@@ -1,4 +1,4 @@
-# Billy Data - An Ember Data Layer
+# Billy Data - A Data Layer for Ember.js
 
 ...
 
