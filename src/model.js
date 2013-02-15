@@ -54,7 +54,6 @@ BD.Model = Em.Object.extend(Em.Evented, {
     }.property(),
     getParent: function() {
         var parentRelationship = this.get('parentRelationship');
-        console.log(parentRelationship, parentRelationship ? this.get(parentRelationship) : null);
         return parentRelationship ? this.get(parentRelationship) : null;
     },
 
@@ -100,7 +99,7 @@ BD.Model = Em.Object.extend(Em.Evented, {
         }, this);
         //HasMany
         this.eachHasMany(function(key, meta) {
-            var ids = serialized[BD.store.singularize(key)+'Ids'];
+            var ids = serialized[BD.singularize(key)+'Ids'];
             if (ids) {
                 data.hasMany[key] = ids;
                 this.get(key);
@@ -154,7 +153,6 @@ BD.Model = Em.Object.extend(Em.Evented, {
     },
     rollback: function() {
         //Rollback embedded records
-        console.log(this);
         this.eachEmbeddedRecord(function(r) {
             r.rollback();
         });
@@ -164,7 +162,6 @@ BD.Model = Em.Object.extend(Em.Evented, {
         }
         //Store parent
         var parent = this.getParent();
-        console.log('parent', parent);
         //Reset data
         var dirtyData = this.get('data'),
             cleanData = this.clean.data;
@@ -248,7 +245,6 @@ BD.Model = Em.Object.extend(Em.Evented, {
     }
     
 });
-
 
 BD.Model.reopenClass({
 

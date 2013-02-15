@@ -70,7 +70,7 @@ BD.Store = Em.Object.extend({
         r.set('isLoading', true);
         this.ajax({
             type: 'GET',
-            url: '/api/' + this.pluralize(this.rootForType(type)) + '/' + id,
+            url: '/api/' + BD.pluralize(this.rootForType(type)) + '/' + id,
             data: query,
             success: function(payload) {
                 r.set('isLoading', false);
@@ -114,7 +114,7 @@ BD.Store = Em.Object.extend({
             url: '/api/' + url,
             data: query,
             success: function(payload) {
-                this.sideload(payload, this.pluralize(this.rootForType(type)), recordArray);
+                this.sideload(payload, BD.pluralize(this.rootForType(type)), recordArray);
                 recordArray.set('isLoaded', true);
                 recordArray.trigger('didLoad', payload);
             },
@@ -131,7 +131,7 @@ BD.Store = Em.Object.extend({
     },
     findByQuery: function(type, query) {
         type = this.resolveType(type);
-        return this.findByUrl(type, this.pluralize(this.rootForType(type)), query);
+        return this.findByUrl(type, BD.pluralize(this.rootForType(type)), query);
     },
     all: function(type) {
         type = this.resolveType(type);
@@ -225,7 +225,7 @@ BD.Store = Em.Object.extend({
         //Construct URL
         var isNew = r.get('isNew'),
             root = this.rootForType(r.constructor),
-            url = '/api/' + this.pluralize(root);
+            url = '/api/' + BD.pluralize(root);
         if (!isNew) {
             url += '/' + r.get('id');
         }
@@ -307,7 +307,7 @@ BD.Store = Em.Object.extend({
         var promise = BD.ModelOperationPromise.create();
         this.ajax({
             type: 'DELETE',
-            url: '/api/' + this.pluralize(this.rootForType(r.constructor)) + '/' + r.get('id'),
+            url: '/api/' + BD.pluralize(this.rootForType(r.constructor)) + '/' + r.get('id'),
             success: function(payload) {
                 this.didDeleteRecord(r);
                 promise.trigger('complete');
@@ -349,7 +349,7 @@ BD.Store = Em.Object.extend({
             if (!payload.hasOwnProperty(key)) continue;
             if (key === 'meta') continue;
             //Find type
-            var type = this.lookupTypeByName(key);
+            var type = BD.lookupTypeByName(key);
             Ember.assert('JSON payload had unknown key "'+key+'"', type);
             //Load records of this type
             var records = this._loadMany(type, payload[key]);
@@ -364,20 +364,6 @@ BD.Store = Em.Object.extend({
         if (rootRecords) {
             recordArray.set('content', rootRecords);
         }
-    },
-    lookupTypeByName: function(name) {
-        var type;
-        BD.typeNamespaces.find(function(namespace) {
-            type = namespace[this.classify(this.singularize(name))];
-            if (type) {
-                return true;
-            }
-            type = namespace[this.classify(name)];
-            if (type) {
-                return true;
-            }
-        });
-        return type;
     },
     loadMany: function(type, dataItems) {
         var records = this._loadMany(type, dataItems);
@@ -459,27 +445,6 @@ BD.Store = Em.Object.extend({
         return BD.ajax(hash);
     },
     
-    plurals: {
-        country: 'countries',
-        currency: 'currencies'
-    },
-    pluralize: function(name) {
-        return this.plurals[name] || name+'s';
-    },
-    singularize: function(name) {
-        if (!this.singulars) {
-            this.singulars = {};
-            for (var k in this.plurals) {
-                if (!this.plurals.hasOwnProperty(k)) continue;
-                this.singulars[this.plurals[k]] = k;
-            }
-        }
-        return this.singulars[name] || name.substring(0, name.length-1);
-    },
-    classify: function(name) {
-        return name.substring(0, 1).toUpperCase()+name.substring(1);
-    },
-    
     filter: function(type, filter, comparator) {
         type = this.resolveType(type);
         var typeMap = this.typeMapFor(type),
@@ -554,7 +519,7 @@ BD.Store = Em.Object.extend({
 
     parseReference: function(reference) {
         var s = reference.split(':'),
-            type = this.lookupTypeByName(s[0]),
+            type = BD.lookupTypeByName(s[0]),
             id = s[1];
         Ember.assert('Unknown type in API reference "'+reference+'".', type);
         Ember.assert('No ID contained in API reference "'+reference+'".', id);

@@ -43,9 +43,7 @@ test('rollback() on parent should remove embedded child records from other paren
     equal(invoice.get('isDirty'), false, 'Invoice should be clean');
     equal(payment.get('isDirty'), true, 'Payment should be dirty');
     equal(association.get('isDirty'), true, 'InvoicePaymentAssociation should be dirty');
-    console.log('-----')
     payment.rollback();
-    console.log('-----')
     equal(invoice.get('paymentAssociations.length'), 0, 'The payment association should have been removed from the invoice');
 });
 
