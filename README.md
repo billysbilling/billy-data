@@ -12,6 +12,10 @@ Go to Terminal and `cd` into the billy-data folder and run:
 grunt
 ```
 
+## Running tests
+
+Just open the `test.html` file in your browser.
+
 ## Contributing
 
 You are very welcome to contribute using pull requests, as long as the functionality is also in Billy's Billing's best interest.
