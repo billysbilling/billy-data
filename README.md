@@ -14,7 +14,7 @@ grunt
 
 ## Running tests
 
-Just open the `test.html` file in your browser.
+Just open the `tests.html` file in your browser.
 
 ## Contributing
 
