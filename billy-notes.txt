@@ -1,3 +1,0 @@
-- BD.ajax
-- BD.url
-- BD.ModelOperationPromise.mask
