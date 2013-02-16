@@ -17,6 +17,8 @@ Go to Terminal and `cd` into the billy-data folder and run:
 grunt
 ```
 
+The built source code can then be found at `dist/billy-data.js` and `dist/billy-data.min.js`.
+
 ## Running tests
 
 Just open the `tests.html` file in your browser.
