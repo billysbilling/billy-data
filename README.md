@@ -23,9 +23,9 @@ The built source code can then be found at `dist/billy-data.js` and `dist/billy-
 
 ### In browser
 
-Just open the `tests.html` file in your browser.
+Just open the `tests.html` file in your browser. The test suite uses QUnit.
 
-## From command line
+### From command line
 
 Run:
 
