@@ -21,11 +21,13 @@ The built source code can then be found at `dist/billy-data.js` and `dist/billy-
 
 ## Running tests
 
-### In browser
+### In a browser
 
 Just open the `tests.html` file in your browser. The test suite uses QUnit.
 
 ### From command line
+
+Install [PhantomJS](http://phantomjs.org/).
 
 From within your billy-data folder run:
 
