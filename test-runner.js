@@ -2,7 +2,7 @@ var page = require('webpage').create();
 
 page.onError = function(message, trace) {
     console.log('Page error: '+message, 'ERROR');
-    phantom.exit();
+    phantom.exit(1);
 };
 page.onInitialized = function() {
     page.evaluate(function() {
@@ -31,6 +31,11 @@ function checkDone() {
     phantom.exit(details.failed ? 1 : 0);
 }
 
-page.open('file://localhost/Users/sebsei/htdocs/billysbilling/resources/modules/billy-data/tests.html', function() {
+var url = 'file://localhost'+require('fs').workingDirectory+'/tests.html';
+page.open(url, function(status) {
+    if (status !== 'success') {
+        console.log('Could not open '+url);
+        phantom.exit(1);
+    }
     checkDone();
 });
