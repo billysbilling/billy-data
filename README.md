@@ -27,7 +27,7 @@ Just open the `tests.html` file in your browser. The test suite uses QUnit.
 
 ### From command line
 
-Run:
+From within your billy-data folder run:
 
 ```
 phantomjs test-runner.js
