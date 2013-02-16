@@ -21,7 +21,17 @@ The built source code can then be found at `dist/billy-data.js` and `dist/billy-
 
 ## Running tests
 
+### In browser
+
 Just open the `tests.html` file in your browser.
+
+## From command line
+
+Run:
+
+```
+phantomjs test-runner.js
+```
 
 ## Contributing
 
