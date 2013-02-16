@@ -30,7 +30,7 @@ Here are a few of the issues we've had with Ember Data, which Billy Data solves 
 - Ability to reload a record from the API (by ID), with an extra query parameter. We use this to ensure that a specific record has all its relationships loaded.
 - No state manager for records. The concept of a state manager is cool in theory, but in practice it has given us more problems than advantages. 
 
-The API of Billy Data and some of the implementation has been greatly inspired by Ember Data. So big thanks and probs
+The API of Billy Data and some of the implementation has been greatly inspired by Ember Data. So big thanks and props
 for that to the Ember.js guys.
 
 ## Building
