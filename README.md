@@ -1,6 +1,11 @@
 # Billy Data - A Data Layer for Ember.js
 
-...
+Description on the way...
+
+## Open source
+
+This library is open sourced mostly for display. Since this library is brand new we make no guarantee at this time that
+we're going to continue to support at develop it. 
 
 ## Building
 
