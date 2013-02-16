@@ -61,10 +61,6 @@ From within your billy-data folder run:
 phantomjs test-runner.js
 ```
 
-## Documentation
-
-
-
 ## Contributing
 
 You are very welcome to contribute using pull requests, as long as the functionality is also in Billy's Billing's best interest.
