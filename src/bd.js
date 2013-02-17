@@ -50,8 +50,9 @@ BD.reopenClass({
         $.ajax(hash);
     },
 
+    urlPrefix: '',
     url: function(url) {
-        return url;
+        return this.urlPrefix + url;
     }
     
 });

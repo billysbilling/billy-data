@@ -70,7 +70,7 @@ BD.Store = Em.Object.extend({
         r.set('isLoading', true);
         this.ajax({
             type: 'GET',
-            url: '/api/' + BD.pluralize(this.rootForType(type)) + '/' + id,
+            url: '/' + BD.pluralize(this.rootForType(type)) + '/' + id,
             data: query,
             success: function(payload) {
                 r.set('isLoading', false);
@@ -111,7 +111,7 @@ BD.Store = Em.Object.extend({
         });
         this.ajax({
             type: 'GET',
-            url: '/api/' + url,
+            url: '/' + url,
             data: query,
             success: function(payload) {
                 this.sideload(payload, BD.pluralize(this.rootForType(type)), recordArray);
@@ -225,7 +225,7 @@ BD.Store = Em.Object.extend({
         //Construct URL
         var isNew = r.get('isNew'),
             root = this.rootForType(r.constructor),
-            url = '/api/' + BD.pluralize(root);
+            url = '/' + BD.pluralize(root);
         if (!isNew) {
             url += '/' + r.get('id');
         }
@@ -307,7 +307,7 @@ BD.Store = Em.Object.extend({
         var promise = BD.ModelOperationPromise.create();
         this.ajax({
             type: 'DELETE',
-            url: '/api/' + BD.pluralize(this.rootForType(r.constructor)) + '/' + r.get('id'),
+            url: '/' + BD.pluralize(this.rootForType(r.constructor)) + '/' + r.get('id'),
             success: function(payload) {
                 this.didDeleteRecord(r);
                 promise.trigger('complete');
