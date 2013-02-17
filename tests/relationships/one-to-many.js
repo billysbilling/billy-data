@@ -1,4 +1,4 @@
-module('Billy Data one-to-many relationships', {
+module('One-to-many relationships', {
     setup: function() {
         App.Category = BD.Model.extend({
             name: BD.attr('string'),

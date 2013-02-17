@@ -1,4 +1,4 @@
-module('Billy Data many-to-many relationships', {
+module('Many-to-many relationships', {
     setup: function() {
         App.InvoicePaymentAssociation = BD.Model.extend({
             invoice: BD.belongsTo('App.Invoice'),

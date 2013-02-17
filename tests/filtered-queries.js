@@ -1,4 +1,4 @@
-module('Billy Data filtered queries', {
+module('Filtered queries', {
     setup: function() {
         App.Category = BD.Model.extend({
             name: BD.attr('string')
