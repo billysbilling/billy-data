@@ -560,7 +560,6 @@ BD.Store = Em.Object.extend({
     resetContainers: function() {
         this.clientIdCounter = 0;
         this.cidToRecord = {};
-        this.cidInFilteredRecordArrays = {};
         this.typeMaps = {};
         this.unmaterializedRecords = [];
     },
