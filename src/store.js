@@ -310,6 +310,7 @@ BD.Store = Em.Object.extend({
             url: '/' + BD.pluralize(this.rootForType(r.constructor)) + '/' + r.get('id'),
             success: function(payload) {
                 this.didDeleteRecord(r);
+                this.markDeletedRecords(payload);
                 promise.trigger('complete');
                 promise.trigger('success');
             },
@@ -326,6 +327,27 @@ BD.Store = Em.Object.extend({
             }
         });
         return promise;
+    },
+    markDeletedRecords: function(payload) {
+        var meta = payload.meta,
+            deletedRecords;
+        if (meta) {
+            deletedRecords = meta.deletedRecords;
+            if (deletedRecords) {
+                _.each(deletedRecords, function(ids, typeName) {
+                    var type = BD.lookupTypeByName(typeName);
+                    if (!type) {
+                        return;
+                    }
+                    ids.forEach(function(id) {
+                        var deletedRecord = this.recordForTypeAndId(type, id);
+                        if (deletedRecord) {
+                            this.didDeleteRecord(deletedRecord);
+                        }
+                    }, this);
+                }, this);
+            }
+        }
     },
     didDeleteRecord: function(r) {
         r.eachEmbeddedRecord(function(child) {
