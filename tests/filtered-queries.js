@@ -1,17 +1,14 @@
-var Category,
-    Post;
-
 module('Billy Data filtered queries', {
     setup: function() {
-        Category = BD.Model.extend({
+        App.Category = BD.Model.extend({
             name: BD.attr('string')
         });
-        Post = BD.Model.extend({
-            category: BD.belongsTo(Category),
+        App.Post = BD.Model.extend({
+            category: BD.belongsTo('App.Category'),
             author: BD.attr('string'),
             isPublic: BD.attr('boolean')
         });
-        BD.store.loadMany(Category, [
+        BD.store.loadMany(App.Category, [
             {
                 id: 201,
                 name: 'Tech'
@@ -21,7 +18,7 @@ module('Billy Data filtered queries', {
                 name: 'Business'
             }
         ]);
-        BD.store.loadMany(Post, [
+        BD.store.loadMany(App.Post, [
             {
                 id: 1,
                 categoryId: 201,
@@ -48,21 +45,21 @@ module('Billy Data filtered queries', {
 });
 
 test('Test filter', function() {
-    var allPosts = Post.filter();
-    var publicPosts = Post.filter({
+    var allPosts = App.Post.filter();
+    var publicPosts = App.Post.filter({
         isPublic: true
     });
-    var sebastianPosts = Post.filter({
+    var sebastianPosts = App.Post.filter({
         author: 'Sebastian'
     });
-    var sAuthorPosts = Post.filter(function(r) {
+    var sAuthorPosts = App.Post.filter(function(r) {
         return r.get('author').substring(0, 1).toLowerCase() == 's';
     });
-    var techPosts = Post.filter({
-        category: Category.find(201)
+    var techPosts = App.Post.filter({
+        category: App.Category.find(201)
     });
-    var businessPosts = Post.filter({
-        category: Category.find(202)
+    var businessPosts = App.Post.filter({
+        category: App.Category.find(202)
     });
     equal(allPosts.get('length'), 3, 'Expect three posts in total');
     equal(publicPosts.get('length'), 2, 'Expect two public posts');
@@ -83,12 +80,12 @@ test('Test filter', function() {
 });
 
 test('Test sorting', function() {
-    var callbackComparatorPosts = Post.filter(null, function(a, b) {
+    var callbackComparatorPosts = App.Post.filter(null, function(a, b) {
         return a.get('author').localeCompare(b.get('author'));
     });
-    var stringComparatorPosts = Post.filter(null, 'author');
-    var stringDescComparatorPosts = Post.filter(null, {'author': 'DESC'});
-    var multipleStringComparatorPosts = Post.filter(null, {'category.name': 'ASC', 'author': 'ASC'});
+    var stringComparatorPosts = App.Post.filter(null, 'author');
+    var stringDescComparatorPosts = App.Post.filter(null, {'author': 'DESC'});
+    var multipleStringComparatorPosts = App.Post.filter(null, {'category.name': 'ASC', 'author': 'ASC'});
     deepEqual(callbackComparatorPosts.mapProperty('id'), [2, 3, 1], 'Order should be correct');
     deepEqual(stringComparatorPosts.mapProperty('id'), [2, 3, 1], 'Order should be correct');
     deepEqual(stringDescComparatorPosts.mapProperty('id'), [1, 3, 2], 'Order should be correct');

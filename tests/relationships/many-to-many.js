@@ -1,26 +1,20 @@
-var Invoice,
-    InvoicePayment,
-    InvoicePaymentAssociation;
-
 module('Billy Data many-to-many relationships', {
     setup: function() {
-        InvoicePaymentAssociation = BD.Model.extend({
+        App.InvoicePaymentAssociation = BD.Model.extend({
+            invoice: BD.belongsTo('App.Invoice'),
+            payment: BD.belongsTo('App.InvoicePayment', {isParent: true})
         });
-        Invoice = BD.Model.extend({
-            paymentAssociations: BD.hasMany(InvoicePaymentAssociation, 'invoice')
+        App.Invoice = BD.Model.extend({
+            paymentAssociations: BD.hasMany('App.InvoicePaymentAssociation', 'invoice')
         });
-        InvoicePayment = BD.Model.extend({
-            invoiceAssociations: BD.hasMany(InvoicePaymentAssociation, 'payment', {isEmbedded: true})
+        App.InvoicePayment = BD.Model.extend({
+            invoiceAssociations: BD.hasMany('App.InvoicePaymentAssociation', 'payment', {isEmbedded: true})
         });
-        InvoicePaymentAssociation.reopen({
-            invoice: BD.belongsTo(Invoice),
-            payment: BD.belongsTo(InvoicePayment, {isParent: true})
-        });
-        BD.store.load(Invoice, {
+        BD.store.load(App.Invoice, {
             id: 201,
             paymentAssociationIds: []
         });
-        BD.store.load(InvoicePayment, {
+        BD.store.load(App.InvoicePayment, {
             id: 301,
             invoiceAssociationIds: []
         });
@@ -31,10 +25,10 @@ module('Billy Data many-to-many relationships', {
 });
 
 test('rollback() on parent should remove embedded child records from other parents', function() {
-    var invoice = Invoice.find(201);
-    var payment = InvoicePayment.createRecord({
+    var invoice = App.Invoice.find(201);
+    var payment = App.InvoicePayment.createRecord({
     });
-    var association = InvoicePaymentAssociation.createRecord({
+    var association = App.InvoicePaymentAssociation.createRecord({
         invoice: invoice,
         payment: payment
     });
@@ -48,9 +42,9 @@ test('rollback() on parent should remove embedded child records from other paren
 });
 
 test('rollback() on embedded child should clean parent', function() {
-    var invoice = Invoice.find(201);
-    var payment = InvoicePayment.find(301);
-    var association = InvoicePaymentAssociation.createRecord({
+    var invoice = App.Invoice.find(201);
+    var payment = App.InvoicePayment.find(301);
+    var association = App.InvoicePaymentAssociation.createRecord({
         invoice: invoice,
         payment: payment
     });

@@ -14,6 +14,10 @@ if (window.isCli) {
     });
 }
 
+App = Ember.Application.create({});
+App.deferReadiness();
+BD.registerTypeNamespace(App);
+
 var originalBdAjax;
 QUnit.config.begin.push(function() {
     originalBdAjax = BD.ajax;
@@ -24,7 +28,7 @@ QUnit.config.testStart.push(function() {
 
 window.fakeAjaxSuccess = function(payload) {
     payload = payload || {};
-    payload.meta = {
+    payload.meta = payload.meta || {
         success: true,
         statusCode: 200
     };
