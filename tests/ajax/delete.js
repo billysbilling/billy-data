@@ -57,6 +57,7 @@ test('Other records that were also deleted by the API should be removed from the
     });
     var post = App.Post.find(101);
     post.deleteRecord();
+    flushAjax();
     equal(BD.store.recordForTypeAndId(App.Post, 101), null, 'Post should have been deleted');
     equal(BD.store.recordForTypeAndId(App.Comment, 201), null, 'Comment should have been deleted');
     equal(BD.store.recordForTypeAndId(App.Comment, 202), null, 'Comment should have been deleted');

@@ -2,29 +2,27 @@ module('One-to-many relationships', {
     setup: function() {
         App.Category = BD.Model.extend({
             name: BD.attr('string'),
-            posts: BD.hasMany('App.Post', 'category')
+            posts: BD.hasMany('App.Post', 'category', {isEmbedded: true})
         });
         App.Post = BD.Model.extend({
-            category: BD.belongsTo('App.Category', {parent: true}),
-            author: BD.attr('string'),
-            isPublic: BD.attr('boolean')
+            category: BD.belongsTo('App.Category', {isParent: true})
         });
+        BD.store.loadMany(App.Post, [
+            {
+                id: 1,
+                categoryId: 201
+            }
+        ]);
         BD.store.loadMany(App.Category, [
             {
                 id: 201,
                 name: 'Tech',
-                postIds: []
+                postIds: [1]
             },
             {
                 id: 202,
                 name: 'Business',
                 postIds: []
-            }
-        ]);
-        BD.store.loadMany(App.Post, [
-            {
-                id: 1,
-                categoryId: 201
             }
         ]);
     },
@@ -59,7 +57,7 @@ test('When deleting a child record, it should be removed from the parent', funct
     equal(tech.get('posts.length'), 0, 'Tech should not have anymore posts now');
 });
 
-test('When loading a child record, its parent should be updated', function() {
+test('When loading a child record, its parent\'s hasMany should be updated', function() {
     var tech = App.Category.find(201);
     var biz = App.Category.find(202);
     var post = App.Post.find(1);
@@ -69,4 +67,26 @@ test('When loading a child record, its parent should be updated', function() {
     });
     equal(tech.get('posts.length'), 0, 'Tech should not have anymore posts now');
     equal(biz.get('posts.length'), 1, 'Business should have the post now');
+});
+
+test('Loading a parent, and then its children', function() {
+    fakeAjaxSuccess({
+        category: {
+            id: 203,
+            name: 'Startup'
+        }
+    });
+    var category = App.Category.find(203);
+    flushAjax();
+    fakeAjaxSuccess({
+        posts: [
+            {
+                id: 2,
+                categoryId: 203
+            }
+        ]
+    });
+    category.get('posts');
+    flushAjax();
+    equal(category.get('posts.length'), 1);
 });

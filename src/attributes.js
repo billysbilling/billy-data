@@ -31,26 +31,38 @@ function belongsTo(meta, options) {
     meta.options = options;
     return function(key, value) {
         var data = this.get('data'),
-            oldValue,
+            didChange,
+            oldClientId,
             id;
         id = data.belongsTo[key];
-        if (id) {
-            if (typeof id === 'object') {
-                oldValue = BD.store.findByClientId(id.clientId);
-            } else {
-                oldValue = meta.find(id);
-            }
-        } else {
-            oldValue = null;
-        }
         if (arguments.length >= 2) {
-            if (value != oldValue) {
+            if (id) {
+                if (typeof id === 'object') {
+                    oldClientId = id.clientId;
+                    didChange = (!value || value.get('clientId') != oldClientId);
+                } else {
+                    oldClientId = meta.clientIdForValue(id);
+                    didChange = (!value || value.get('clientId') != oldClientId);
+                }
+            } else {
+                didChange = !!value;
+                oldClientId = null;
+            }
+            if (didChange) {
                 this.becomeDirty();
                 data.belongsTo[key] = value ? value.clientIdObj : null;
-                BD.store.belongsToDidChange(this, key, value ? value.get('clientId') : null, oldValue ? oldValue.get('clientId') : null, true);
+                BD.store.belongsToDidChange(this, key, value ? value.get('clientId') : null, oldClientId, true);
             }
         } else {
-            value = oldValue;
+            if (id) {
+                if (typeof id === 'object') {
+                    value = BD.store.findByClientId(id.clientId);
+                } else {
+                    value = meta.find(id);
+                }
+            } else {
+                value = null;
+            }
         }
         return value;
     }.property('data').meta(meta);
@@ -140,6 +152,7 @@ BD.hasMany = function(type, belongsToKey, options) {
                 BD.store.registerHasManyRecordArray(this, recordArray, type, key, belongsToKey);
             }
         }
+        this.loadedHasMany[key] = true;
         return recordArray;
     }.property('data').meta(meta);
 };

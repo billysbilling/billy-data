@@ -18,12 +18,14 @@ App = Ember.Application.create({});
 App.deferReadiness();
 BD.registerTypeNamespace(App);
 
-var originalBdAjax;
+var originalBdAjax,
+    ajaxQueue;
 QUnit.config.begin.push(function() {
     originalBdAjax = BD.ajax;
 });
 QUnit.config.testStart.push(function() {
     resetAjax();
+    ajaxQueue = [];
 });
 
 window.fakeAjaxSuccess = function(payload) {
@@ -33,7 +35,9 @@ window.fakeAjaxSuccess = function(payload) {
         statusCode: 200
     };
     BD.ajax = function(hash) {
-        hash.success.call(hash.context, payload);
+        ajaxQueue.push(function() {
+            hash.success.call(hash.context, payload);
+        });
     };
 };
 
@@ -48,8 +52,17 @@ window.fakeAjaxError = function(statusCode, payload) {
         responseText: JSON.stringify(payload)
     };
     BD.ajax = function(hash) {
-        hash.error.call(hash.context, xhr);
+        ajaxQueue.push(function() {
+            hash.error.call(hash.context, xhr);
+        });
     };
+};
+
+window.flushAjax = function() {
+    resetAjax();
+    ajaxQueue.forEach(function(fn) {
+        fn();
+    });
 };
 
 window.resetAjax = function() {

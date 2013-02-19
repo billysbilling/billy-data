@@ -22,6 +22,7 @@ BD.Model = Em.Object.extend(Em.Evented, {
         this.clientIdObj = {
             clientId: this.get('clientId')
         };
+        this.loadedHasMany = {};
         this._super();
     },
     
@@ -71,11 +72,18 @@ BD.Model = Em.Object.extend(Em.Evented, {
     },
     eachEmbeddedRecord: function(callback, binding) {
         this.eachEmbeddedHasMany(function(key, meta) {
+            //Skip unloaded records
+            if (!this.hasManyIsLoaded(key)) {
+                return;
+            }
             var records = this.get(key);
             records.forEach(function(r) {
                 callback.call(binding, r, key, meta);
             });
         }, this)
+    },
+    hasManyIsLoaded: function(key) {
+        return this.loadedHasMany[key];
     },
 
     loadData: function(serialized) {

@@ -350,6 +350,9 @@ BD.Store = Em.Object.extend({
         }
     },
     didDeleteRecord: function(r) {
+        r.eachBelongsTo(function(name) {
+            r.set(name, null);
+        }, this);
         r.eachEmbeddedRecord(function(child) {
             this.didDeleteRecord(child);
         }, this);
@@ -382,8 +385,8 @@ BD.Store = Em.Object.extend({
         }
         //Materialize records
         this.materializeRecords();
-        //Add root records, if any, to the RecordArray
-        if (rootRecords) {
+        //Add root records, if any, to the RecordArray, but only if it's not a hasMany array
+        if (rootRecords && !recordArray.get('parent')) {
             recordArray.set('content', rootRecords);
         }
     },
