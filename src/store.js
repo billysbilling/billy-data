@@ -286,7 +286,8 @@ BD.Store = Em.Object.extend({
     },
 
     deleteRecord: function(r) {
-        var id = r.get('id');
+        var id = r.get('id'),
+            parent = r.getParent();
         //Set the record as dirty
         r.becomeDirty();
         r.set('isDeleted');
@@ -299,8 +300,9 @@ BD.Store = Em.Object.extend({
             this.didDeleteRecord(r);
             return;
         }
-        //If the record is embedded, then don't send DELETE request
+        //If the record is embedded, then don't send DELETE request, but dirty the parent
         if (r.get('isEmbedded')) {
+            parent.becomeDirty();
             return;
         }
         //Make DELETE request

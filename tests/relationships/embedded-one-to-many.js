@@ -49,12 +49,13 @@ test('Many arrays should update when child record changes its parent', function(
     equal(biz.get('posts.length'), 0, 'Business should not have any posts');
 });
 
-test('When deleting a child record, it should be removed from the parent', function() {
+test('When deleting a child record, it should be removed from the parent and parent should be dirty', function() {
     var tech = App.Category.find(201);
     var post = App.Post.find(1);
     fakeAjaxSuccess();
     post.deleteRecord();
     equal(tech.get('posts.length'), 0, 'Tech should not have anymore posts now');
+    equal(tech.get('isDirty'), true, 'Parent should be dirty');
 });
 
 test('When loading a child record, its parent\'s hasMany should be updated', function() {
