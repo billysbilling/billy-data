@@ -91,7 +91,8 @@ BD.Model = Em.Object.extend(Em.Evented, {
     },
     materializeData: function() {
         var serialized = this.serializedData,
-            data = this.get('data');
+            data = this.get('data'),
+            belongsToChanges = [];
         //Attributes
         this.eachAttribute(function(key, meta) {
             data.attributes[key] = BD.transforms[meta.type].deserialize(serialized[key]);
@@ -103,7 +104,7 @@ BD.Model = Em.Object.extend(Em.Evented, {
                 newValue = meta.extractValue(serialized, key),
                 newClientId = meta.clientIdForValue(newValue);
             data.belongsTo[key] = newValue;
-            BD.store.belongsToDidChange(this, key, newClientId, oldClientId, false);
+            belongsToChanges.push([this, key, newClientId, oldClientId, false]);
         }, this);
         //HasMany
         this.eachHasMany(function(key, meta) {
@@ -113,6 +114,10 @@ BD.Model = Em.Object.extend(Em.Evented, {
                 this.get(key);
             }
         }, this);
+        //Update belongsTo relationships
+        belongsToChanges.forEach(function(args) {
+            BD.store.belongsToDidChange.apply(BD.store, args);
+        });
         //
         Em.propertyDidChange(this, 'data');
         //Handle dirty state
