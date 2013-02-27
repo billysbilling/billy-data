@@ -5,29 +5,30 @@ module('Ajax delete', {
             comments: BD.hasMany('App.Comment', 'post')
         });
         App.Comment = BD.Model.extend({
-            post: BD.belongsTo('App.Category', {parent: true}),
+            post: BD.belongsTo('App.Post', {isParent: true}),
             text: BD.attr('string')
         });
         BD.store.loadMany(App.Post, [
             {
                 id: 101,
-                name: 'Tech'
+                title: 'Delete yes, yes'
             }
         ]);
         BD.store.loadMany(App.Comment, [
             {
                 id: 201,
-                categoryId: 101,
+                postId: 101,
                 text: 'I agree!'
             },
             {
                 id: 202,
-                categoryId: 101,
+                postId: 101,
                 text: 'I disagree!'
             }
         ]);
     },
     teardown: function() {
+        
         BD.store.reset();
     }
 });
@@ -40,6 +41,7 @@ test('Test ajax request options', function() {
     };
     var post = App.Post.find(101);
     post.deleteRecord();
+    flushAjax();
 });
 
 test('Other records that were also deleted by the API should be removed from the store', function() {

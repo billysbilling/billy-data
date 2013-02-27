@@ -129,7 +129,7 @@ BD.Model = Em.Object.extend(Em.Evented, {
         return (this.get('selfIsDirty') || this.get('childIsDirty'));
     }.property('selfIsDirty', 'childIsDirty'),
     becomeDirty: function() {
-        if (this.get('selfIsDirty')) {
+        if (this.get('isUnloading') || this.get('selfIsDirty')) {
             return;
         }
         this.clean = {
@@ -189,8 +189,8 @@ BD.Model = Em.Object.extend(Em.Evented, {
             }
             this.becameClean();
         } else {
-            //Handle case where record never was created. Then we just delete it 
-            BD.store.didDeleteRecord(this);
+            //Handle case where record never was created. Then we just unload it 
+            this.unload();
         }
         //Let parent check child dirtyness
         if (parent) {
@@ -245,7 +245,15 @@ BD.Model = Em.Object.extend(Em.Evented, {
     },
 
     unload: function() {
-        BD.store.didDeleteRecord(this);
+        this.set('isUnloading', true);
+        this.eachBelongsTo(function(name) {
+            this.set(name, null);
+        }, this);
+        this.eachEmbeddedRecord(function(child) {
+            child.unload();
+        });
+        BD.store.didUnloadRecord(this);
+        this.destroy();
     },
 
     toString: function toString() {

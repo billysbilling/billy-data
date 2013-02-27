@@ -18,11 +18,7 @@ App = Ember.Application.create({});
 App.deferReadiness();
 BD.registerTypeNamespace(App);
 
-var originalBdAjax,
-    ajaxQueue;
-QUnit.config.begin.push(function() {
-    originalBdAjax = BD.ajax;
-});
+var ajaxQueue;
 QUnit.config.testStart.push(function() {
     resetAjax();
     ajaxQueue = [];
@@ -59,12 +55,17 @@ window.fakeAjaxError = function(statusCode, payload) {
 };
 
 window.flushAjax = function() {
-    resetAjax();
     ajaxQueue.forEach(function(fn) {
         fn();
     });
+    ajaxQueue = [];
+    resetAjax();
 };
 
 window.resetAjax = function() {
-    BD.ajax = originalBdAjax;
+    BD.ajax = function(hash) {
+        console.log('BD.ajax hash for debugging:');
+        console.log(hash);
+        throw new Error('BD.ajax should not be called.');
+    };
 };

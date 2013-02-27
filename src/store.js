@@ -297,7 +297,7 @@ BD.Store = Em.Object.extend({
         }, this);
         //If the record hasn't been created yet, there is no need to contact the server
         if (r.get('isNew')) {
-            this.didDeleteRecord(r);
+            r.unload();
             return;
         }
         //If the record is embedded, then don't send DELETE request, but dirty the parent
@@ -311,7 +311,7 @@ BD.Store = Em.Object.extend({
             type: 'DELETE',
             url: '/' + BD.pluralize(this.rootForType(r.constructor)) + '/' + r.get('id'),
             success: function(payload) {
-                this.didDeleteRecord(r);
+                r.unload();
                 this.markDeletedRecords(payload);
                 promise.trigger('complete');
                 promise.trigger('success');
@@ -344,25 +344,18 @@ BD.Store = Em.Object.extend({
                     ids.forEach(function(id) {
                         var deletedRecord = this.recordForTypeAndId(type, id);
                         if (deletedRecord) {
-                            this.didDeleteRecord(deletedRecord);
+                            deletedRecord.unload();
                         }
                     }, this);
                 }, this);
             }
         }
     },
-    didDeleteRecord: function(r) {
-        r.eachBelongsTo(function(name) {
-            r.set(name, null);
-        }, this);
-        r.eachEmbeddedRecord(function(child) {
-            this.didDeleteRecord(child);
-        }, this);
+    didUnloadRecord: function(r) {
         var cid = r.get('clientId'),
             id = r.get('id');
         delete this.cidToRecord[cid];
         delete this.typeMapFor(r.constructor).idToRecord[id];
-        r.destroy();
     },
 
     rootForType: function(type) {
