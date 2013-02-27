@@ -162,6 +162,10 @@ BD.Store = Em.Object.extend({
 //        return typeMap.hasManyRecordArrays[belongsToKey][parent.get('clientId')];
 //    },
     belongsToDidChange: function(r, belongsToKey, newCid, oldCid, dirty) {
+        if (this.belongsToDidChangeIsSuspended) {
+            this.belongsToDidChangeQueue.push(arguments);
+            return;
+        }
         if (newCid === oldCid) {
             return;
         }
@@ -189,6 +193,16 @@ BD.Store = Em.Object.extend({
             }
         }
     },
+    suspendBelongsToDidChange: function() {
+        this.belongsToDidChangeIsSuspended = true;
+    },
+    resumeBelongsToDidChange: function() {
+        this.belongsToDidChangeIsSuspended = false;
+        this.belongsToDidChangeQueue.forEach(function(args) {
+            this.belongsToDidChange.apply(this, args);
+        }, this);
+        this.belongsToDidChangeQueue = [];
+    },
 
     createRecord: function(type, properties) {
         //Instantiate record
@@ -204,7 +218,9 @@ BD.Store = Em.Object.extend({
         }, this);
         //Mark the record as dirty and update properties
         r.becomeDirty();
+        this.suspendBelongsToDidChange();
         r.setProperties(properties);
+        this.resumeBelongsToDidChange();
         return r;
     },
     
@@ -560,6 +576,7 @@ BD.Store = Em.Object.extend({
         this.cidToRecord = {};
         this.typeMaps = {};
         this.unmaterializedRecords = [];
+        this.belongsToDidChangeQueue = [];
     },
     
     didServerError: function(message) {

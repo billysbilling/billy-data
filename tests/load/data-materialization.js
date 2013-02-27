@@ -30,7 +30,7 @@ module('Data materialization', {
     }
 });
 
-test('All attributes, belongsTo and hasMany should be setup before firing belongsToDidChange', function() {
+test('All attributes, belongsTo and hasMany should be setup before firing belongsToDidChange when loading child records from server', function() {
     expect(2);
     var post = App.Post.find(101);
     fakeAjaxSuccess({
@@ -47,9 +47,37 @@ test('All attributes, belongsTo and hasMany should be setup before firing belong
         post: null,
         commentsDidChange: function() {
             var comment = this.get('post.comments.firstObject');
-            equal(comment.get('author.id'), 201);
-            equal(comment.get('text'), 'I agree!');
+            equal(comment.get('author.id'), 201, 'Author should match');
+            equal(comment.get('text'), 'I agree!', 'Text should match');
         }.observes('post.comments.@each')
     }).create({post: post});
     flushAjax();
+    o.destroy();
+});
+
+test('All attributes, belongsTo and hasMany should be setup before firing belongsToDidChange when creating new record', function() {
+    expect(2);
+    var post = App.Post.find(101);
+    var author = App.Author.find(201);
+    //First make sure that comments are loaded, and are empty
+    fakeAjaxSuccess({
+        comments: []
+    });
+    post.get('comments');
+    flushAjax();
+    //Then do the real test
+    var o = Ember.Object.extend({
+        post: null,
+        commentsDidChange: function() {
+            var comment = this.get('post.comments.firstObject');
+            equal(comment.get('author.id'), 201, 'Author should match');
+            equal(comment.get('text'), 'I agree!', 'Text should match');
+        }.observes('post.comments.@each')
+    }).create({post: post});
+    App.Comment.createRecord({
+        post: post,
+        author: author,
+        text: 'I agree!'
+    });
+    o.destroy();
 });
