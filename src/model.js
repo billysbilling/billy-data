@@ -183,6 +183,10 @@ BD.Model = Em.Object.extend(Em.Evented, {
         var dirtyData = this.get('data'),
             cleanData = this.clean.data;
         this.set('data', cleanData);
+        //Rollback embedded records again, since we might have gotten some old child records back after rolling back the hasMany arrays
+        this.eachEmbeddedRecord(function(r) {
+            r.rollback();
+        });
         //Update belongsTo relationships
         this.eachBelongsTo(function(key, meta) {
             var oldValue = dirtyData.belongsTo[key],

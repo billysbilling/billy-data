@@ -303,10 +303,14 @@ BD.Store = Em.Object.extend({
 
     deleteRecord: function(r) {
         var id = r.get('id'),
-            parent = r.getParent();
+            isEmbedded = r.get('isEmbedded');
         //Set the record as dirty
         r.becomeDirty();
         r.set('isDeleted');
+        //Dirty the parent, if embedded
+        if (isEmbedded) {
+            r.getParent().becomeDirty();
+        }
         //Remove all belongsTo
         r.eachBelongsTo(function(key) {
             r.set(key, null);
@@ -316,9 +320,8 @@ BD.Store = Em.Object.extend({
             r.unload();
             return;
         }
-        //If the record is embedded, then don't send DELETE request, but dirty the parent
-        if (r.get('isEmbedded')) {
-            parent.becomeDirty();
+        //If the record is embedded, then don't send DELETE request
+        if (isEmbedded) {
             return;
         }
         //Make DELETE request

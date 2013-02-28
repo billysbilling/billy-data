@@ -91,3 +91,14 @@ test('Loading a parent, and then its children', function() {
     flushAjax();
     equal(category.get('posts.length'), 1);
 });
+
+test('When deleting an embedded child record, and then rolling back the parent, it should rollback the child too', function() {
+    var category = App.Category.find(201);
+    var post = App.Post.find(1);
+    post.deleteRecord();
+    category.rollback();
+    equal(category.get('isDirty'), false, 'Parent should be clean');
+    equal(post.get('isDirty'), false, 'Child should be clean');
+    equal(category.get('posts.length'), 1);
+    equal(category.get('posts.firstObject'), post);
+});
