@@ -169,33 +169,46 @@ BD.Model = Em.Object.extend(Em.Evented, {
         this.set('selfIsDirty', false);
     },
     rollback: function() {
-        //Rollback embedded records
-        this.eachEmbeddedRecord(function(r) {
-            r.rollback();
-        });
+        //Setup data variables
+        var selfIsDirty = this.get('selfIsDirty'),
+            dirtyData = this.get('data');
+        //Rollback embedded records. We have to take these directly from BOTH the dirty- and clean data, if the record itself is dirty
+        var hasManyStores = [dirtyData.hasMany];
+        if (selfIsDirty) {
+            hasManyStores.push(this.clean.data.hasMany);
+        }
+        this.eachEmbeddedHasMany(function(name, meta) {
+            //Skip unloaded records
+            if (!this.hasManyIsLoaded(name)) {
+                return;
+            }
+            hasManyStores.forEach(function(hasMany) {
+                hasMany[name].forEach(function(id) {
+                    if (typeof id === 'object') {
+                        BD.store.findByClientId(id.clientId).rollback();
+                    } else {
+                        BD.store.recordForTypeAndId(meta.type, id).rollback();
+                    }
+                });
+            });
+        }, this);
         //Don't continue if this record itself is not dirty
-        if (!this.get('selfIsDirty')) {
+        if (!selfIsDirty) {
             return;
         }
-        //Store parent
-        var parent = this.getParent();
-        //Reset data
-        var dirtyData = this.get('data'),
-            cleanData = this.clean.data;
-        this.set('data', cleanData);
-        //Rollback embedded records again, since we might have gotten some old child records back after rolling back the hasMany arrays
-        this.eachEmbeddedRecord(function(r) {
-            r.rollback();
-        });
+        //Store dirty parent (before we might clean it and set it back the original parent)
+        var dirtyParent = this.getParent();
+        //Set the data to the clean data
+        this.set('data', this.clean.data);
         //Update belongsTo relationships
         this.eachBelongsTo(function(key, meta) {
             var oldValue = dirtyData.belongsTo[key],
                 oldClientId = meta.clientIdForValue(oldValue),
-                newValue = cleanData.belongsTo[key],
+                newValue = this.clean.data.belongsTo[key],
                 newClientId = meta.clientIdForValue(newValue);
             BD.store.belongsToDidChange(this, key, newClientId, oldClientId, false);
         }, this);
-        //Handle the case where the record already is created
+        //Handle the case where the record is not newly created
         if (!this.clean.isNew) {
             if (this.get('isDeleted')) {
                 this.set('isDeleted', false);
@@ -205,9 +218,9 @@ BD.Model = Em.Object.extend(Em.Evented, {
             //Handle case where record never was created. Then we just unload it 
             this.unload();
         }
-        //Let parent check child dirtyness
-        if (parent) {
-            parent.checkEmbeddedChildrenDirty();
+        //Let parent check child dirtiness
+        if (dirtyParent) {
+            dirtyParent.checkEmbeddedChildrenDirty();
         }
     },
     

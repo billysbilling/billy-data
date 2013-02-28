@@ -102,3 +102,22 @@ test('When deleting an embedded child record, and then rolling back the parent, 
     equal(category.get('posts.length'), 1);
     equal(category.get('posts.firstObject'), post);
 });
+
+test('When deleting an embedded child record, and then rolling back the parent, the child should have all its attributes set before parent hasMany relationship change event fires', function() {
+    expect(1);
+    var doCheck = false;
+    var category = App.Category.find(201);
+    var post = App.Post.find(1);
+    var o = Em.ObjectProxy.extend({
+        postsObserver: function() {
+            if (doCheck) {
+                equal(this.get('posts.firstObject.category'), category);
+                doCheck = false;
+            }
+        }.observes('posts.@each')
+    }).create({content: category});
+    post.deleteRecord();
+    doCheck = true;
+    category.rollback();
+    o.destroy();
+});
