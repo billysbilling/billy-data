@@ -135,13 +135,19 @@ BD.Model = Em.Object.extend(Em.Evented, {
         if (this.get('isUnloading') || this.get('selfIsDirty')) {
             return;
         }
+        var data = this.get('data'),
+            parent;
         this.clean = {
             isNew: this.get('isNew'),
-            data: Em.copy(this.get('data'), true)
+            data: {
+                attributes: Em.copy(data.attributes),
+                belongsTo: Em.copy(data.belongsTo),
+                hasMany: Em.copy(data.hasMany, true)
+            }
         };
         this.set('selfIsDirty', true);
         //Dirty parent
-        var parent = this.getParent();
+        parent = this.getParent();
         if (parent) {
             parent.checkEmbeddedChildrenDirty();
         }
