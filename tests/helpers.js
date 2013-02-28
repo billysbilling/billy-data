@@ -64,8 +64,9 @@ window.flushAjax = function() {
 
 window.resetAjax = function() {
     BD.ajax = function(hash) {
-        console.log('BD.ajax hash for debugging:');
+        console.log('BD.ajax hash and for debugging:');
         console.log(hash);
+        console.trace();
         throw new Error('BD.ajax should not be called.');
     };
 };
