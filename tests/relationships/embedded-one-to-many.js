@@ -58,6 +58,45 @@ test('When deleting a child record, it should be removed from the parent and par
     equal(tech.get('isDirty'), true, 'Parent should be dirty');
 });
 
+test('When adding a child record, parent should be dirty and the child should be added to the parent collection', function() {
+    var category = App.Category.find(201);
+    var newPost = App.Post.createRecord({
+        category: category
+    });
+    equal(category.get('isDirty'), true, 'Parent should be dirty');
+    equal(category.get('selfIsDirty'), false, 'Parent (self) should be clean');
+    equal(newPost.get('isDirty'), true, 'Child should be dirty');
+    equal(newPost.get('selfIsDirty'), true, 'Child (self) should be dirty');
+    equal(category.get('posts.length'), 2, 'Parent should have two posts now');
+});
+
+test('When adding a child record, then deleting another child record, then rolling back the parent, the parent should something', function() {
+    var category = App.Category.find(201);
+    var oldPost = App.Post.find(1);
+    equal(category.get('posts.length'), 1, 'Count matches');
+    var newPost = App.Post.createRecord({
+        category: category
+    });
+    equal(category.get('posts.length'), 2, 'Count matches');
+    oldPost.deleteRecord();
+    equal(category.get('posts.length'), 1, 'Count matches');
+    equal(category.get('posts.firstObject'), newPost, 'New post is the only child');
+    category.rollback();
+    equal(category.get('posts.length'), 1, 'Count matches');
+    equal(category.get('posts.firstObject'), oldPost, 'Old post is the only child');
+});
+
+//test('When adding a child record, parent should be dirty', function() {
+//    var category = App.Category.find(201);
+//    var post = App.Post.find(1);
+//    App.Post.createRecord({
+//        category: category
+//    });
+//    post.deleteRecord();
+//    category.rollback();
+//    equal(1, 1)
+//});
+
 test('When loading a child record, its parent\'s hasMany should be updated', function() {
     var tech = App.Category.find(201);
     var biz = App.Category.find(202);

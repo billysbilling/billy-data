@@ -23,6 +23,7 @@ BD.Model = Em.Object.extend(Em.Evented, {
             clientId: this.get('clientId')
         };
         this.loadedHasMany = {};
+        this.deletedEmbeddedRecords = [];
         this._super();
     },
     
@@ -154,12 +155,19 @@ BD.Model = Em.Object.extend(Em.Evented, {
     },
     checkEmbeddedChildrenDirty: function() {
         var childIsDirty = false;
+        if (this.deletedEmbeddedRecords.length > 0) {
+            childIsDirty = true;
+        }
         this.eachEmbeddedRecord(function(r) {
             if (r.get('isDirty')) {
                 childIsDirty = true;
             }
         });
         this.set('childIsDirty', childIsDirty);
+    },
+    didDeleteEmbeddedRecord: function(r) {
+        this.checkEmbeddedChildrenDirty();
+        this.deletedEmbeddedRecords.push(r);
     },
     becameClean: function() {
         if (!this.get('selfIsDirty')) {
@@ -173,25 +181,14 @@ BD.Model = Em.Object.extend(Em.Evented, {
         var selfIsDirty = this.get('selfIsDirty'),
             dirtyData = this.get('data');
         //Rollback embedded records. We have to take these directly from BOTH the dirty- and clean data, if the record itself is dirty
-        var hasManyStores = [dirtyData.hasMany];
-        if (selfIsDirty) {
-            hasManyStores.push(this.clean.data.hasMany);
-        }
-        this.eachEmbeddedHasMany(function(name, meta) {
-            //Skip unloaded records
-            if (!this.hasManyIsLoaded(name)) {
-                return;
-            }
-            hasManyStores.forEach(function(hasMany) {
-                hasMany[name].forEach(function(id) {
-                    if (typeof id === 'object') {
-                        BD.store.findByClientId(id.clientId).rollback();
-                    } else {
-                        BD.store.recordForTypeAndId(meta.type, id).rollback();
-                    }
-                });
-            });
+        this.eachEmbeddedRecord(function(r) {
+            r.rollback();
         }, this);
+        this.deletedEmbeddedRecords.forEach(function(r) {
+            r.rollback();
+        });
+        this.deletedEmbeddedRecords = [];
+        this.checkEmbeddedChildrenDirty();
         //Don't continue if this record itself is not dirty
         if (!selfIsDirty) {
             return;

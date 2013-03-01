@@ -309,7 +309,7 @@ BD.Store = Em.Object.extend({
         r.set('isDeleted');
         //Dirty the parent, if embedded
         if (isEmbedded) {
-            r.getParent().becomeDirty();
+            r.getParent().didDeleteEmbeddedRecord(r);
         }
         //Remove all belongsTo
         r.eachBelongsTo(function(key) {
