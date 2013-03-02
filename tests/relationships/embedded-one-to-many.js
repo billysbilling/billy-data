@@ -88,17 +88,6 @@ test('When adding a child record, then deleting another child record, then rolli
     equal(category.get('posts.firstObject'), oldPost, 'Old post is the only child');
 });
 
-//test('When adding a child record, parent should be dirty', function() {
-//    var category = App.Category.find(201);
-//    var post = App.Post.find(1);
-//    App.Post.createRecord({
-//        category: category
-//    });
-//    post.deleteRecord();
-//    category.rollback();
-//    equal(1, 1)
-//});
-
 test('When loading a child record, its parent\'s hasMany should be updated', function() {
     var tech = App.Category.find(201);
     var biz = App.Category.find(202);
