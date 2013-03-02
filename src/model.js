@@ -119,7 +119,7 @@ BD.Model = Em.Object.extend(Em.Evented, {
         //
         Em.propertyDidChange(this, 'data');
         BD.store.resumeBelongsToDidChange();
-        //Handle dirty state
+        //Handle dirty state TODO: This should not happen here
         this.becameClean();
         //
         delete this.serializedData;
@@ -170,11 +170,22 @@ BD.Model = Em.Object.extend(Em.Evented, {
         this.deletedEmbeddedRecords.push(r);
     },
     becameClean: function() {
+        this.checkEmbeddedChildrenDirty();
         if (!this.get('selfIsDirty')) {
             return;
         }
         delete this.clean;
         this.set('selfIsDirty', false);
+    },
+    didCommit: function(embeddedKeys) {
+        this.eachHasMany(function(key) {
+            if (embeddedKeys.contains(key)) {
+                this.get(key).forEach(function(child) {
+                    child.becameClean();
+                });
+            }
+        }, this);
+        this.becameClean();
     },
     rollback: function() {
         //Setup data variables

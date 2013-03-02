@@ -256,6 +256,7 @@ BD.Store = Em.Object.extend({
             url: url,
             data: data,
             success: function(payload) {
+                r.didCommit(embeddedKeys);
                 this.sideload(payload);
                 promise.trigger('complete');
                 promise.trigger('success', payload);

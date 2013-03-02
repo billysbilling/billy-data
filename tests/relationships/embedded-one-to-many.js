@@ -5,12 +5,14 @@ module('One-to-many relationships', {
             posts: BD.hasMany('App.Post', 'category', {isEmbedded: true})
         });
         App.Post = BD.Model.extend({
-            category: BD.belongsTo('App.Category', {isParent: true})
+            category: BD.belongsTo('App.Category', {isParent: true}),
+            title: BD.attr('string')
         });
         BD.store.loadMany(App.Post, [
             {
                 id: 1,
-                categoryId: 201
+                categoryId: 201,
+                title: 'There are so many posts'
             }
         ]);
         BD.store.loadMany(App.Category, [
@@ -159,4 +161,23 @@ test('When deleting an embedded child record, and then rolling back the parent, 
     doCheck = true;
     category.rollback();
     o.destroy();
+});
+
+test('When saving a parent with a dirty child, the whole tree should be clean afterwards', function() {
+    var category = App.Category.find(201);
+    var post = App.Post.find(1);
+    post.set('title', 'Changy changong');
+    equal(category.get('isDirty'), true, 'Parent should be dirty');
+    equal(category.get('selfIsDirty'), false, 'Parent should not be self-dirty');
+    equal(category.get('childIsDirty'), true, 'Parent should have a dirty child');
+    equal(post.get('isDirty'), true, 'Child should be dirty');
+    equal(post.get('selfIsDirty'), true, 'Child should be be self-dirty');
+    fakeAjaxSuccess();
+    category.save(['posts']);
+    flushAjax();
+    equal(category.get('isDirty'), false, 'Parent should be clean');
+    equal(category.get('selfIsDirty'), false, 'Parent should be self-clean');
+    equal(category.get('childIsDirty'), false, 'Parent should not have any dirty children');
+    equal(post.get('isDirty'), false, 'Child should be clean');
+    equal(post.get('selfIsDirty'), false, 'Child should be self-clean');
 });
