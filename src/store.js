@@ -79,9 +79,9 @@ BD.Store = Em.Object.extend({
             error: function(xhr) {
                 if (xhr.status == 422) {
                     var payload = JSON.parse(xhr.responseText);
-                    this.didServerError(payload.errorMessage);
+                    this.printServerError(payload.errorMessage);
                 } else {
-                    this.didServerError('We\'re sorry, but the record could currently not be loaded. Please try again.');
+                    this.printServerError('We\'re sorry, but the record could currently not be loaded. Please try again.');
                 }
             }
         });
@@ -121,9 +121,9 @@ BD.Store = Em.Object.extend({
             error: function(xhr) {
                 if (xhr.status == 422) {
                     var payload = JSON.parse(xhr.responseText);
-                    this.didServerError(payload.errorMessage);
+                    this.printServerError(payload.errorMessage);
                 } else {
-                    this.didServerError('We\'re sorry, but the records could currently not be loaded. Please try again.');
+                    this.printServerError('We\'re sorry, but the records could currently not be loaded. Please try again.');
                 }
             }
         });
@@ -261,13 +261,7 @@ BD.Store = Em.Object.extend({
                 promise.trigger('success', payload);
             },
             error: function(xhr) {
-                if (xhr.status == 422) {
-                    this.handleValidationErrors(xhr);
-                } else {
-                    r.set('error', 'We\'re sorry but we couldn\'t successfully save your data. Please try again.');
-                }
-                promise.trigger('complete');
-                promise.trigger('error');
+                this.handleModelOperationError(promise, xhr, 'We\'re sorry but we couldn\'t successfully save your data. Please try again.');
             }
         });
         return promise;
@@ -336,15 +330,7 @@ BD.Store = Em.Object.extend({
                 promise.trigger('success');
             },
             error: function(xhr) {
-                if (xhr.status == 422) {
-                    var payload = JSON.parse(xhr.responseText);
-                    this.didServerError(payload.errorMessage);
-                } else {
-                    this.didServerError('We\'re sorry, but the record could currently not be deleted. Please try again.');
-                }
-                r.rollback();
-                promise.trigger('complete');
-                promise.trigger('error');
+                this.handleModelOperationError(promise, xhr, 'We\'re sorry, but the record could currently not be deleted. Please try again.');
             }
         });
         return promise;
@@ -581,9 +567,22 @@ BD.Store = Em.Object.extend({
         this.unmaterializedRecords = [];
         this.belongsToDidChangeQueue = [];
     },
-    
-    didServerError: function(message) {
-        console.error(message);
+
+    handleModelOperationError: function(promise, xhr, defaultMessage) {
+        promise.trigger('complete');
+        if (promise.has('error')) {
+            promise.trigger('error', xhr);
+        } else {
+            if (xhr.status == 422) {
+                var payload = JSON.parse(xhr.responseText);
+                this.printServerError(payload.errorMessage);
+            } else {
+                this.printServerError(defaultMessage);
+            }
+        }
+    },
+    printServerError: function(message) {
+        console.error('Server error: ' + message);
     }
     
 });
