@@ -24,6 +24,7 @@ BD.Model = Em.Object.extend(Em.Evented, {
         };
         this.loadedHasMany = {};
         this.deletedEmbeddedRecords = [];
+        this.inRecordArrays = {};
         this._super();
     },
     
@@ -284,6 +285,9 @@ BD.Model = Em.Object.extend(Em.Evented, {
         this.eachEmbeddedRecord(function(child) {
             child.unload();
         });
+        _.each(this.inRecordArrays, function(recordArray) {
+            recordArray.removeObject(this);
+        }, this);
         BD.store.didUnloadRecord(this);
         this.destroy();
     },

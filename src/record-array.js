@@ -6,6 +6,25 @@ BD.RecordArray = Em.ArrayProxy.extend(Em.Evented, {
     parent: null,
     hasManyKey: null,
 
+    init: function() {
+        this._super();
+        this.forEach(function(r) {
+            r.inRecordArrays[Em.guidFor(this)] = this;
+        }, this);
+    },
+    
+    arrayContentWillChange: function(index, removed, added) {
+        var ret = this._super.apply(this, arguments);
+        var r,
+            i;
+        if (removed) {
+            for (i = 0; i < removed; i++) {
+                r = this.objectAt(index + i);
+                delete r.inRecordArrays[Em.guidFor(this)];
+            }
+        }
+        return ret;
+    },
     arrayContentDidChange: function(index, removed, added) {
         var ret = this._super.apply(this, arguments);
         var parent = this.get('parent'),
@@ -13,7 +32,14 @@ BD.RecordArray = Em.ArrayProxy.extend(Em.Evented, {
             data,
             hasManyKey,
             spliceArgs,
+            r,
             i;
+        if (added) {
+            for (i = 0; i < added; i++) {
+                r = this.objectAt(index + i);
+                r.inRecordArrays[Em.guidFor(this)] = this;
+            }
+        }
         if (!parent) {
             return;
         }
@@ -34,6 +60,13 @@ BD.RecordArray = Em.ArrayProxy.extend(Em.Evented, {
             hasManyIds.splice.apply(hasManyIds, spliceArgs);
         }
         return ret;
+    },
+    
+    willDestroy: function() {
+        this.forEach(function(r) {
+            delete r.inRecordArrays[Em.guidFor(this)];
+        }, this);
+        this._super();
     }
 
     //Currently not used
