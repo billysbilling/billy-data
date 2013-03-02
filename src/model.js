@@ -119,8 +119,6 @@ BD.Model = Em.Object.extend(Em.Evented, {
         //
         Em.propertyDidChange(this, 'data');
         BD.store.resumeBelongsToDidChange();
-        //Handle dirty state TODO: This should not happen here
-        this.becameClean();
         //
         delete this.serializedData;
     },
