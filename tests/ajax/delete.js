@@ -2,7 +2,7 @@ module('Ajax delete', {
     setup: function() {
         App.Post = BD.Model.extend({
             title: BD.attr('string'),
-            comments: BD.hasMany('App.Comment', 'post')
+            comments: BD.hasMany('App.Comment', 'post', {isEmbedded: true})
         });
         App.Comment = BD.Model.extend({
             post: BD.belongsTo('App.Post', {isParent: true}),
@@ -41,7 +41,6 @@ test('Test ajax request options', function() {
     };
     var post = App.Post.find(101);
     post.deleteRecord();
-    flushAjax();
 });
 
 test('Other records that were also deleted by the API should be removed from the store', function() {
