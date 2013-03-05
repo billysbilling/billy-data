@@ -237,6 +237,8 @@ BD.Store = Em.Object.extend({
         //Make sure that embeddedKeys is either null or an array
         if (embeddedKeys && !Em.isArray(embeddedKeys)) {
             embeddedKeys = [embeddedKeys];
+        } else if (!embeddedKeys) {
+            embeddedKeys = [];
         }
         //Construct URL
         var isNew = r.get('isNew'),
