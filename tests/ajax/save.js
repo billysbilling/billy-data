@@ -61,3 +61,22 @@ test('Test PUT', function() {
     equal(post.get('isDirty'), false);
     equal(post.get('title'), 'This is a good day to die');
 });
+
+test('Test error validation', function() {
+    var post = App.Post.find(101);
+    fakeAjaxError(422, {
+        validationErrors: {
+            1: { //1 must be the clientId
+                message: 'All of it is wrong.',
+                attributes: {
+                    title: 'This is wrong.'
+                }
+            }
+        }
+    });
+    post.set('title', 'This is a good day to die'); //Set something so .save() actually commits the record
+    post.save();
+    flushAjax();
+    equal(post.get('error'), 'All of it is wrong.');
+    equal(post.get('errors.title'), 'This is wrong.');
+});

@@ -9,6 +9,11 @@ BD.ModelOperationPromise = Em.Object.extend(Em.Evented, {
     },
     error: function(callback) {
         return this.on('error', callback);
+    },
+    autoError: function() {
+        return this.on('error', function(errorMessage) {
+            BD.printServerError(errorMessage);
+        });
     }
 
 });

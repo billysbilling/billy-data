@@ -264,17 +264,26 @@ BD.Store = Em.Object.extend({
                 promise.trigger('success', payload);
             },
             error: function(xhr) {
-                this.handleModelOperationError(promise, xhr, 'We\'re sorry but we couldn\'t successfully save your data. Please try again.');
+                var errorMessage;
+                if (xhr.status == 422) {
+                    var payload = JSON.parse(xhr.responseText);
+                    errorMessage = payload.errorMessage;
+                    this.handleValidationErrors(payload);
+                } else {
+                    errorMessage = 'We\'re sorry but we couldn\'t save your data. Please try again.';
+                    r.set('error', errorMessage);
+                }
+                promise.trigger('complete');
+                promise.trigger('error', errorMessage, xhr);
             }
         });
         return promise;
     },
-    handleValidationErrors: function(xhr) {
-        var data = JSON.parse(xhr.responseText);
-        if (!data.validationErrors) {
+    handleValidationErrors: function(payload) {
+        if (!payload.validationErrors) {
             return;
         }
-        _.each(data.validationErrors, function(rawErrors, clientId) {
+        _.each(payload.validationErrors, function(rawErrors, clientId) {
             var r = BD.store.findByClientId(clientId);
             if (!r) {
                 return;
@@ -333,7 +342,15 @@ BD.Store = Em.Object.extend({
                 promise.trigger('success');
             },
             error: function(xhr) {
-                this.handleModelOperationError(promise, xhr, 'We\'re sorry, but the record could currently not be deleted. Please try again.');
+                var errorMessage;
+                if (xhr.status == 422) {
+                    var payload = JSON.parse(xhr.responseText);
+                    errorMessage = payload.errorMessage;
+                } else {
+                    errorMessage = 'We\'re sorry, but the record could currently not be deleted. Please try again.';
+                }
+                promise.trigger('complete');
+                promise.trigger('error', errorMessage, xhr);
             }
         });
         return promise;
@@ -571,19 +588,6 @@ BD.Store = Em.Object.extend({
         this.belongsToDidChangeQueue = [];
     },
 
-    handleModelOperationError: function(promise, xhr, defaultMessage) {
-        promise.trigger('complete');
-        if (promise.has('error')) {
-            promise.trigger('error', xhr);
-        } else {
-            if (xhr.status == 422) {
-                var payload = JSON.parse(xhr.responseText);
-                this.printServerError(payload.errorMessage);
-            } else {
-                this.printServerError(defaultMessage);
-            }
-        }
-    },
     printServerError: function(message) {
         console.error('Server error: ' + message);
     }
