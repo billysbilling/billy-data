@@ -426,9 +426,14 @@ test('Test #bigdata sorting', function() {
         name: 'A'
     });
     equal(all.indexOf(category), 0, 'A goes first');
+    //Insert middle
+    category = App.Category.createRecord({
+        name: 'G'
+    });
+    equal(all.indexOf(category), 4, 'G goes in the middle');
     //Insert Last
     category = App.Category.createRecord({
         name: 'Z'
     });
-    equal(all.indexOf(category), 10, 'Z goes last');
+    equal(all.indexOf(category), 11, 'Z goes last');
 });
