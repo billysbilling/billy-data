@@ -127,55 +127,6 @@ test('Test rollback', function() {
     equal(publicPosts.get('length'), 2, 'Expect two public posts again');
 });
 
-asyncTest('Record arrays should be destroyed on reset', function() {
-    expect(3);
-    var publicPosts = App.Post.filter({
-        query: {
-            isPublic: true
-        }
-    });
-    equal(publicPosts.get('isDestroyed'), false, 'Record array should not be destroyed');
-    BD.store.reset();
-    equal(publicPosts.get('isDestroying'), true, 'Record array should be destroying');
-    setTimeout(function() {
-        equal(publicPosts.get('isDestroyed'), true, 'Record array should be destroyed');
-        start();
-    }, 1);
-});
-
-test('Record arrays should be removed from store when destroyed', function() {
-    var publicPosts = App.Post.filter({
-        query: {
-            isPublic: true
-        },
-        comparator: 'isPublic'
-    });
-    var expectedRecordArrays = {};
-    expectedRecordArrays[Em.guidFor(publicPosts)] = publicPosts;
-    deepEqual(BD.store.recordArrays, expectedRecordArrays, 'There should be one record array');
-    deepEqual(BD.store.typeMapFor(App.Post).recordArrayQueryObservers.isPublic, expectedRecordArrays, 'There should be one query observer');
-    deepEqual(BD.store.typeMapFor(App.Post).recordArrayComparatorObservers.isPublic, expectedRecordArrays, 'There should be one comparator observer');
-    publicPosts.destroy();
-    deepEqual(BD.store.recordArrays, {}, 'There should not be any record arrays');
-    deepEqual(BD.store.typeMapFor(App.Post).recordArrayQueryObservers.isPublic, {}, 'There should not be any query observers left');
-    deepEqual(BD.store.typeMapFor(App.Post).recordArrayComparatorObservers.isPublic, {}, 'There should not be any comparator observers left');
-});
-
-test('Record arrays should be removed from records when destroyed', function() {
-    var post = App.Post.find(1);
-    var publicPosts = App.Post.filter({
-        query: {
-            isPublic: true
-        },
-        comparator: 'isPublic'
-    });
-    var expectedRecordArrays = {};
-    expectedRecordArrays[Em.guidFor(publicPosts)] = publicPosts;
-    deepEqual(post.inRecordArrays, expectedRecordArrays, 'There should be one record array');
-    publicPosts.destroy();
-    deepEqual(post.inRecordArrays, {}, 'There should not be any record arrays');
-});
-
 test('Deleting a new record should remove it from filtered arrays', function() {
     var publicPosts = App.Post.filter({
         query: {
