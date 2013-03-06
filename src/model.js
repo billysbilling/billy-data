@@ -13,18 +13,18 @@ BD.Model = Em.Object.extend(Em.Evented, {
     errors: null,
 
     init: function() {
-        BD.store.didInstantiateRecord(this);
+        this.hasManyRecordArrays = {};
+        this.deletedEmbeddedRecords = [];
+        this.inRecordArrays = {};
         this.set('data', {
             attributes: {},
             belongsTo: {},
             hasMany: {}
         });
+        BD.store.didInstantiateRecord(this);
         this.clientIdObj = {
             clientId: this.get('clientId')
         };
-        this.loadedHasMany = {};
-        this.deletedEmbeddedRecords = [];
-        this.inRecordArrays = {};
         this._super();
     },
     
@@ -85,7 +85,19 @@ BD.Model = Em.Object.extend(Em.Evented, {
         }, this)
     },
     hasManyIsLoaded: function(key) {
-        return this.loadedHasMany[key];
+        return this.hasManyRecordArrays[key];
+    },
+
+    didDefineProperty: function(proto, key, value) {
+        if (value instanceof Ember.Descriptor) {
+            var meta = value.meta();
+            if (meta.isAttribute || meta.isBelongsTo) {
+                Ember.addObserver(proto, key, null, 'attributeDidChange');
+            }
+        }
+    },
+    attributeDidChange: function(r, key) {
+        BD.store.recordAttributeDidChange(this, key);
     },
 
     loadData: function(serialized) {
@@ -93,21 +105,18 @@ BD.Model = Em.Object.extend(Em.Evented, {
     },
     materializeData: function() {
         var serialized = this.serializedData,
-            data = this.get('data'),
-            belongsToChanges = [];
-        BD.store.suspendBelongsToDidChange();
+            data = this.get('data');
+        BD.store.suspendRecordAttributeDidChange();
         //Attributes
         this.eachAttribute(function(key, meta) {
             data.attributes[key] = BD.transforms[meta.type].deserialize(serialized[key]);
+            BD.store.recordAttributeDidChange(this, key);
         }, this);
         //BelongsTo
         this.eachBelongsTo(function(key, meta) {
-            var oldValue = data.belongsTo[key],
-                oldClientId = meta.clientIdForValue(oldValue),
-                newValue = meta.extractValue(serialized, key),
-                newClientId = meta.clientIdForValue(newValue);
+            var newValue = meta.extractValue(serialized, key);
             data.belongsTo[key] = newValue;
-            BD.store.belongsToDidChange(this, key, newClientId, oldClientId, false);
+            BD.store.recordAttributeDidChange(this, key);
         }, this);
         //HasMany
         this.eachHasMany(function(key, meta) {
@@ -119,7 +128,7 @@ BD.Model = Em.Object.extend(Em.Evented, {
         }, this);
         //
         Em.propertyDidChange(this, 'data');
-        BD.store.resumeBelongsToDidChange();
+        BD.store.resumeRecordAttributeDidChange();
         //
         delete this.serializedData;
     },
@@ -188,8 +197,7 @@ BD.Model = Em.Object.extend(Em.Evented, {
     },
     rollback: function() {
         //Setup data variables
-        var selfIsDirty = this.get('selfIsDirty'),
-            dirtyData = this.get('data');
+        var selfIsDirty = this.get('selfIsDirty');
         //Rollback embedded records. We have to take these directly from BOTH the dirty- and clean data, if the record itself is dirty
         this.eachEmbeddedRecord(function(r) {
             r.rollback();
@@ -207,14 +215,6 @@ BD.Model = Em.Object.extend(Em.Evented, {
         var dirtyParent = this.getParent();
         //Set the data to the clean data
         this.set('data', this.clean.data);
-        //Update belongsTo relationships
-        this.eachBelongsTo(function(key, meta) {
-            var oldValue = dirtyData.belongsTo[key],
-                oldClientId = meta.clientIdForValue(oldValue),
-                newValue = this.clean.data.belongsTo[key],
-                newClientId = meta.clientIdForValue(newValue);
-            BD.store.belongsToDidChange(this, key, newClientId, oldClientId, false);
-        }, this);
         //Handle the case where the record is not newly created
         if (!this.clean.isNew) {
             if (this.get('isDeleted')) {
@@ -293,7 +293,7 @@ BD.Model = Em.Object.extend(Em.Evented, {
     },
 
     toString: function toString() {
-        return '<'+this.constructor.toString()+':'+this.get('id')+'>';
+        return '<'+this.constructor.toString()+':'+this.get('id')+':'+this.get('clientId')+'>';
     }
     
 });

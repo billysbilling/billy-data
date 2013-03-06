@@ -11,7 +11,8 @@ BD.Store = Em.Object.extend({
         if (!this.typeMaps[guidForType]) {
             this.typeMaps[guidForType] = {
                 idToRecord: {},
-                hasManyRecordArrays: {}
+                recordArrayQueryObservers: {},
+                recordArrayComparatorObservers: {}
             };
         }
         return this.typeMaps[guidForType];
@@ -134,74 +135,7 @@ BD.Store = Em.Object.extend({
         return this.findByUrl(type, BD.pluralize(this.rootForType(type)), query);
     },
     all: function(type) {
-        type = this.resolveType(type);
-        var records = _.values(this.typeMapFor(type).idToRecord);
-        var recordArray = BD.RecordArray.create({
-            type: type,
-            content: Em.A(records)
-        });
-        return recordArray;
-    },
-
-    registerHasManyRecordArray: function(parent, recordArray, type, hasManyKey, belongsToKey) {
-        var typeMap = this.typeMapFor(type),
-            parentCid = parent.get('clientId');
-        recordArray.set('parent', parent);
-        recordArray.set('hasManyKey', hasManyKey);
-        if (!typeMap.hasManyRecordArrays[belongsToKey]) {
-            typeMap.hasManyRecordArrays[belongsToKey] = {};
-        }
-        typeMap.hasManyRecordArrays[belongsToKey][parentCid] = recordArray;
-    },
-    //Currently not used
-//    getHasManyRecordArray: function(parent, type, belongsToKey) {
-//        var typeMap = this.typeMapFor(type);
-//        if (!typeMap.hasManyRecordArrays[belongsToKey]) {
-//            return null;
-//        }
-//        return typeMap.hasManyRecordArrays[belongsToKey][parent.get('clientId')];
-//    },
-    belongsToDidChange: function(r, belongsToKey, newCid, oldCid, dirty) {
-        if (this.belongsToDidChangeIsSuspended) {
-            this.belongsToDidChangeQueue.push(arguments);
-            return;
-        }
-        if (newCid === oldCid) {
-            return;
-        }
-        var typeMap = this.typeMapFor(r.constructor),
-            recordArrays = typeMap.hasManyRecordArrays[belongsToKey],
-            oldRecordArray,
-            newRecordArray;
-        if (!recordArrays) {
-            return;
-        }
-        oldRecordArray = recordArrays[oldCid];
-        newRecordArray = recordArrays[newCid];
-        if (oldRecordArray) {
-            oldRecordArray.removeObject(r);
-            if (dirty) {
-                oldRecordArray.get('parent').checkEmbeddedChildrenDirty();
-            }
-        }
-        if (newRecordArray) {
-            if (!newRecordArray.contains(r)) {
-                newRecordArray.pushObject(r);
-            }
-            if (dirty) {
-                newRecordArray.get('parent').checkEmbeddedChildrenDirty();
-            }
-        }
-    },
-    suspendBelongsToDidChange: function() {
-        this.belongsToDidChangeIsSuspended = true;
-    },
-    resumeBelongsToDidChange: function() {
-        this.belongsToDidChangeIsSuspended = false;
-        this.belongsToDidChangeQueue.forEach(function(args) {
-            this.belongsToDidChange.apply(this, args);
-        }, this);
-        this.belongsToDidChangeQueue = [];
+        return this.filter(type);
     },
 
     createRecord: function(type, properties) {
@@ -218,9 +152,9 @@ BD.Store = Em.Object.extend({
         }, this);
         //Mark the record as dirty and update properties
         r.becomeDirty();
-        this.suspendBelongsToDidChange();
+        this.suspendRecordAttributeDidChange();
         r.setProperties(properties);
-        this.resumeBelongsToDidChange();
+        this.resumeRecordAttributeDidChange();
         return r;
     },
     
@@ -406,7 +340,7 @@ BD.Store = Em.Object.extend({
         //Materialize records
         this.materializeRecords();
         //Add root records, if any, to the RecordArray, but only if it's not a hasMany array
-        if (rootRecords && !recordArray.get('parent')) {
+        if (rootRecords) {
             recordArray.set('content', rootRecords);
         }
     },
@@ -441,7 +375,7 @@ BD.Store = Em.Object.extend({
         } else {
             r = this.recordForTypeAndId(type, id);
         }
-        //If record was found, then update its isLoaded and isNew states
+        //If record was found, then update its isNew states
         if (r) {
             //Created
             if (r.get('isNew')) {
@@ -479,6 +413,7 @@ BD.Store = Em.Object.extend({
         var clientId = this.clientIdCounter;
         r.set('clientId', clientId);
         this.cidToRecord[clientId] = r;
+        this.checkRecordArrayObservers(r, '_all');
     },
     didUpdateId: function(r, id) {
         r.set('id', id);
@@ -490,76 +425,139 @@ BD.Store = Em.Object.extend({
         return BD.ajax(hash);
     },
     
-    filter: function(type, filter, comparator) {
+    filterOptionsToString: function(o) {
+        var self = this;
+        if (Ember.isArray(o)) {
+            return o.reduce(function(rest, value) {
+                return rest + ',' + self.filterOptionsToString(value);
+            }, '');
+        } else if (o instanceof BD.Model) {
+            return o.toString();
+        } else if (typeof o == 'object') {
+            return _.reduce(o, function(rest, value, key) {
+                return rest + ',' + key + ':' + self.filterOptionsToString(value);
+            }, '');
+        } else if (typeof o == 'function') {
+            return o.toString();
+        } else {
+            return o;
+        }
+    },
+    filter: function(type, options) {
         type = this.resolveType(type);
+        options = options || {};
         var typeMap = this.typeMapFor(type),
             recordArray,
-            content = [];
-        _.each(typeMap.idToRecord, function(r) {
-            if (this.matchesFilter(r, filter)) {
-                content.push(r);
-            }
-        }, this);
-        this.sortRecords(content, comparator);
-        recordArray = BD.RecordArray.create({
-            content: Em.A(content)
+            recordArrayId,
+            query = options.query,
+            queryObservers = options.queryObservers,
+            comparator = options.comparator,
+            comparatorObservers = options.comparatorObservers;
+        //Normalize query properties to observe
+        queryObservers = queryObservers || [];
+        if (typeof query == 'object') {
+            _.each(query, function(value, key) {
+                queryObservers.push(key);
+            });
+        }
+        if (queryObservers.length == 0) {
+            queryObservers.push('_all');
+        }
+        //Normalize comparator properties to observe
+        comparatorObservers = comparatorObservers || [];
+        if (typeof comparator == 'string') {
+            comparatorObservers.push(comparator);
+        } else if (typeof comparator == 'object') {
+            _.each(comparator, function(value, key) {
+                comparatorObservers.push(key);
+            });
+        }
+        if (comparatorObservers.length == 0) {
+            comparatorObservers.push('_all');
+        }
+        //Create record array
+        //TODO: Reuse similar filtered record arrays
+//        recordArrayId = type.toString() + '-' + this.filterOptionsToString(query) + '-' + this.filterOptionsToString(comparator) + '-';
+        recordArray = BD.FilteredRecordArray.create({
+            id: recordArrayId,
+            type: type,
+            query: query,
+            queryObservers: queryObservers,
+            comparator: comparator,
+            comparatorObservers: comparatorObservers,
+            parent: options.parent,
+            content: Em.A()
         });
+        var guid = Em.guidFor(recordArray);
+        this.recordArrays[ guid] = recordArray;
+        //Add query properties to observe
+        queryObservers.forEach(function(property) {
+            if (!typeMap.recordArrayQueryObservers[property]) {
+                typeMap.recordArrayQueryObservers[property] = {};
+            }
+            typeMap.recordArrayQueryObservers[property][guid] = recordArray;
+        });
+        //Add comparator properties to observe
+        comparatorObservers.forEach(function(property) {
+            if (!typeMap.recordArrayComparatorObservers[property]) {
+                typeMap.recordArrayComparatorObservers[property] = {};
+            }
+            typeMap.recordArrayComparatorObservers[property][guid] = recordArray;
+        });
+        //Populate the record array
+        if (options.remote) {
+            recordArray.remoteRefresh();
+        } else if (options.ids) {
+            recordArray.pushIds(options.ids);
+        } else {
+            recordArray.refresh();
+        }
+        //Return the record array
         return recordArray;
     },
-    matchesFilter: function(r, filter) {
-        if (typeof filter === 'object') {
-            var match = true;
-            _.find(filter, function(v, k) {
-                if (r.get(k) !== v) {
-                    match = false;
-                    return true;
-                }
-                return false;
-            });
-            return match;
-        } else if (typeof filter === 'function') {
-            return filter(r);
-        } else {
-            return true;
-        }
-    },
-    sortRecords: function(content, comparator) {
-        var self = this;
-        if (typeof comparator === 'function') {
-            content.sort(comparator);
+    recordAttributeDidChange: function(r, key) {
+        if (this.recordAttributeDidChangeIsSuspended) {
+            this.recordAttributeDidChangeQueue.push(arguments);
             return;
         }
-        if (typeof comparator === 'string') {
-            var temp = comparator;
-            comparator = {};
-            comparator[temp] = 'ASC';
+        this.checkRecordArrayObservers(r, key);
+    },
+    checkRecordArrayObservers: function(r, key) {
+        var type = r.constructor,
+            typeMap = this.typeMapFor(type),
+            queryObservers = typeMap.recordArrayQueryObservers[key],
+            comparatorObservers = typeMap.recordArrayComparatorObservers[key];
+        if (queryObservers) {
+            _.each(queryObservers, function(recordArray) {
+                recordArray.checkRecordAgainstQuery(r);
+            });
         }
-        if (typeof comparator === 'object') {
-            content.sort(function(a, b) {
-                var result = 0;
-                _.find(comparator, function(direction, property) {
-                    result = self.compareValues(a.get(property), b.get(property));
-                    if (direction === 'DESC') {
-                        result *= -1;
-                    }
-                    if (result == 0) {
-                        //Take next sort parameter
-                        return false;
-                    }
-                    //End with this result
-                    return true;
-                });
-                return result;
+        if (comparatorObservers) {
+            _.each(comparatorObservers, function(recordArray) {
+                recordArray.checkRecordAgainstComparator(r);
             });
         }
     },
-    compareValues: function(a, b) {
-        if (typeof a !== 'string' || typeof b !== 'string') {
-            return a - b;
-        }
-        a = a+'';
-        b = b+'';
-        return a.localeCompare(b);
+    suspendRecordAttributeDidChange: function() {
+        this.recordAttributeDidChangeIsSuspended = true;
+    },
+    resumeRecordAttributeDidChange: function() {
+        this.recordAttributeDidChangeIsSuspended = false;
+        this.recordAttributeDidChangeQueue.forEach(function(args) {
+            this.recordAttributeDidChange.apply(this, args);
+        }, this);
+        this.recordAttributeDidChangeQueue = [];
+    },
+    willDestroyRecordArray: function(recordArray) {
+        var guid = Em.guidFor(recordArray),
+            typeMap = this.typeMapFor(recordArray.get('type'));
+        delete this.recordArrays[guid];
+        recordArray.get('queryObservers').forEach(function(key) {
+            delete typeMap.recordArrayQueryObservers[key][guid];
+        })
+        recordArray.get('comparatorObservers').forEach(function(key) {
+            delete typeMap.recordArrayComparatorObservers[key][guid];
+        })
     },
 
     parseReference: function(reference) {
@@ -578,6 +576,9 @@ BD.Store = Em.Object.extend({
         _.each(this.cidToRecord, function(r) {
             r.unload();
         });
+        _.each(this.recordArrays, function(recordArray) {
+            recordArray.destroy();
+        });
         this.resetContainers();
     },
     resetContainers: function() {
@@ -585,7 +586,8 @@ BD.Store = Em.Object.extend({
         this.cidToRecord = {};
         this.typeMaps = {};
         this.unmaterializedRecords = [];
-        this.belongsToDidChangeQueue = [];
+        this.recordAttributeDidChangeQueue = [];
+        this.recordArrays = {};
     },
 
     printServerError: function(message) {

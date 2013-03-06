@@ -51,7 +51,6 @@ function belongsTo(meta, options) {
             if (didChange) {
                 this.becomeDirty();
                 data.belongsTo[key] = value ? value.clientIdObj : null;
-                BD.store.belongsToDidChange(this, key, value ? value.get('clientId') : null, oldClientId, true);
             }
         } else {
             if (id) {
@@ -90,7 +89,7 @@ BD.belongsTo = function(type, options) {
         serialize: function(serialized, key, id) {
             serialized[key+'Id'] = id;
         },
-        hasManyQuery: function(parent, query, belongsToKey) {
+        addToQuery: function(query, belongsToKey, parent) {
             query[belongsToKey+'Id'] = parent.get('id');
         }
     }, options);
@@ -119,7 +118,7 @@ BD.belongsToReference = function(options) {
         serialize: function(serialized, key, reference) {
             serialized[key+'Reference'] = reference;
         },
-        hasManyQuery: function(parent, query, belongsToKey) {
+        addToQuery: function(query, belongsToKey, parent) {
             query[belongsToKey+'Reference'] = parent.get('reference');
         }
     }, options);
@@ -134,25 +133,27 @@ BD.hasMany = function(type, belongsToKey, options) {
         options: options
     };
     return function(key) {
-        var data = this.get('data'),
-            ids = data.hasMany[key],
-            recordArray;
-        if (ids) {
-            recordArray = BD.store.findMany(type, ids);
-            BD.store.registerHasManyRecordArray(this, recordArray, type, key, belongsToKey);
-        } else {
-            if (this.get('isLoading')) {
-                recordArray = BD.RecordArray.create({content: Em.A()});
-            } else {
-                type = BD.store.resolveType(type);
-                var query = {};
-                var belongsToMeta = Ember.get(type, 'belongsToRelationships').get(belongsToKey);
-                belongsToMeta.hasManyQuery(this, query, belongsToKey);
-                recordArray = BD.store.find(type, query);
-                BD.store.registerHasManyRecordArray(this, recordArray, type, key, belongsToKey);
-            }
+        if (this.hasManyRecordArrays[key]) {
+            return this.hasManyRecordArrays[key]
         }
-        this.loadedHasMany[key] = true;
+        var data = this.get('data'),
+            resolvedType = BD.store.resolveType(type),
+            ids = data.hasMany[key],
+            recordArray,
+            query = {},
+            filterOptions;
+        query[belongsToKey] = this;
+        filterOptions = {
+            parent: this,
+            query: query
+        };
+        if (ids) {
+            filterOptions.ids = ids;
+        } else {
+            filterOptions.remote = true;
+        }
+        recordArray = BD.store.filter(resolvedType, filterOptions);
+        this.hasManyRecordArrays[key] = recordArray;
         return recordArray;
     }.property('data').meta(meta);
 };
