@@ -52,6 +52,7 @@ BD.FilteredRecordArray = BD.RecordArray.extend({
     queryObservers: null,
     comparator: null,
     comparatorObservers: null,
+    remoteQuery: null,
     parent: null,
     
     rejectAll: false,
@@ -75,7 +76,7 @@ BD.FilteredRecordArray = BD.RecordArray.extend({
             query = this.get('query');
         Ember.assert('Query has to be an object to be able to call remoteRefresh() on a BD.FilteredRecordArray.', typeof query == 'object');
         this.set('rejectAll', true);
-        var remoteQuery = {};
+        var remoteQuery = this.get('remoteQuery') ? Em.copy(this.get('remoteQuery')) : {};
         _.each(query, function(value, key) {
             remoteQuery[key] = value;
             Ember.get(type, 'belongsToRelationships').forEach(function(belongsToKey, meta) {

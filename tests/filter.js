@@ -261,6 +261,24 @@ test('Test AJAX options for remote filtered record arrays', function() {
     });
 });
 
+test('Test AJAX options for remote filtered record arrays with remoteQuery', function() {
+    expect(3);
+    BD.ajax = function(hash) {
+        equal(hash.type, 'GET');
+        equal(hash.url, '/posts');
+        deepEqual(hash.data, {isPublic: true, include: 'post.category'});
+    };
+    App.Post.filter({
+        query: {
+            isPublic: true
+        },
+        remoteQuery: {
+            include: 'post.category'
+        },
+        remote: true
+    });
+});
+
 test('Remote filtered record arrays should be filled', function() {
     fakeAjaxSuccess({
         posts: [

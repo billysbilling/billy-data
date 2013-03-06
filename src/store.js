@@ -486,6 +486,7 @@ BD.Store = Em.Object.extend({
             comparator: comparator,
             comparatorObservers: comparatorObservers,
             parent: options.parent,
+            remoteQuery: options.remoteQuery,
             content: Em.A()
         });
         var guid = Em.guidFor(recordArray);
