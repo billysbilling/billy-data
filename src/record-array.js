@@ -58,14 +58,17 @@ BD.FilteredRecordArray = BD.RecordArray.extend({
     rejectAll: false,
     
     refresh: function() {
-        var typeMap = BD.store.typeMapFor(this.get('type')),
+        var self = this,
+            typeMap = BD.store.typeMapFor(this.get('type')),
             content = []
         _.each(typeMap.idToRecord, function(r) {
             if (this.matchesQuery(r)) {
                 content.push(r);
             }
         }, this);
-        content.sort(this.compare.bind(this));
+        content.sort(function(a, b) {
+            return self.compare(a, b);
+        });
         this.set('content', content);
         this.set('isLoaded', true);
     },
