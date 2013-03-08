@@ -162,7 +162,9 @@ test('When saving a parent with a dirty child, the whole tree should be clean af
     equal(post.get('isDirty'), true, 'Child should be dirty');
     equal(post.get('selfIsDirty'), true, 'Child should be be self-dirty');
     fakeAjaxSuccess();
-    category.save(['posts']);
+    category.save({
+        embed: ['posts']
+    });
     flushAjax();
     equal(category.get('isDirty'), false, 'Parent should be clean');
     equal(category.get('selfIsDirty'), false, 'Parent should be self-clean');

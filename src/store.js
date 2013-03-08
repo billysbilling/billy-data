@@ -158,21 +158,22 @@ BD.Store = Em.Object.extend({
         return r;
     },
     
-    saveRecord: function(r, embeddedKeys) {
+    saveRecord: function(r, options) {
+        options = options || {};
         var promise = BD.ModelOperationPromise.create();
         //Don't save if the record is clean
-        if (!r.get('isDirty')) {
+        if (!r.get('isDirty') && !options.properties) {
             setTimeout(function() {
                 promise.trigger('complete');
                 promise.trigger('success');
             }, 1);
             return promise;
         }
-        //Make sure that embeddedKeys is either null or an array
-        if (embeddedKeys && !Em.isArray(embeddedKeys)) {
-            embeddedKeys = [embeddedKeys];
-        } else if (!embeddedKeys) {
-            embeddedKeys = [];
+        //Make sure that options.embed is an array
+        if (options.embed && !Em.isArray(options.embed)) {
+            options.embed = [options.embed];
+        } else if (!options.embed) {
+            options.embed = [];
         }
         //Construct URL
         var isNew = r.get('isNew'),
@@ -183,16 +184,14 @@ BD.Store = Em.Object.extend({
         }
         //Payload
         var data = {};
-        data[root] = r.serialize({
-            embeddedKeys: embeddedKeys
-        });
+        data[root] = r.serialize(options);
         //Make PUT/POST request
         this.ajax({
             type: isNew ? 'POST' : 'PUT',
             url: url,
             data: data,
             success: function(payload) {
-                r.didCommit(embeddedKeys);
+                r.didCommit(options);
                 this.sideload(payload);
                 promise.trigger('complete');
                 promise.trigger('success', payload);

@@ -185,9 +185,10 @@ BD.Model = Em.Object.extend(Em.Evented, {
         delete this.clean;
         this.set('selfIsDirty', false);
     },
-    didCommit: function(embeddedKeys) {
+    didCommit: function(options) {
+        this.setProperties(options.properties);
         this.eachHasMany(function(key) {
-            if (embeddedKeys.contains(key)) {
+            if (options.embed.contains(key)) {
                 this.get(key).forEach(function(child) {
                     child.becameClean();
                 });
@@ -231,8 +232,8 @@ BD.Model = Em.Object.extend(Em.Evented, {
         }
     },
     
-    save: function(embeddedKeys) {
-        return BD.store.saveRecord(this, embeddedKeys);
+    save: function(options) {
+        return BD.store.saveRecord(this, options);
     },
     
     deleteRecord: function() {
@@ -241,6 +242,7 @@ BD.Model = Em.Object.extend(Em.Evented, {
     
     serialize: function(options) {
         options = options || {};
+        options.properties = options.properties || {};
         var serialized = {},
             data = this.get('data');
         serialized._clientId = this.get('clientId');
@@ -248,13 +250,19 @@ BD.Model = Em.Object.extend(Em.Evented, {
             serialized.id = this.get('id');
         }
         this.eachAttribute(function(key, meta) {
-            if (typeof data.attributes[key] != 'undefined') {
-                serialized[key] = BD.transforms[meta.type].serialize(data.attributes[key]);
+            var value = options.properties[key] || data.attributes[key];
+            if (typeof value != 'undefined') {
+                serialized[key] = BD.transforms[meta.type].serialize(value);
             }
         }, this);
         this.eachBelongsTo(function(key, meta) {
             if (!options.isEmbedded || !meta.options.isParent) {
-                var id = data.belongsTo[key];
+                var id;
+                if (options.properties[key]) {
+                    id = options.properties[key].get('id');
+                } else {
+                    id = data.belongsTo[key];
+                }
                 if (id) {
                     if (typeof id === 'object') {
                         id = BD.store.findByClientId(id.clientId).get(meta.idProperty);
@@ -263,9 +271,9 @@ BD.Model = Em.Object.extend(Em.Evented, {
                 }
             }
         }, this);
-        if (options.embeddedKeys) {
+        if (options.embed) {
             this.eachHasMany(function(key, meta) {
-                if (options.embeddedKeys.contains(key)) {
+                if (options.embed.contains(key)) {
                     var embeddedRecords = [];
                     this.get(key).forEach(function(child) {
                         embeddedRecords.push(child.serialize({isEmbedded: true}));
