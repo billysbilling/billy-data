@@ -40,6 +40,14 @@ BD.RecordArray = Em.ArrayProxy.extend(Em.Evented, {
             delete r.inRecordArrays[Em.guidFor(this)];
         }, this);
         this._super();
+    },
+    
+    whenLoaded: function(callback) {
+        if (this.get('isLoaded')) {
+            callback();
+        } else {
+            this.one('didLoad', callback);
+        }
     }
 
 });
@@ -90,10 +98,11 @@ BD.FilteredRecordArray = BD.RecordArray.extend({
             })
         });
         var recordArray = BD.store.findByQuery(type, remoteQuery);
-        recordArray.one('didLoad', function() {
+        recordArray.one('didLoad', function(payload) {
             var content = recordArray.get('content');
             self.set('content', content);
             self.set('isLoaded', true);
+            self.trigger('didLoad', payload);
             recordArray.destroy();
             self.set('rejectAll', false);
         });

@@ -106,3 +106,125 @@ test('Record arrays should be removed from store when destroyed', function() {
     deepEqual(BD.store.typeMapFor(App.Post).recordArrayQueryObservers.isPublic, {}, 'There should not be any query observers left');
     deepEqual(BD.store.typeMapFor(App.Post).recordArrayComparatorObservers.isPublic, {}, 'There should not be any comparator observers left');
 });
+
+test('whenLoaded() with findByQuery() before loaded', function() {
+    expect(1);
+    fakeAjaxSuccess({
+        posts: [
+            {
+                id: 999
+            }
+        ]
+    });
+    var posts = App.Post.findByQuery({
+        something: 1
+    });
+    flushAjax();
+    posts.whenLoaded(function() {
+        equal(posts.get('length'), 1);
+    });
+});
+
+test('whenLoaded() with findByQuery() after loaded', function() {
+    expect(1);
+    fakeAjaxSuccess({
+        posts: [
+            {
+                id: 999
+            }
+        ]
+    });
+    var posts = App.Post.findByQuery({
+        something: 1
+    });
+    posts.whenLoaded(function() {
+        equal(posts.get('length'), 1);
+    });
+    flushAjax();
+});
+
+test('whenLoaded() with findMany() before loaded', function() {
+    expect(1);
+    fakeAjaxSuccess({
+        posts: [
+            {
+                id: 999
+            }
+        ]
+    });
+    var posts = App.Post.findMany([999]);
+    posts.whenLoaded(function() {
+        equal(posts.get('length'), 1);
+    });
+    flushAjax();
+});
+
+test('whenLoaded() with findMany() after loaded', function() {
+    expect(1);
+    fakeAjaxSuccess({
+        posts: [
+            {
+                id: 999
+            }
+        ]
+    });
+    var posts = App.Post.findMany([999]);
+    flushAjax();
+    posts.whenLoaded(function() {
+        equal(posts.get('length'), 1);
+    });
+});
+
+test('whenLoaded() with filter() local', function() {
+    expect(1);
+    var posts = App.Post.filter({
+        query: {
+            title: 'Dirty secrets'
+        }
+    });
+    posts.whenLoaded(function() {
+        equal(posts.get('length'), 1);
+    });
+});
+
+test('whenLoaded() with filter() remote before loaded', function() {
+    expect(1);
+    fakeAjaxSuccess({
+        posts: [
+            {
+                id: 999
+            }
+        ]
+    });
+    var posts = App.Post.filter({
+        query: {
+            title: 'Dirty secrets'
+        },
+        remote: true
+    });
+    posts.whenLoaded(function() {
+        equal(posts.get('length'), 1);
+    });
+    flushAjax();
+});
+
+test('whenLoaded() with filter() remote after loaded', function() {
+    expect(1);
+    fakeAjaxSuccess({
+        posts: [
+            {
+                id: 999
+            }
+        ]
+    });
+    var posts = App.Post.filter({
+        query: {
+            title: 'Dirty secrets'
+        },
+        remote: true
+    });
+    flushAjax();
+    posts.whenLoaded(function() {
+        equal(posts.get('length'), 1);
+    });
+});
