@@ -312,12 +312,12 @@ BD.Store = Em.Object.extend({
         });
     },
 
-    deleteRecord: function(r) {
+    prepareRecordForDeletion: function(r) {
         var id = r.get('id'),
             isEmbedded = r.get('isEmbedded');
         //Set the record as dirty
         r.becomeDirty();
-        r.set('isDeleted');
+        r.set('isDeleted', true);
         //Dirty the parent, if embedded
         if (isEmbedded) {
             r.getParent().didDeleteEmbeddedRecord(r);
@@ -326,39 +326,102 @@ BD.Store = Em.Object.extend({
         r.eachBelongsTo(function(key) {
             r.set(key, null);
         }, this);
+    },
+    deleteRecord: function(r) {
+        var id = r.get('id'),
+            isEmbedded = r.get('isEmbedded'),
+            promise = BD.ModelOperationPromise.create();
+        this.prepareRecordForDeletion(r);
         //If the record hasn't been created yet, there is no need to contact the server
         if (r.get('isNew')) {
             r.unload();
+            promise.trigger('complete');
+            promise.trigger('success', null);
             return;
         }
         //If the record is embedded, then don't send DELETE request
         if (isEmbedded) {
+            promise.trigger('complete');
+            promise.trigger('success', null);
             return;
         }
         //Make DELETE request
-        var promise = BD.ModelOperationPromise.create();
         this.ajax({
             type: 'DELETE',
-            url: '/' + BD.pluralize(this.rootForType(r.constructor)) + '/' + r.get('id'),
+            url: '/' + BD.pluralize(this.rootForType(r.constructor)) + '/' + id,
             success: function(payload) {
                 r.unload();
                 this.unloadServerDeletedRecords(payload);
                 promise.trigger('complete');
-                promise.trigger('success');
+                promise.trigger('success', payload);
             },
             error: function(xhr) {
-                var errorMessage;
-                if (xhr.status == 422) {
-                    var payload = JSON.parse(xhr.responseText);
-                    errorMessage = payload.errorMessage;
-                } else {
-                    errorMessage = 'We\'re sorry, but the record could currently not be deleted. Please try again.';
-                }
-                promise.trigger('complete');
-                promise.trigger('error', errorMessage, xhr);
+                this.handleDeleteServerError(promise, xhr);
             }
         });
         return promise;
+    },
+    deleteRecords: function(records) {
+        var type,
+            recordsToDelete = [],
+            promise = BD.ModelOperationPromise.create();
+        records.forEach(function(r) {
+            var id = r.get('id'),
+                isEmbedded = r.get('isEmbedded');
+            if (!type) {
+                type = r.constructor;
+            } else {
+                Ember.assert('A bulk delete transaction can only contain records of the same type. This transaction already has '+type.toString()+' records, but you tried to add a '+r.constructor.toString()+' record.', r.constructor == type);
+            }
+            this.prepareRecordForDeletion(r);
+            //If the record hasn't been created yet, there is no need to contact the server
+            if (r.get('isNew')) {
+                r.unload();
+                return;
+            }
+            //If the record is embedded, then don't send DELETE request
+            if (isEmbedded) {
+                return;
+            }
+            recordsToDelete.push(r);
+        }, this);
+        //If there is nothing to delete
+        if (recordsToDelete.length == 0) {
+            promise.trigger('complete');
+            promise.trigger('success', null);
+            return;
+        }
+        //Make DELETE request
+        this.ajax({
+            type: 'DELETE',
+            url: '/' + BD.pluralize(this.rootForType(type)),
+            data: {
+                ids: recordsToDelete.mapProperty('id')
+            },
+            success: function(payload) {
+                recordsToDelete.forEach(function(r) {
+                    r.unload();
+                });
+                this.unloadServerDeletedRecords(payload);
+                promise.trigger('complete');
+                promise.trigger('success', payload);
+            },
+            error: function(xhr) {
+                this.handleDeleteServerError(promise, xhr);
+            }
+        });
+        return promise;
+    },
+    handleDeleteServerError: function(promise, xhr) {
+        var errorMessage;
+        if (xhr.status == 422) {
+            var payload = JSON.parse(xhr.responseText);
+            errorMessage = payload.errorMessage;
+        } else {
+            errorMessage = 'We\'re sorry, but the record could currently not be deleted. Please try again.';
+        }
+        promise.trigger('complete');
+        promise.trigger('error', errorMessage, xhr);
     },
     unloadServerDeletedRecords: function(payload) {
         var meta = payload.meta,

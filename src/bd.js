@@ -65,6 +65,10 @@ BD.reopenClass({
         });
         transaction.commit();
         return transaction;
+    },
+    
+    deleteRecords: function(records) {
+        return BD.store.deleteRecords(records);
     }
     
 });

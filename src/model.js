@@ -141,7 +141,7 @@ BD.Model = Em.Object.extend(Em.Evented, {
         return (this.get('selfIsDirty') || this.get('childIsDirty'));
     }.property('selfIsDirty', 'childIsDirty'),
     becomeDirty: function() {
-        if (this.get('isUnloading') || this.get('selfIsDirty')) {
+        if (this.get('isUnloaded') || this.get('selfIsDirty')) {
             return;
         }
         var data = this.get('data'),
@@ -286,7 +286,7 @@ BD.Model = Em.Object.extend(Em.Evented, {
     },
 
     unload: function() {
-        this.set('isUnloading', true);
+        this.set('isUnloaded', true);
         this.eachBelongsTo(function(name) {
             this.set(name, null);
         }, this);
