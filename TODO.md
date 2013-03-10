@@ -2,7 +2,7 @@
 
 ## Small fixes
 
-- `BD.store.findByIdInclude` should be removed (and moved to Billy).
+- `BD.store.findByIdInclude` and `BD.Model.include` should be removed (and moved to Billy).
 - Remove the dependency on underscore js.
 
 ## Tests
