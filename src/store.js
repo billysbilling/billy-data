@@ -342,7 +342,7 @@ BD.Store = Em.Object.extend({
             url: '/' + BD.pluralize(this.rootForType(r.constructor)) + '/' + r.get('id'),
             success: function(payload) {
                 r.unload();
-                this.markDeletedRecords(payload);
+                this.unloadServerDeletedRecords(payload);
                 promise.trigger('complete');
                 promise.trigger('success');
             },
@@ -360,7 +360,7 @@ BD.Store = Em.Object.extend({
         });
         return promise;
     },
-    markDeletedRecords: function(payload) {
+    unloadServerDeletedRecords: function(payload) {
         var meta = payload.meta,
             deletedRecords;
         if (meta) {
