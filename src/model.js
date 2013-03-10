@@ -8,23 +8,20 @@ BD.Model = Em.Object.extend(Em.Evented, {
     
     clientId: null,
     id: null,
-    data: null,
+    _data: null,
     error: null,
     errors: null,
 
     init: function() {
-        this.hasManyRecordArrays = {};
-        this.deletedEmbeddedRecords = [];
-        this.inRecordArrays = {};
-        this.set('data', {
+        this._hasManyRecordArrays = {};
+        this._deletedEmbeddedRecords = [];
+        this._inRecordArrays = {};
+        this.set('_data', {
             attributes: {},
             belongsTo: {},
             hasMany: {}
         });
         BD.store.didInstantiateRecord(this);
-        this.clientIdObj = {
-            clientId: this.get('clientId')
-        };
         this._super();
     },
     
@@ -43,7 +40,7 @@ BD.Model = Em.Object.extend(Em.Evented, {
             callback.call(binding, key, meta);
         });
     },
-    parentRelationship: function() {
+    _parentRelationship: function() {
         var parentRelationship = null;
         this.eachBelongsTo(function(key, meta) {
             if (meta.options.isParent) {
@@ -53,10 +50,10 @@ BD.Model = Em.Object.extend(Em.Evented, {
         return parentRelationship;
     }.property(),
     isEmbedded: function() {
-        return !!this.get('parentRelationship');
+        return !!this.get('_parentRelationship');
     }.property(),
     getParent: function() {
-        var parentRelationship = this.get('parentRelationship');
+        var parentRelationship = this.get('_parentRelationship');
         return parentRelationship ? this.get(parentRelationship) : null;
     },
 
@@ -85,27 +82,27 @@ BD.Model = Em.Object.extend(Em.Evented, {
         }, this)
     },
     hasManyIsLoaded: function(key) {
-        return this.hasManyRecordArrays[key];
+        return this._hasManyRecordArrays[key];
     },
 
     didDefineProperty: function(proto, key, value) {
         if (value instanceof Ember.Descriptor) {
             var meta = value.meta();
             if (meta.isAttribute || meta.isBelongsTo) {
-                Ember.addObserver(proto, key, null, 'attributeDidChange');
+                Ember.addObserver(proto, key, null, '_attributeDidChange');
             }
         }
     },
-    attributeDidChange: function(r, key) {
+    _attributeDidChange: function(r, key) {
         BD.store.recordAttributeDidChange(this, key);
     },
 
     loadData: function(serialized) {
-        this.serializedData = serialized;
+        this._serializedData = serialized;
     },
     materializeData: function() {
-        var serialized = this.serializedData,
-            data = this.get('data');
+        var serialized = this._serializedData,
+            data = this.get('_data');
         BD.store.suspendRecordAttributeDidChange();
         //Attributes
         this.eachAttribute(function(key, meta) {
@@ -127,10 +124,10 @@ BD.Model = Em.Object.extend(Em.Evented, {
             }
         }, this);
         //
-        Em.propertyDidChange(this, 'data');
+        Em.propertyDidChange(this, '_data');
         BD.store.resumeRecordAttributeDidChange();
         //
-        delete this.serializedData;
+        delete this._serializedData;
     },
 
     include: function(include) {
@@ -144,7 +141,7 @@ BD.Model = Em.Object.extend(Em.Evented, {
         if (this.get('isUnloaded') || this.get('selfIsDirty')) {
             return;
         }
-        var data = this.get('data'),
+        var data = this.get('_data'),
             parent;
         this.clean = {
             isNew: this.get('isNew'),
@@ -163,7 +160,7 @@ BD.Model = Em.Object.extend(Em.Evented, {
     },
     checkEmbeddedChildrenDirty: function() {
         var childIsDirty = false;
-        if (this.deletedEmbeddedRecords.length > 0) {
+        if (this._deletedEmbeddedRecords.length > 0) {
             childIsDirty = true;
         }
         this.eachEmbeddedRecord(function(r) {
@@ -175,7 +172,7 @@ BD.Model = Em.Object.extend(Em.Evented, {
     },
     didDeleteEmbeddedRecord: function(r) {
         this.checkEmbeddedChildrenDirty();
-        this.deletedEmbeddedRecords.push(r);
+        this._deletedEmbeddedRecords.push(r);
     },
     becameClean: function() {
         this.checkEmbeddedChildrenDirty();
@@ -203,10 +200,10 @@ BD.Model = Em.Object.extend(Em.Evented, {
         this.eachEmbeddedRecord(function(r) {
             r.rollback();
         }, this);
-        this.deletedEmbeddedRecords.forEach(function(r) {
+        this._deletedEmbeddedRecords.forEach(function(r) {
             r.rollback();
         });
-        this.deletedEmbeddedRecords = [];
+        this._deletedEmbeddedRecords = [];
         this.checkEmbeddedChildrenDirty();
         //Don't continue if this record itself is not dirty
         if (!selfIsDirty) {
@@ -215,7 +212,7 @@ BD.Model = Em.Object.extend(Em.Evented, {
         //Store dirty parent (before we might clean it and set it back the original parent)
         var dirtyParent = this.getParent();
         //Set the data to the clean data
-        this.set('data', this.clean.data);
+        this.set('_data', this.clean.data);
         //Handle the case where the record is not newly created
         if (!this.clean.isNew) {
             if (this.get('isDeleted')) {
@@ -244,7 +241,7 @@ BD.Model = Em.Object.extend(Em.Evented, {
         options = options || {};
         options.properties = options.properties || {};
         var serialized = {},
-            data = this.get('data');
+            data = this.get('_data');
         serialized._clientId = this.get('clientId');
         if (!this.get('isNew')) {
             serialized.id = this.get('id');
@@ -284,6 +281,16 @@ BD.Model = Em.Object.extend(Em.Evented, {
         }
         return serialized;
     },
+    
+    didAddToRecordArray: function(recordArray) {
+        this._inRecordArrays[Em.guidFor(recordArray)] = recordArray;
+    },
+    didRemoveFromRecordArray: function(recordArray) {
+        delete this._inRecordArrays[Em.guidFor(recordArray)];
+    },
+    isInRecordArray: function(recordArray) {
+        return !!this._inRecordArrays[Em.guidFor(recordArray)]
+    },
 
     unload: function() {
         this.set('isUnloaded', true);
@@ -293,7 +300,7 @@ BD.Model = Em.Object.extend(Em.Evented, {
         this.eachEmbeddedRecord(function(child) {
             child.unload();
         });
-        _.each(this.inRecordArrays, function(recordArray) {
+        _.each(this._inRecordArrays, function(recordArray) {
             recordArray.removeObject(this);
         }, this);
         BD.store.didUnloadRecord(this);
@@ -312,8 +319,24 @@ BD.Model.reopenClass({
     create: function() {
         throw new Ember.Error("You should not call `create` on a model. Instead, call `createRecord` with the attributes you would like to set.");
     },
-    createRecord: function(data) {
-        return BD.store.createRecord(this, data);
+    createRecord: function(properties) {
+        //Instantiate record
+        properties = properties || {};
+        var r = this._create({
+            isNew: true
+        });
+        //Make sure that each hasMany relationship is registered as an empty RecordArray
+        var data = r.get('_data');
+        r.eachHasMany(function(name) {
+            data.hasMany[name] = [];
+            r.get(name);
+        }, this);
+        //Mark the record as dirty and update properties
+        r.becomeDirty();
+        BD.store.suspendRecordAttributeDidChange();
+        r.setProperties(properties);
+        BD.store.resumeRecordAttributeDidChange();
+        return r;
     },
     
     root: function() {

@@ -2,52 +2,54 @@ BD.Store = Em.Object.extend({
 
     init: function() {
         this._super();
-        this.resetContainers();
+        this._resetContainers();
     },
     
-    typeMapFor: function(type) {
-        type = this.resolveType(type);
+    _typeMapFor: function(type) {
+        type = BD.resolveType(type);
         var guidForType = Ember.guidFor(type);
-        if (!this.typeMaps[guidForType]) {
-            this.typeMaps[guidForType] = {
+        if (!this._typeMaps[guidForType]) {
+            this._typeMaps[guidForType] = {
                 idToRecord: {},
                 recordArrayQueryObservers: {},
                 recordArrayComparatorObservers: {}
             };
         }
-        return this.typeMaps[guidForType];
+        return this._typeMaps[guidForType];
     },
     recordForTypeAndId: function(type, id) {
-        return this.typeMapFor(type).idToRecord[id];
+        return this._typeMapFor(type).idToRecord[id];
     },
-
-    resolveType: function(type) {
-        if (typeof type === 'string') {
-            type = Em.get(Em.lookup, type);
+    eachRecordOfType: function(type, callback, context) {
+        var typeMap = this._typeMapFor(type),
+            idToRecord = typeMap.idToRecord,
+            id;
+        for (id in idToRecord) {
+            if (!idToRecord.hasOwnProperty(id)) continue;
+            callback.call(context, idToRecord[id]);
         }
-        return type;
     },
 
     findByClientId: function(clientId) {
-        var r = this.cidToRecord[clientId];
+        var r = this._cidToRecord[clientId];
         Ember.assert('No record with clientId "'+clientId+'" has been loaded.', r);
         return r;
     },
-    instantiateUnloadedRecord: function(type, id) {
+    _instantiateUnloadedRecord: function(type, id) {
         var r = type._create({});
-        this.didUpdateId(r, id);
+        this._didUpdateId(r, id);
         return r;
     },
     find: function(type, id) {
         if (typeof id === 'object') {
             return this.findByQuery(type, id);
         }
-        type = this.resolveType(type);
+        type = BD.resolveType(type);
         var r = this.recordForTypeAndId(type, id);
         if (r) {
             return r;
         }
-        r = this.instantiateUnloadedRecord(type, id);
+        r = this._instantiateUnloadedRecord(type, id);
         this._findOne(type, r, id);
         return r;
     },
@@ -56,10 +58,10 @@ BD.Store = Em.Object.extend({
         return this.find(p.type, p.id);
     },
     findByIdQuery: function(type, id, query) {
-        type = this.resolveType(type);
+        type = BD.resolveType(type);
         var r = this.recordForTypeAndId(type, id);
         if (!r) {
-            r = this.instantiateUnloadedRecord(type, id);
+            r = this._instantiateUnloadedRecord(type, id);
         }
         this._findOne(type, r, id, query);
         return r;
@@ -69,9 +71,9 @@ BD.Store = Em.Object.extend({
     },
     _findOne: function(type, r, id, query) {
         r.set('isLoading', true);
-        this.ajax({
+        this._ajax({
             type: 'GET',
-            url: '/' + BD.pluralize(this.rootForType(type)) + '/' + id,
+            url: '/' + BD.pluralize(this._rootForType(type)) + '/' + id,
             data: query,
             success: function(payload) {
                 r.set('isLoading', false);
@@ -80,15 +82,15 @@ BD.Store = Em.Object.extend({
             error: function(xhr) {
                 if (xhr.status == 422) {
                     var payload = JSON.parse(xhr.responseText);
-                    this.printServerError(payload.errorMessage);
+                    BD.printServerError(payload.errorMessage);
                 } else {
-                    this.printServerError('We\'re sorry, but the record could currently not be loaded. Please try again.');
+                    BD.printServerError('We\'re sorry, but the record could currently not be loaded. Please try again.');
                 }
             }
         });
     },
     findMany: function(type, ids) {
-        type = this.resolveType(type);
+        type = BD.resolveType(type);
         var records = [];
         ids.forEach(function(id) {
             if (typeof id === 'object') {
@@ -105,57 +107,37 @@ BD.Store = Em.Object.extend({
         return recordArray;
     },
     findByUrl: function(type, url, query) {
-        type = this.resolveType(type);
+        type = BD.resolveType(type);
         var recordArray = BD.RecordArray.create({
             type: type,
             content: Em.A()
         });
-        this.ajax({
+        this._ajax({
             type: 'GET',
             url: '/' + url,
             data: query,
             success: function(payload) {
-                this.sideload(payload, BD.pluralize(this.rootForType(type)), recordArray);
+                this.sideload(payload, BD.pluralize(this._rootForType(type)), recordArray);
                 recordArray.set('isLoaded', true);
                 recordArray.trigger('didLoad', payload);
             },
             error: function(xhr) {
                 if (xhr.status == 422) {
                     var payload = JSON.parse(xhr.responseText);
-                    this.printServerError(payload.errorMessage);
+                    BD.printServerError(payload.errorMessage);
                 } else {
-                    this.printServerError('We\'re sorry, but the records could currently not be loaded. Please try again.');
+                    BD.printServerError('We\'re sorry, but the records could currently not be loaded. Please try again.');
                 }
             }
         });
         return recordArray;
     },
     findByQuery: function(type, query) {
-        type = this.resolveType(type);
-        return this.findByUrl(type, BD.pluralize(this.rootForType(type)), query);
+        type = BD.resolveType(type);
+        return this.findByUrl(type, BD.pluralize(this._rootForType(type)), query);
     },
     all: function(type) {
         return this.filter(type);
-    },
-
-    createRecord: function(type, properties) {
-        //Instantiate record
-        properties = properties || {};
-        var r = type._create({
-            isNew: true
-        });
-        //Make sure that each hasMany relationship is registered as an empty RecordArray
-        var data = r.get('data');
-        r.eachHasMany(function(name) {
-            data.hasMany[name] = [];
-            r.get(name);
-        }, this);
-        //Mark the record as dirty and update properties
-        r.becomeDirty();
-        this.suspendRecordAttributeDidChange();
-        r.setProperties(properties);
-        this.resumeRecordAttributeDidChange();
-        return r;
     },
 
     _normalizeSaveOptions: function(options) {
@@ -181,7 +163,7 @@ BD.Store = Em.Object.extend({
         }
         //Construct URL
         var isNew = r.get('isNew'),
-            root = this.rootForType(r.constructor),
+            root = this._rootForType(r.constructor),
             url = '/' + BD.pluralize(root);
         if (!isNew) {
             url += '/' + r.get('id');
@@ -190,7 +172,7 @@ BD.Store = Em.Object.extend({
         var data = {};
         data[root] = r.serialize(options);
         //Make PUT/POST request
-        this.ajax({
+        this._ajax({
             type: isNew ? 'POST' : 'PUT',
             url: url,
             data: data,
@@ -205,7 +187,7 @@ BD.Store = Em.Object.extend({
                 if (xhr.status == 422) {
                     var payload = JSON.parse(xhr.responseText);
                     errorMessage = payload.errorMessage;
-                    this.handleValidationErrors(payload);
+                    this._handleValidationErrors(payload);
                 } else {
                     errorMessage = 'We\'re sorry but we couldn\'t save your data. Please try again.';
                     r.set('error', errorMessage);
@@ -216,7 +198,9 @@ BD.Store = Em.Object.extend({
         });
         return promise;
     },
-    _commitTransaction: function(transaction) {
+    commitTransaction: function(transaction) {
+        Ember.assert('This transaction has already been committed.', !transaction.get('hasCommitted'));
+        transaction.set('hasCommitted', true);
         //If there are no records in the transaction we just stop here
         if (transaction.get('length') == 0) {
             setTimeout(function() {
@@ -230,11 +214,12 @@ BD.Store = Em.Object.extend({
         Ember.assert(type.toString()+' does not support bulk saving. Try reopening the class with `supportsBulkSave: true`.', type.supportsBulkSave);
         //Commit the bulk transaction
         this._commitTransactionBulk(transaction);
+        return transaction;
     },
     _commitTransactionBulk: function(transaction) {
         var serializedItems = [],
             type = transaction.get('type'),
-            rootPlural = BD.pluralize(this.rootForType(type)),
+            rootPlural = BD.pluralize(this._rootForType(type)),
             data  = {};
         //Serialize records
         transaction.get('records').forEach(function(r, options) {
@@ -255,7 +240,7 @@ BD.Store = Em.Object.extend({
         //Payload
         data[rootPlural] = serializedItems;
         //Make PATCH request
-        this.ajax({
+        this._ajax({
             type: 'PATCH',
             url: '/' + rootPlural,
             data: data,
@@ -272,7 +257,7 @@ BD.Store = Em.Object.extend({
                 if (xhr.status == 422) {
                     var payload = JSON.parse(xhr.responseText);
                     errorMessage = payload.errorMessage;
-                    this.handleValidationErrors(payload);
+                    this._handleValidationErrors(payload);
                 } else {
                     errorMessage = 'We\'re sorry but we couldn\'t save your data. Please try again.';
                     transaction.get('records').forEach(function(r, options) {
@@ -284,12 +269,12 @@ BD.Store = Em.Object.extend({
             }
         });
     },
-    handleValidationErrors: function(payload) {
+    _handleValidationErrors: function(payload) {
         if (!payload.validationErrors) {
             return;
         }
         _.each(payload.validationErrors, function(rawErrors, clientId) {
-            var r = BD.store.findByClientId(clientId);
+            var r = this.findByClientId(clientId);
             if (!r) {
                 return;
             }
@@ -309,10 +294,10 @@ BD.Store = Em.Object.extend({
             }
             r.set('error', rawErrors.message);
             r.set('errors', attributeErrors);
-        });
+        }, this);
     },
 
-    prepareRecordForDeletion: function(r) {
+    _prepareRecordForDeletion: function(r) {
         var id = r.get('id'),
             isEmbedded = r.get('isEmbedded');
         //Set the record as dirty
@@ -331,7 +316,7 @@ BD.Store = Em.Object.extend({
         var id = r.get('id'),
             isEmbedded = r.get('isEmbedded'),
             promise = BD.ModelOperationPromise.create();
-        this.prepareRecordForDeletion(r);
+        this._prepareRecordForDeletion(r);
         //If the record hasn't been created yet, there is no need to contact the server
         if (r.get('isNew')) {
             r.unload();
@@ -346,17 +331,17 @@ BD.Store = Em.Object.extend({
             return;
         }
         //Make DELETE request
-        this.ajax({
+        this._ajax({
             type: 'DELETE',
-            url: '/' + BD.pluralize(this.rootForType(r.constructor)) + '/' + id,
+            url: '/' + BD.pluralize(this._rootForType(r.constructor)) + '/' + id,
             success: function(payload) {
                 r.unload();
-                this.unloadServerDeletedRecords(payload);
+                this._unloadServerDeletedRecords(payload);
                 promise.trigger('complete');
                 promise.trigger('success', payload);
             },
             error: function(xhr) {
-                this.handleDeleteServerError(promise, xhr);
+                this._handleDeleteServerError(promise, xhr);
             }
         });
         return promise;
@@ -373,7 +358,7 @@ BD.Store = Em.Object.extend({
             } else {
                 Ember.assert('A bulk delete transaction can only contain records of the same type. This transaction already has '+type.toString()+' records, but you tried to add a '+r.constructor.toString()+' record.', r.constructor == type);
             }
-            this.prepareRecordForDeletion(r);
+            this._prepareRecordForDeletion(r);
             //If the record hasn't been created yet, there is no need to contact the server
             if (r.get('isNew')) {
                 r.unload();
@@ -392,9 +377,9 @@ BD.Store = Em.Object.extend({
             return;
         }
         //Make DELETE request
-        this.ajax({
+        this._ajax({
             type: 'DELETE',
-            url: '/' + BD.pluralize(this.rootForType(type)),
+            url: '/' + BD.pluralize(this._rootForType(type)),
             data: {
                 ids: recordsToDelete.mapProperty('id')
             },
@@ -402,17 +387,17 @@ BD.Store = Em.Object.extend({
                 recordsToDelete.forEach(function(r) {
                     r.unload();
                 });
-                this.unloadServerDeletedRecords(payload);
+                this._unloadServerDeletedRecords(payload);
                 promise.trigger('complete');
                 promise.trigger('success', payload);
             },
             error: function(xhr) {
-                this.handleDeleteServerError(promise, xhr);
+                this._handleDeleteServerError(promise, xhr);
             }
         });
         return promise;
     },
-    handleDeleteServerError: function(promise, xhr) {
+    _handleDeleteServerError: function(promise, xhr) {
         var errorMessage;
         if (xhr.status == 422) {
             var payload = JSON.parse(xhr.responseText);
@@ -423,7 +408,7 @@ BD.Store = Em.Object.extend({
         promise.trigger('complete');
         promise.trigger('error', errorMessage, xhr);
     },
-    unloadServerDeletedRecords: function(payload) {
+    _unloadServerDeletedRecords: function(payload) {
         var meta = payload.meta,
             deletedRecords;
         if (meta) {
@@ -447,11 +432,11 @@ BD.Store = Em.Object.extend({
     didUnloadRecord: function(r) {
         var cid = r.get('clientId'),
             id = r.get('id');
-        delete this.cidToRecord[cid];
-        delete this.typeMapFor(r.constructor).idToRecord[id];
+        delete this._cidToRecord[cid];
+        delete this._typeMapFor(r.constructor).idToRecord[id];
     },
 
-    rootForType: function(type) {
+    _rootForType: function(type) {
         return Ember.get(type, 'root');
     },
     
@@ -472,7 +457,7 @@ BD.Store = Em.Object.extend({
             }
         }
         //Materialize records
-        this.materializeRecords();
+        this._materializeRecords();
         //Add root records, if any, to the RecordArray, but only if it's not a hasMany array
         if (rootRecords) {
             recordArray.set('content', rootRecords);
@@ -480,7 +465,7 @@ BD.Store = Em.Object.extend({
     },
     loadMany: function(type, dataItems) {
         var records = this._loadMany(type, dataItems);
-        this.materializeRecords();
+        this._materializeRecords();
         return records;
     },
     _loadMany: function(type, dataItems) {
@@ -496,7 +481,7 @@ BD.Store = Em.Object.extend({
     },
     load: function(type, data) {
         var r = this._load(type, data);
-        this.materializeRecords();
+        this._materializeRecords();
         return r;
     },
     _load: function(type, data) {
@@ -514,7 +499,7 @@ BD.Store = Em.Object.extend({
             //Created
             if (r.get('isNew')) {
                 r.set('isNew', false);
-                this.didUpdateId(r, id);
+                this._didUpdateId(r, id);
                 r.trigger('didCreate');
             }
         } else {
@@ -522,54 +507,54 @@ BD.Store = Em.Object.extend({
             r = type._create({
                 isLoaded: true
             });
-            this.didUpdateId(r, id);
+            this._didUpdateId(r, id);
         }
         //Update data
         r.loadData(data);
-        this.unmaterializedRecords.push(r);
+        this._unmaterializedRecords.push(r);
         return r;
     },
-    materializeRecords: function() {
-        this.unmaterializedRecords.forEach(function(r) {
+    _materializeRecords: function() {
+        this._unmaterializedRecords.forEach(function(r) {
             r.materializeData();
         });
-        this.unmaterializedRecords.forEach(function(r) {
+        this._unmaterializedRecords.forEach(function(r) {
             if (!r.get('isLoaded')) {
                 r.set('isLoaded', true);
             }
             r.trigger('didLoad');
         });
-        this.unmaterializedRecords = [];
+        this._unmaterializedRecords = [];
     },
 
     didInstantiateRecord: function(r) {
-        this.clientIdCounter++;
-        var clientId = this.clientIdCounter;
+        this._clientIdCounter++;
+        var clientId = this._clientIdCounter;
         r.set('clientId', clientId);
-        this.cidToRecord[clientId] = r;
-        this.checkRecordArrayObservers(r, '_all');
+        this._cidToRecord[clientId] = r;
+        this._checkRecordArrayObservers(r, '_all');
     },
-    didUpdateId: function(r, id) {
+    _didUpdateId: function(r, id) {
         r.set('id', id);
-        this.typeMapFor(r.constructor).idToRecord[id] = r;
+        this._typeMapFor(r.constructor).idToRecord[id] = r;
     },
 
-    ajax: function(hash) {
+    _ajax: function(hash) {
         hash.context = this;
         return BD.ajax(hash);
     },
     
-    filterOptionsToString: function(o) {
+    _filterOptionsToString: function(o) {
         var self = this;
         if (Ember.isArray(o)) {
             return o.reduce(function(rest, value) {
-                return rest + ',' + self.filterOptionsToString(value);
+                return rest + ',' + self._filterOptionsToString(value);
             }, '');
         } else if (o instanceof BD.Model) {
             return o.toString();
         } else if (typeof o == 'object') {
             return _.reduce(o, function(rest, value, key) {
-                return rest + ',' + key + ':' + self.filterOptionsToString(value);
+                return rest + ',' + key + ':' + self._filterOptionsToString(value);
             }, '');
         } else if (typeof o == 'function') {
             return o.toString();
@@ -578,9 +563,9 @@ BD.Store = Em.Object.extend({
         }
     },
     filter: function(type, options) {
-        type = this.resolveType(type);
+        type = BD.resolveType(type);
         options = options || {};
-        var typeMap = this.typeMapFor(type),
+        var typeMap = this._typeMapFor(type),
             recordArray,
             recordArrayId,
             query = options.query,
@@ -610,10 +595,7 @@ BD.Store = Em.Object.extend({
             comparatorObservers.push('_all');
         }
         //Create record array
-        //TODO: Reuse similar filtered record arrays
-//        recordArrayId = type.toString() + '-' + this.filterOptionsToString(query) + '-' + this.filterOptionsToString(comparator) + '-';
         recordArray = BD.FilteredRecordArray.create({
-            id: recordArrayId,
             type: type,
             query: query,
             queryObservers: queryObservers,
@@ -624,7 +606,7 @@ BD.Store = Em.Object.extend({
             content: Em.A()
         });
         var guid = Em.guidFor(recordArray);
-        this.recordArrays[ guid] = recordArray;
+        this._recordArrays[ guid] = recordArray;
         //Add query properties to observe
         queryObservers.forEach(function(property) {
             if (!typeMap.recordArrayQueryObservers[property]) {
@@ -651,15 +633,15 @@ BD.Store = Em.Object.extend({
         return recordArray;
     },
     recordAttributeDidChange: function(r, key) {
-        if (this.recordAttributeDidChangeIsSuspended) {
-            this.recordAttributeDidChangeQueue.push(arguments);
+        if (this._recordAttributeDidChangeIsSuspended) {
+            this._recordAttributeDidChangeQueue.push(arguments);
             return;
         }
-        this.checkRecordArrayObservers(r, key);
+        this._checkRecordArrayObservers(r, key);
     },
-    checkRecordArrayObservers: function(r, key) {
+    _checkRecordArrayObservers: function(r, key) {
         var type = r.constructor,
-            typeMap = this.typeMapFor(type),
+            typeMap = this._typeMapFor(type),
             queryObservers = typeMap.recordArrayQueryObservers[key],
             comparatorObservers = typeMap.recordArrayComparatorObservers[key];
         if (queryObservers) {
@@ -674,19 +656,19 @@ BD.Store = Em.Object.extend({
         }
     },
     suspendRecordAttributeDidChange: function() {
-        this.recordAttributeDidChangeIsSuspended = true;
+        this._recordAttributeDidChangeIsSuspended = true;
     },
     resumeRecordAttributeDidChange: function() {
-        this.recordAttributeDidChangeIsSuspended = false;
-        this.recordAttributeDidChangeQueue.forEach(function(args) {
+        this._recordAttributeDidChangeIsSuspended = false;
+        this._recordAttributeDidChangeQueue.forEach(function(args) {
             this.recordAttributeDidChange.apply(this, args);
         }, this);
-        this.recordAttributeDidChangeQueue = [];
+        this._recordAttributeDidChangeQueue = [];
     },
     willDestroyRecordArray: function(recordArray) {
         var guid = Em.guidFor(recordArray),
-            typeMap = this.typeMapFor(recordArray.get('type'));
-        delete this.recordArrays[guid];
+            typeMap = this._typeMapFor(recordArray.get('type'));
+        delete this._recordArrays[guid];
         recordArray.get('queryObservers').forEach(function(key) {
             delete typeMap.recordArrayQueryObservers[key][guid];
         })
@@ -708,25 +690,21 @@ BD.Store = Em.Object.extend({
     },
     
     reset: function() {
-        _.each(this.cidToRecord, function(r) {
+        _.each(this._cidToRecord, function(r) {
             r.unload();
         });
-        _.each(this.recordArrays, function(recordArray) {
+        _.each(this._recordArrays, function(recordArray) {
             recordArray.destroy();
         });
-        this.resetContainers();
+        this._resetContainers();
     },
-    resetContainers: function() {
-        this.clientIdCounter = 0;
-        this.cidToRecord = {};
-        this.typeMaps = {};
-        this.unmaterializedRecords = [];
-        this.recordAttributeDidChangeQueue = [];
-        this.recordArrays = {};
-    },
-
-    printServerError: function(message) {
-        console.error('Server error: ' + message);
+    _resetContainers: function() {
+        this._clientIdCounter = 0;
+        this._cidToRecord = {};
+        this._typeMaps = {};
+        this._unmaterializedRecords = [];
+        this._recordAttributeDidChangeQueue = [];
+        this._recordArrays = {};
     }
     
 });

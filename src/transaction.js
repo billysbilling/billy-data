@@ -28,10 +28,7 @@ BD.Transaction = BD.ModelOperationPromise.extend({
     },
     
     commit: function() {
-        Ember.assert('This transaction has already been committed.', !this.get('hasCommitted'));
-        this.set('hasCommitted', true);
-        BD.store._commitTransaction(this);
-        return this;
+        return BD.store.commitTransaction(this);
     }
     
 });

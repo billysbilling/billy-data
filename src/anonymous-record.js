@@ -26,7 +26,7 @@ BD.AnonymousRecord = Em.ObjectProxy.extend({
             },
             error: function(xhr) {
                 if (xhr.status == 422) {
-                    this.handleValidationErrors(xhr);
+                    this._handleValidationErrors(xhr);
                 } else {
                     this.set('error', 'We\'re sorry but we couldn\'t successfully send your request. Please try again.');
                 }
@@ -37,7 +37,7 @@ BD.AnonymousRecord = Em.ObjectProxy.extend({
         });
         return promise;
     },
-    handleValidationErrors: function(xhr) {
+    _handleValidationErrors: function(xhr) {
         var data = JSON.parse(xhr.responseText);
         if (!data.validationErrors) {
             return;
@@ -55,7 +55,7 @@ BD.AnonymousRecord = Em.ObjectProxy.extend({
 BD.AnonymousRecord.reopenClass({
     _create: BD.AnonymousRecord.create,
     create: function() {
-        throw new Ember.Error("You should not call `create` on BD.AnonymousRecord. Instead, call `createRecord` with the attributes you would like to set.");
+        throw new Ember.Error("You should not call `create` on BD.AnonymousRecord. Instead, call createRecord` with the attributes you would like to set.");
     },
     createRecord: function(data) {
         return BD.AnonymousRecord._create({

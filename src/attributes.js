@@ -7,7 +7,7 @@ BD.attr = function(type, options) {
         options: options
     };
     return function(key, value) {
-        var data = this.get('data'),
+        var data = this.get('_data'),
             oldValue;
         oldValue = data.attributes[key];
         if (oldValue === undefined) {
@@ -22,7 +22,7 @@ BD.attr = function(type, options) {
             value = oldValue;
         }
         return value;
-    }.property('data').meta(meta);
+    }.property('_data').meta(meta);
 };
 
 function belongsTo(meta, options) {
@@ -30,16 +30,15 @@ function belongsTo(meta, options) {
     meta.isBelongsTo = true;
     meta.options = options;
     return function(key, value) {
-        var data = this.get('data'),
+        var data = this.get('_data'),
             didChange,
             oldClientId,
             id;
         id = data.belongsTo[key];
         if (arguments.length >= 2) {
             if (id) {
-                if (typeof id === 'object') {
-                    oldClientId = id.clientId;
-                    didChange = (!value || value.get('clientId') != oldClientId);
+                if (typeof id === 'object') { //then `id` is the record
+                    didChange = (!value || value != id);
                 } else {
                     oldClientId = meta.clientIdForValue(id);
                     didChange = (!value || value.get('clientId') != oldClientId);
@@ -50,7 +49,7 @@ function belongsTo(meta, options) {
             }
             if (didChange) {
                 this.becomeDirty();
-                data.belongsTo[key] = value ? value.clientIdObj : null;
+                data.belongsTo[key] = value;
             }
         } else {
             if (id) {
@@ -64,7 +63,7 @@ function belongsTo(meta, options) {
             }
         }
         return value;
-    }.property('data').meta(meta);
+    }.property('_data').meta(meta);
 }
 
 BD.belongsTo = function(type, options) {
@@ -133,11 +132,11 @@ BD.hasMany = function(type, belongsToKey, options) {
         options: options
     };
     return function(key) {
-        if (this.hasManyRecordArrays[key]) {
-            return this.hasManyRecordArrays[key]
+        if (this._hasManyRecordArrays[key]) {
+            return this._hasManyRecordArrays[key]
         }
-        var data = this.get('data'),
-            resolvedType = BD.store.resolveType(type),
+        var data = this.get('_data'),
+            resolvedType = BD.resolveType(type),
             ids = data.hasMany[key],
             recordArray,
             query = {},
@@ -153,7 +152,7 @@ BD.hasMany = function(type, belongsToKey, options) {
             filterOptions.remote = true;
         }
         recordArray = BD.store.filter(resolvedType, filterOptions);
-        this.hasManyRecordArrays[key] = recordArray;
+        this._hasManyRecordArrays[key] = recordArray;
         return recordArray;
-    }.property('data').meta(meta);
+    }.property('_data').meta(meta);
 };

@@ -21,6 +21,12 @@ BD.reopenClass({
         }, this);
         return type;
     },
+    resolveType: function(type) {
+        if (typeof type === 'string') {
+            type = Em.get(Em.lookup, type);
+        }
+        return type;
+    },
 
     plurals: {},
     pluralize: function(name) {
@@ -69,7 +75,11 @@ BD.reopenClass({
     
     deleteRecords: function(records) {
         return BD.store.deleteRecords(records);
+    },
+
+    printServerError: function(message) {
+        console.error('Server error: ' + message);
     }
-    
+
 });
 

@@ -6,7 +6,7 @@ BD.RecordArray = Em.ArrayProxy.extend(Em.Evented, {
     init: function() {
         this._super();
         this.forEach(function(r) {
-            r.inRecordArrays[Em.guidFor(this)] = this;
+            r.didAddToRecordArray(this);
         }, this);
     },
     
@@ -17,7 +17,7 @@ BD.RecordArray = Em.ArrayProxy.extend(Em.Evented, {
         if (removed) {
             for (i = 0; i < removed; i++) {
                 r = this.objectAt(index + i);
-                delete r.inRecordArrays[Em.guidFor(this)];
+                r.didRemoveFromRecordArray(this);
             }
         }
         return ret;
@@ -29,7 +29,7 @@ BD.RecordArray = Em.ArrayProxy.extend(Em.Evented, {
         if (added) {
             for (i = 0; i < added; i++) {
                 r = this.objectAt(index + i);
-                r.inRecordArrays[Em.guidFor(this)] = this;
+                r.didAddToRecordArray(this);
             }
         }
         return ret;
@@ -37,7 +37,7 @@ BD.RecordArray = Em.ArrayProxy.extend(Em.Evented, {
     
     willDestroy: function() {
         this.forEach(function(r) {
-            delete r.inRecordArrays[Em.guidFor(this)];
+            r.didRemoveFromRecordArray(this);
         }, this);
         this._super();
     },
@@ -63,19 +63,16 @@ BD.FilteredRecordArray = BD.RecordArray.extend({
     remoteQuery: null,
     parent: null,
     
-    rejectAll: false,
-    
     refresh: function() {
         var self = this,
-            typeMap = BD.store.typeMapFor(this.get('type')),
-            content = []
-        _.each(typeMap.idToRecord, function(r) {
-            if (this.matchesQuery(r)) {
+            content = [];
+        BD.store.eachRecordOfType(this.get('type'), function(r) {
+            if (this._matchesQuery(r)) {
                 content.push(r);
             }
         }, this);
         content.sort(function(a, b) {
-            return self.compare(a, b);
+            return self._compare(a, b);
         });
         this.set('content', content);
         this.set('isLoaded', true);
@@ -86,7 +83,7 @@ BD.FilteredRecordArray = BD.RecordArray.extend({
             type = this.get('type'),
             query = this.get('query');
         Ember.assert('Query has to be an object to be able to call remoteRefresh() on a BD.FilteredRecordArray.', typeof query == 'object');
-        this.set('rejectAll', true);
+        this._rejectAll = true;
         var remoteQuery = this.get('remoteQuery') ? Em.copy(this.get('remoteQuery')) : {};
         _.each(query, function(value, key) {
             remoteQuery[key] = value;
@@ -104,10 +101,10 @@ BD.FilteredRecordArray = BD.RecordArray.extend({
             self.set('isLoaded', true);
             self.trigger('didLoad', payload);
             recordArray.destroy();
-            self.set('rejectAll', false);
+            self._rejectAll = false;
         });
         recordArray.one('error', function() {
-            self.set('rejectAll', false);
+            self._rejectAll = false;
         });
     },
 
@@ -131,14 +128,14 @@ BD.FilteredRecordArray = BD.RecordArray.extend({
                     }
                 });
             }
-            this.pushObjectSorted(r);
+            this._pushObjectSorted(r);
         }, this);
         if (pending == 0) {
             this.set('isLoaded', true);
         }
     },
 
-    matchesQuery: function(r) {
+    _matchesQuery: function(r) {
         var query = this.get('query');
         if (typeof query === 'object') {
             var match = true;
@@ -156,7 +153,7 @@ BD.FilteredRecordArray = BD.RecordArray.extend({
             return true;
         }
     },
-    compare: function(a, b) {
+    _compare: function(a, b) {
         var self = this,
             comparator = this.get('comparator');
         if (typeof comparator === 'function') {
@@ -170,7 +167,7 @@ BD.FilteredRecordArray = BD.RecordArray.extend({
         if (typeof comparator === 'object') {
             var result = 0;
             _.find(comparator, function(direction, property) {
-                result = self.compareValues(a.get(property), b.get(property));
+                result = self._compareValues(a.get(property), b.get(property));
                 if (direction === 'DESC') {
                     result *= -1;
                 }
@@ -185,7 +182,7 @@ BD.FilteredRecordArray = BD.RecordArray.extend({
         }
         return 0;
     },
-    compareValues: function(a, b) {
+    _compareValues: function(a, b) {
         if (typeof a !== 'string' || typeof b !== 'string') {
             return a - b;
         }
@@ -193,14 +190,14 @@ BD.FilteredRecordArray = BD.RecordArray.extend({
     },
 
     checkRecordAgainstQuery: function(r) {
-        if (this.get('rejectAll')) {
+        if (this._rejectAll) {
             return;
         }
-        var match = this.matchesQuery(r),
+        var match = this._matchesQuery(r),
             isContained = this.contains(r),
             parent = this.get('parent'); //hasMany parent
         if (match && !isContained) {
-            this.pushObjectSorted(r);
+            this._pushObjectSorted(r);
             if (parent) {
                 parent.checkEmbeddedChildrenDirty();
             }
@@ -214,33 +211,33 @@ BD.FilteredRecordArray = BD.RecordArray.extend({
 
     checkRecordAgainstComparator: function(r) {
         //If the record array does not contain the record, then don't do anything
-        if (!r.inRecordArrays[Em.guidFor(this)]) {
+        if (!r.isInRecordArray(this)) {
             return;
         }
         var index = this.indexOf(r),
             result;
         //Check the previous and next records. If the order of those 3 don't match, then reinsert the record.
         if (index > 0) {
-            result = this.compare(r, this.objectAt(index-1));
+            result = this._compare(r, this.objectAt(index-1));
             if (result < 0) {
                 this.removeObject(r);
-                this.pushObjectSorted(r);
+                this._pushObjectSorted(r);
                 return;
             }
         }
         if (index < this.get('length') - 1) {
-            result = this.compare(r, this.objectAt(index+1));
+            result = this._compare(r, this.objectAt(index+1));
             if (result > 0) {
                 this.removeObject(r);
-                this.pushObjectSorted(r);
+                this._pushObjectSorted(r);
             }
         }
     },
 
-    pushObjectSorted: function(r) {
+    _pushObjectSorted: function(r) {
         var insertIndex = null;
         if (this.get('comparator')) {
-            insertIndex = this.findInsertionPoint(r, 0, this.get('length')-1);
+            insertIndex = this._findInsertionPoint(r, 0, this.get('length')-1);
         }
         if (insertIndex === null) {
             this.pushObject(r);
@@ -248,20 +245,20 @@ BD.FilteredRecordArray = BD.RecordArray.extend({
             this.insertAt(insertIndex, r);
         }
     },
-    findInsertionPoint: function(r, min, max) {
+    _findInsertionPoint: function(r, min, max) {
         var mid = Math.floor((min + max) / 2);
         var o = this.objectAt(mid);
-        var s = this.compare(r, o)
+        var s = this._compare(r, o)
         if (s < 0) {
             if (mid == min) {
                 return mid;
             }
-            return this.findInsertionPoint(r, min, mid-1);
+            return this._findInsertionPoint(r, min, mid-1);
         } else if (s > 0) {
             if (mid == max) {
                 return mid+1;
             }
-            return this.findInsertionPoint(r, mid+1, max);
+            return this._findInsertionPoint(r, mid+1, max);
         } else  {
             return mid;
         }
