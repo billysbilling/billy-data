@@ -157,9 +157,19 @@ BD.Store = Em.Object.extend({
         this.resumeRecordAttributeDidChange();
         return r;
     },
-    
-    saveRecord: function(r, options) {
+
+    _normalizeSaveOptions: function(options) {
         options = options || {};
+        //Make sure that options.embed is an array
+        if (options.embed && !Em.isArray(options.embed)) {
+            options.embed = [options.embed];
+        } else if (!options.embed) {
+            options.embed = [];
+        }
+        return options;
+    },
+    saveRecord: function(r, options) {
+        options = this._normalizeSaveOptions(options);
         var promise = BD.ModelOperationPromise.create();
         //Don't save if the record is clean
         if (!r.get('isDirty') && !options.properties) {
@@ -168,12 +178,6 @@ BD.Store = Em.Object.extend({
                 promise.trigger('success');
             }, 1);
             return promise;
-        }
-        //Make sure that options.embed is an array
-        if (options.embed && !Em.isArray(options.embed)) {
-            options.embed = [options.embed];
-        } else if (!options.embed) {
-            options.embed = [];
         }
         //Construct URL
         var isNew = r.get('isNew'),
@@ -211,6 +215,74 @@ BD.Store = Em.Object.extend({
             }
         });
         return promise;
+    },
+    _commitTransaction: function(transaction) {
+        //If there are no records in the transaction we just stop here
+        if (transaction.get('length') == 0) {
+            setTimeout(function() {
+                transaction.trigger('complete');
+                transaction.trigger('success', null);
+            }, 0);
+            return;
+        }
+        //Check bulk support
+        var type = transaction.get('type');
+        Ember.assert(type.toString()+' does not support bulk saving. Try reopening the class with `supportsBulkSave: true`.', type.supportsBulkSave);
+        //Commit the bulk transaction
+        this._commitTransactionBulk(transaction);
+    },
+    _commitTransactionBulk: function(transaction) {
+        var serializedItems = [],
+            type = transaction.get('type'),
+            rootPlural = BD.pluralize(this.rootForType(type)),
+            data  = {};
+        //Serialize records
+        transaction.get('records').forEach(function(r, options) {
+            //Don't add if the record is clean
+            if (!r.get('isDirty') && !options.properties) {
+                return;
+            }
+            serializedItems.push(r.serialize(options));
+        }, this);
+        //If there were no dirty records we just stop here
+        if (serializedItems.length == 0) {
+            setTimeout(function() {
+                transaction.trigger('complete');
+                transaction.trigger('success', null);
+            }, 0);
+            return;
+        }
+        //Payload
+        data[rootPlural] = serializedItems;
+        //Make PATCH request
+        this.ajax({
+            type: 'PATCH',
+            url: '/' + rootPlural,
+            data: data,
+            success: function(payload) {
+                transaction.get('records').forEach(function(r, options) {
+                    r.didCommit(options);
+                }, this);
+                this.sideload(payload);
+                transaction.trigger('complete');
+                transaction.trigger('success', payload);
+            },
+            error: function(xhr) {
+                var errorMessage;
+                if (xhr.status == 422) {
+                    var payload = JSON.parse(xhr.responseText);
+                    errorMessage = payload.errorMessage;
+                    this.handleValidationErrors(payload);
+                } else {
+                    errorMessage = 'We\'re sorry but we couldn\'t save your data. Please try again.';
+                    transaction.get('records').forEach(function(r, options) {
+                        r.set('error', errorMessage);
+                    }, this);
+                }
+                transaction.trigger('complete');
+                transaction.trigger('error', errorMessage, xhr);
+            }
+        });
     },
     handleValidationErrors: function(payload) {
         if (!payload.validationErrors) {

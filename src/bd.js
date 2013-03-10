@@ -53,6 +53,18 @@ BD.reopenClass({
     urlPrefix: '',
     url: function(url) {
         return this.urlPrefix + url;
+    },
+
+    transaction: function() {
+        return BD.Transaction.create();
+    },
+    saveRecords: function(records, options) {
+        var transaction = this.transaction();
+        records.forEach(function(r) {
+            transaction.add(r, Em.copy(options, true));
+        });
+        transaction.commit();
+        return transaction;
     }
     
 });

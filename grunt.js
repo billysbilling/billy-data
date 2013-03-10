@@ -14,6 +14,7 @@ module.exports = function(grunt) {
                     'src/attributes.js',
                     'src/model-operation-promise.js',
                     'src/record-array.js',
+                    'src/transaction.js',
                     'src/transforms.js'
                 ],
                 dest: 'dist/billy-data.js'
