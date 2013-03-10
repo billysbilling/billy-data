@@ -31,10 +31,8 @@ test('Check AJAX options for bulk DELETE for model that supports bulk deletes', 
     var post2 = App.Post.find(102);
     BD.ajax = function(hash) {
         equal(hash.type, 'DELETE');
-        equal(hash.url, '/posts');
-        deepEqual(hash.data, {
-            ids: [101, 102]
-        });
+        equal(hash.url, '/posts?ids[]=101&ids[]=102');
+        deepEqual(typeof hash.data, 'undefined');
     };
     BD.deleteRecords([post1, post2]);
 });

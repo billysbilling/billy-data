@@ -73,7 +73,7 @@ BD.Store = Em.Object.extend({
         r.set('isLoading', true);
         this._ajax({
             type: 'GET',
-            url: '/' + BD.pluralize(this._rootForType(type)) + '/' + id,
+            url: '/' + BD.pluralize(this._rootForType(type)) + '/' + encodeURIComponent(id),
             data: query,
             success: function(payload) {
                 r.set('isLoading', false);
@@ -166,7 +166,7 @@ BD.Store = Em.Object.extend({
             root = this._rootForType(r.constructor),
             url = '/' + BD.pluralize(root);
         if (!isNew) {
-            url += '/' + r.get('id');
+            url += '/' + encodeURIComponent(r.get('id'));
         }
         //Payload
         var data = {};
@@ -333,7 +333,7 @@ BD.Store = Em.Object.extend({
         //Make DELETE request
         this._ajax({
             type: 'DELETE',
-            url: '/' + BD.pluralize(this._rootForType(r.constructor)) + '/' + id,
+            url: '/' + BD.pluralize(this._rootForType(r.constructor)) + '/' + encodeURIComponent(id),
             success: function(payload) {
                 r.unload();
                 this._unloadServerDeletedRecords(payload);
@@ -349,7 +349,8 @@ BD.Store = Em.Object.extend({
     deleteRecords: function(records) {
         var type,
             recordsToDelete = [],
-            promise = BD.ModelOperationPromise.create();
+            promise = BD.ModelOperationPromise.create(),
+            idsQuery;
         records.forEach(function(r) {
             var id = r.get('id'),
                 isEmbedded = r.get('isEmbedded');
@@ -376,13 +377,13 @@ BD.Store = Em.Object.extend({
             promise.trigger('success', null);
             return;
         }
+        idsQuery = recordsToDelete.map(function(r) {
+            return 'ids[]='+encodeURIComponent(r.get('id'));
+        }).join('&');
         //Make DELETE request
         this._ajax({
             type: 'DELETE',
-            url: '/' + BD.pluralize(this._rootForType(type)),
-            data: {
-                ids: recordsToDelete.mapProperty('id')
-            },
+            url: '/' + BD.pluralize(this._rootForType(type)) + '?' + idsQuery,
             success: function(payload) {
                 recordsToDelete.forEach(function(r) {
                     r.unload();
