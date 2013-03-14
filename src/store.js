@@ -110,7 +110,9 @@ BD.Store = Em.Object.extend({
         type = BD.resolveType(type);
         var recordArray = BD.RecordArray.create({
             type: type,
-            content: Em.A()
+            content: Em.A(),
+            url: url,
+            query: query
         });
         this._ajax({
             type: 'GET',
