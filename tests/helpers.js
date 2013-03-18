@@ -30,10 +30,25 @@ window.fakeAjaxSuccess = function(payload) {
         success: true,
         statusCode: 200
     };
+    var xhr = {
+        status: 200,
+        responseText: JSON.stringify(payload)
+    };
     BD.ajax = function(hash) {
-        ajaxQueue.push(function() {
+        resetAjax();
+        var item = function() {
+            if (hash.complete) {
+                hash.complete.call(hash.context, xhr);
+            }
             hash.success.call(hash.context, payload);
-        });
+        };
+        ajaxQueue.push(item);
+        var request = {
+            abort: function() {
+                ajaxQueue.removeObject(item);
+            }
+        };
+        return request;
     };
 };
 
@@ -48,9 +63,20 @@ window.fakeAjaxError = function(statusCode, payload) {
         responseText: JSON.stringify(payload)
     };
     BD.ajax = function(hash) {
-        ajaxQueue.push(function() {
+        resetAjax();
+        var item = function() {
+            if (hash.complete) {
+                hash.complete.call(hash.context, xhr);
+            }
             hash.error.call(hash.context, xhr);
-        });
+        };
+        ajaxQueue.push(item);
+        var request = {
+            abort: function() {
+                ajaxQueue.removeObject(item);
+            }
+        };
+        return request;
     };
 };
 

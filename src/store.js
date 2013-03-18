@@ -114,10 +114,13 @@ BD.Store = Em.Object.extend({
             url: url,
             query: query
         });
-        this._ajax({
+        var ajaxRequest = this._ajax({
             type: 'GET',
             url: '/' + url,
             data: query,
+            complete: function() {
+                recordArray.set('ajaxRequest', null);
+            },
             success: function(payload) {
                 this.sideload(payload, BD.pluralize(this._rootForType(type)), recordArray);
                 recordArray.set('isLoaded', true);
@@ -132,6 +135,7 @@ BD.Store = Em.Object.extend({
                 }
             }
         });
+        recordArray.set('ajaxRequest', ajaxRequest);
         return recordArray;
     },
     findByQuery: function(type, query) {
@@ -693,6 +697,7 @@ BD.Store = Em.Object.extend({
     },
     
     reset: function() {
+        this.set('isResetting', true);
         _.each(this._cidToRecord, function(r) {
             r.unload();
         });
@@ -700,6 +705,7 @@ BD.Store = Em.Object.extend({
             recordArray.destroy();
         });
         this._resetContainers();
+        this.set('isResetting', false);
     },
     _resetContainers: function() {
         this._clientIdCounter = 0;

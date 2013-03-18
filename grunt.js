@@ -15,6 +15,7 @@ module.exports = function(grunt) {
                     'src/model-operation-promise.js',
                     'src/record-array.js',
                     'src/filtered-record-array.js',
+                    'src/sparse-record-array.js',
                     'src/transaction.js',
                     'src/transforms.js'
                 ],

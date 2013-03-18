@@ -3,6 +3,8 @@ BD.RecordArray = Em.ArrayProxy.extend(Em.Evented, {
     isLoaded: false,
     content: null,
 
+    ajaxRequest: null,
+
     init: function() {
         this._super();
         this.forEach(function(r) {
@@ -17,7 +19,9 @@ BD.RecordArray = Em.ArrayProxy.extend(Em.Evented, {
         if (removed) {
             for (i = 0; i < removed; i++) {
                 r = this.objectAt(index + i);
-                r.didRemoveFromRecordArray(this);
+                if (r !== BD.SPARSE_PLACEHOLDER) {
+                    r.didRemoveFromRecordArray(this);
+                }
             }
         }
         return ret;
@@ -29,15 +33,24 @@ BD.RecordArray = Em.ArrayProxy.extend(Em.Evented, {
         if (added) {
             for (i = 0; i < added; i++) {
                 r = this.objectAt(index + i);
-                r.didAddToRecordArray(this);
+                if (r !== BD.SPARSE_PLACEHOLDER) {
+                    r.didAddToRecordArray(this);
+                }
             }
         }
         return ret;
     },
     
     willDestroy: function() {
+        this._super();
+        var ajaxRequest = this.get('ajaxRequest');
+        if (ajaxRequest) {
+            ajaxRequest.abort();
+        }
         this.forEach(function(r) {
-            r.didRemoveFromRecordArray(this);
+            if (r !== BD.SPARSE_PLACEHOLDER) {
+                r.didRemoveFromRecordArray(this);
+            }
         }, this);
         this._super();
     },

@@ -53,7 +53,7 @@ BD.reopenClass({
         if (hash.data && !(typeof hash.data === 'string') && hash.type !== 'GET') {
             hash.data = JSON.stringify(hash.data);
         }
-        $.ajax(hash);
+        return $.ajax(hash);
     },
 
     urlPrefix: '',
