@@ -181,8 +181,9 @@ BD.FilteredRecordArray = BD.RecordArray.extend({
     },
 
     _pushObjectSorted: function(r) {
-        var insertIndex = null;
-        if (this.get('comparator')) {
+        var insertIndex = null,
+            length = this.get('length');
+        if (this.get('comparator') && length) {
             insertIndex = this._findInsertionPoint(r, 0, this.get('length')-1);
         }
         if (insertIndex === null) {

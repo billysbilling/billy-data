@@ -325,6 +325,20 @@ test('Refresh after loading weird remote', function() {
     deepEqual(techPosts.mapProperty('id'), [1, 2], 'The right posts after refresh');
 });
 
+test('Creating a new record that\'s added to an empty filtered array with a comparator', function() {
+    var dogCategories = App.Category.filter({
+        query: {
+            name: 'Dog'
+        },
+        comparator: 'name'
+    });
+    equal(dogCategories.get('length'), 0, 'There are no Dog categories');
+    App.Category.createRecord({
+        name: 'Dog'
+    });
+    equal(dogCategories.get('length'), 1, 'There is now one Dog category');
+});
+
 test('Test callback sorting', function() {
     var sebastian = App.Post.find(1);
     var adam = App.Post.find(2);
