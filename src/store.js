@@ -41,6 +41,9 @@ BD.Store = Em.Object.extend({
         return r;
     },
     find: function(type, id) {
+        if (Ember.isNone(id)) {
+            id = {};
+        }
         if (typeof id === 'object') {
             return this.findByQuery(type, id);
         }
