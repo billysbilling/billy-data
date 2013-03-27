@@ -468,7 +468,7 @@ BD.Store = Em.Object.extend({
         }
         //Materialize records
         this._materializeRecords();
-        //Add root records, if any, to the RecordArray, but only if it's not a hasMany array
+        //Add root records, if any to the RecordArray
         if (rootRecords) {
             recordArray.set('content', rootRecords);
         }
