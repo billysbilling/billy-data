@@ -403,6 +403,15 @@ BD.Model.reopenClass({
     },
     filter: function(filter, comparator) {
         return BD.store.filter(this, filter, comparator);
+    },
+    loadAll: function(dataItems) {
+        return BD.store.loadAll(this, dataItems);
+    },
+    loadMany: function(dataItems) {
+        return BD.store.loadMany(this, dataItems);
+    },
+    load: function(data) {
+        return BD.store.load(this, data);
     }
     
 });
