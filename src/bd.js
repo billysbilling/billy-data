@@ -1,6 +1,4 @@
-var BD = Ember.Object.extend();
-
-BD.reopenClass({
+var BD = Ember.Namespace.create({
 
     typeNamespaces: [],
     registerTypeNamespace: function(namespace) {
