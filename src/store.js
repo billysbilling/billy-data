@@ -10,6 +10,7 @@ BD.Store = Em.Object.extend({
         var guidForType = Ember.guidFor(type);
         if (!this._typeMaps[guidForType]) {
             this._typeMaps[guidForType] = {
+                allIsLoaded: false,
                 idToRecord: {},
                 recordArrayQueryObservers: {},
                 recordArrayComparatorObservers: {}
@@ -125,6 +126,7 @@ BD.Store = Em.Object.extend({
                 recordArray.set('ajaxRequest', null);
             },
             success: function(payload) {
+                recordArray.trigger('willLoad', payload);
                 this.sideload(payload, BD.pluralize(this._rootForType(type)), recordArray);
                 recordArray.set('isLoaded', true);
                 recordArray.trigger('didLoad', payload);
@@ -144,9 +146,6 @@ BD.Store = Em.Object.extend({
     findByQuery: function(type, query) {
         type = BD.resolveType(type);
         return this.findByUrl(type, BD.pluralize(this._rootForType(type)), query);
-    },
-    all: function(type) {
-        return this.filter(type);
     },
 
     _normalizeSaveOptions: function(options) {
@@ -473,6 +472,15 @@ BD.Store = Em.Object.extend({
             recordArray.set('content', rootRecords);
         }
     },
+    loadAll: function(type, dataItems) {
+        var typeMap = this._typeMapFor(type);
+        typeMap.allIsLoaded = true;
+        return this.loadMany(type, dataItems);
+    },
+    allOfTypeIsLoaded: function(type) {
+        var typeMap = this._typeMapFor(type);
+        return typeMap.allIsLoaded; 
+    },
     loadMany: function(type, dataItems) {
         var records = this._loadMany(type, dataItems);
         this._materializeRecords();
@@ -554,93 +562,41 @@ BD.Store = Em.Object.extend({
         return BD.ajax(hash);
     },
     
-    _filterOptionsToString: function(o) {
-        var self = this;
-        if (Ember.isArray(o)) {
-            return o.reduce(function(rest, value) {
-                return rest + ',' + self._filterOptionsToString(value);
-            }, '');
-        } else if (o instanceof BD.Model) {
-            return o.toString();
-        } else if (typeof o == 'object') {
-            return _.reduce(o, function(rest, value, key) {
-                return rest + ',' + key + ':' + self._filterOptionsToString(value);
-            }, '');
-        } else if (typeof o == 'function') {
-            return o.toString();
-        } else {
-            return o;
-        }
-    },
+    /**
+     @param {string} type The model class to load records of.
+     @param {Object} options Properties to pass on the filtered record array. `type` will automatically be set.
+                     See {@link BD.FilteredRecordArray} for info on which options you can set.
+     @return BD.FilteredRecordArray
+    */
     filter: function(type, options) {
         type = BD.resolveType(type);
         options = options || {};
         var typeMap = this._typeMapFor(type),
-            recordArray,
-            recordArrayId,
-            query = options.query,
-            queryObservers = options.queryObservers,
-            comparator = options.comparator,
-            comparatorObservers = options.comparatorObservers;
-        //Normalize query properties to observe
-        queryObservers = queryObservers || [];
-        if (typeof query == 'object') {
-            _.each(query, function(value, key) {
-                queryObservers.push(key);
-            });
-        }
-        if (queryObservers.length == 0) {
-            queryObservers.push('_all');
-        }
-        //Normalize comparator properties to observe
-        comparatorObservers = comparatorObservers || [];
-        if (typeof comparator == 'string') {
-            comparatorObservers.push(comparator);
-        } else if (typeof comparator == 'object') {
-            _.each(comparator, function(value, key) {
-                comparatorObservers.push(key);
-            });
-        }
-        if (comparatorObservers.length == 0) {
-            comparatorObservers.push('_all');
-        }
+            recordArray;
         //Create record array
-        recordArray = BD.FilteredRecordArray.create({
-            type: type,
-            query: query,
-            queryObservers: queryObservers,
-            comparator: comparator,
-            comparatorObservers: comparatorObservers,
-            parent: options.parent,
-            remoteQuery: options.remoteQuery,
-            content: Em.A()
-        });
+        options.type = type;
+        recordArray = BD.FilteredRecordArray.create(options);
         var guid = Em.guidFor(recordArray);
         this._recordArrays[ guid] = recordArray;
         //Add query properties to observe
-        queryObservers.forEach(function(property) {
+        recordArray.get('queryObservers').forEach(function(property) {
             if (!typeMap.recordArrayQueryObservers[property]) {
                 typeMap.recordArrayQueryObservers[property] = {};
             }
             typeMap.recordArrayQueryObservers[property][guid] = recordArray;
         });
         //Add comparator properties to observe
-        comparatorObservers.forEach(function(property) {
+        recordArray.get('comparatorObservers').forEach(function(property) {
             if (!typeMap.recordArrayComparatorObservers[property]) {
                 typeMap.recordArrayComparatorObservers[property] = {};
             }
             typeMap.recordArrayComparatorObservers[property][guid] = recordArray;
         });
-        //Populate the record array
-        if (options.remote) {
-            recordArray.remoteRefresh();
-        } else if (options.ids) {
-            recordArray.pushIds(options.ids);
-        } else {
-            recordArray.refresh();
-        }
         //Return the record array
         return recordArray;
+    },
+    all: function(type) {
+        return this.filter(type);
     },
     recordAttributeDidChange: function(r, key) {
         if (this._recordAttributeDidChangeIsSuspended) {

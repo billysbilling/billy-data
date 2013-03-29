@@ -48,7 +48,8 @@ module('Filtered queries', {
     }
 });
 
-test('Test filter', function() {
+test('Test local filter()', function() {
+    App.Post.loadAll([]);
     var publicPosts = App.Post.filter({
         query: {
             isPublic: true
@@ -58,12 +59,6 @@ test('Test filter', function() {
         query: {
             author: 'Sebastian'
         }
-    });
-    var sAuthorPosts = App.Post.filter({
-        query: function(r) {
-            return r.get('author').substring(0, 1).toLowerCase() == 's';
-        },
-        queryObservers: ['author']
     });
     var techPosts = App.Post.filter({
         query: {
@@ -77,7 +72,6 @@ test('Test filter', function() {
     });
     equal(publicPosts.get('length'), 2, 'Expect two public posts');
     equal(sebastianPosts.get('length'), 1, 'Expect one post authored by Sebastian');
-    equal(sAuthorPosts.get('length'), 1, 'Expect one post with author starting with s');
     equal(techPosts.get('length'), 2, 'Expect two Tech posts');
     equal(businessPosts.get('length'), 1, 'Expect one Business post');
     App.Post.find(1).set('isPublic', false);
@@ -86,12 +80,12 @@ test('Test filter', function() {
     App.Post.find(3).set('author', 'Storgaard');
     equal(publicPosts.get('length'), 1, 'Expect only one public post');
     equal(sebastianPosts.get('length'), 2, 'Expect two posts authored by Sebastian');
-    equal(sAuthorPosts.get('length'), 3, 'Expect three posts with author starting with s');
     equal(techPosts.get('length'), 1, 'Expect one Tech post');
     equal(businessPosts.get('length'), 2, 'Expect two Business posts');
 });
 
-test('Test all()', function() {
+test('Test local all()', function() {
+    App.Post.loadAll([]);
     var allPosts = App.Post.all(),
         post;
     equal(allPosts.get('length'), 3, 'Expect 3 posts in total');
@@ -114,6 +108,7 @@ test('Test all()', function() {
 });
 
 test('Test rollback', function() {
+    App.Post.loadAll([]);
     var publicPosts = App.Post.filter({
         query: {
             isPublic: true
@@ -128,6 +123,7 @@ test('Test rollback', function() {
 });
 
 test('Deleting a new record should remove it from filtered arrays', function() {
+    App.Post.loadAll([]);
     var publicPosts = App.Post.filter({
         query: {
             isPublic: true
@@ -142,6 +138,7 @@ test('Deleting a new record should remove it from filtered arrays', function() {
 });
 
 test('Deleting an existing record should remove it from filtered arrays', function() {
+    App.Post.loadAll([]);
     var publicPosts = App.Post.filter({
         query: {
             isPublic: true
@@ -157,6 +154,7 @@ test('Deleting an existing record should remove it from filtered arrays', functi
 });
 
 test('Creating a record should add it to the filtered record array', function() {
+    App.Post.loadAll([]);
     var publicPosts = App.Post.filter({
         query: {
             isPublic: true
@@ -174,6 +172,7 @@ test('Creating a record should add it to the filtered record array', function() 
 });
 
 test('Loading records via AJAX should add them to the filtered record array', function() {
+    App.Post.loadAll([]);
     var publicPosts = App.Post.filter({
         query: {
             isPublic: true
@@ -197,18 +196,18 @@ test('Loading records via AJAX should add them to the filtered record array', fu
     equal(publicPosts.get('length'), 3, 'There are now three public posts');
 });
 
-test('Test AJAX options for remote filtered record arrays', function() {
+test('Test remote filter()', function() {
     expect(3);
     BD.ajax = function(hash) {
         equal(hash.type, 'GET');
         equal(hash.url, '/posts');
-        deepEqual(hash.data, {isPublic: true});
+        deepEqual(hash.data, {isPublic: true, offset: 0, pageSize: 100});
     };
     App.Post.filter({
         query: {
             isPublic: true
         },
-        remote: true
+        pageSize: 100
     });
 });
 
@@ -217,7 +216,7 @@ test('Test AJAX options for remote filtered record arrays with remoteQuery', fun
     BD.ajax = function(hash) {
         equal(hash.type, 'GET');
         equal(hash.url, '/posts');
-        deepEqual(hash.data, {isPublic: true, include: 'post.category'});
+        deepEqual(hash.data, {isPublic: true, include: 'post.category', pageSize: 100, offset: 0});
     };
     App.Post.filter({
         query: {
@@ -226,7 +225,7 @@ test('Test AJAX options for remote filtered record arrays with remoteQuery', fun
         remoteQuery: {
             include: 'post.category'
         },
-        remote: true
+        pageSize: 100
     });
 });
 
@@ -250,8 +249,7 @@ test('Remote filtered record arrays should be filled', function() {
     var brucePosts = App.Post.filter({
         query: {
             author: 'Bruce Wayne'
-        },
-        remote: true
+        }
     });
     equal(brucePosts.get('length'), 0, '0 posts before load');
     flushAjax();
@@ -264,13 +262,13 @@ test('Test AJAX options for remote filtered record arrays by belongsTo', functio
     BD.ajax = function(hash) {
         equal(hash.type, 'GET');
         equal(hash.url, '/posts');
-        deepEqual(hash.data, {categoryId: 201});
+        deepEqual(hash.data, {categoryId: 201, offset: 0, pageSize: 100});
     };
     App.Post.filter({
         query: {
             category: App.Category.find(201)
         },
-        remote: true
+        pageSize: 100
     });
 });
 
@@ -294,8 +292,7 @@ test('Remote filtered record arrays should be filled by belongsTo', function() {
     var techPosts = App.Post.filter({
         query: {
             category: App.Category.find(201)
-        },
-        remote: true
+        }
     });
     equal(techPosts.get('length'), 0, '0 posts before load');
     flushAjax();
@@ -303,29 +300,8 @@ test('Remote filtered record arrays should be filled by belongsTo', function() {
     deepEqual(techPosts.mapProperty('id'), [1, 4, 5], 'The right posts');
 });
 
-test('Refresh after loading weird remote', function() {
-    fakeAjaxSuccess({
-        posts: [
-            {
-                id: 4,
-                categoryId: 202
-            }
-        ]
-    })
-    var techPosts = App.Post.filter({
-        query: {
-            category: App.Category.find(201)
-        },
-        remote: true
-    });
-    equal(techPosts.get('length'), 0, '0 posts before load');
-    flushAjax();
-    deepEqual(techPosts.mapProperty('id'), [4], 'The right posts after load');
-    techPosts.refresh();
-    deepEqual(techPosts.mapProperty('id'), [1, 2], 'The right posts after refresh');
-});
-
-test('Creating a new record that\'s added to an empty filtered array with a comparator', function() {
+test('Creating a new record that\'s added to an empty local filtered array with a comparator', function() {
+    App.Category.loadAll([]);
     var dogCategories = App.Category.filter({
         query: {
             name: 'Dog'
@@ -340,6 +316,7 @@ test('Creating a new record that\'s added to an empty filtered array with a comp
 });
 
 test('Test callback sorting', function() {
+    App.Post.loadAll([]);
     var sebastian = App.Post.find(1);
     var adam = App.Post.find(2);
     var callbackComparatorPosts = App.Post.filter({
@@ -355,6 +332,7 @@ test('Test callback sorting', function() {
 });
 
 test('Test string sorting', function() {
+    App.Post.loadAll([]);
     var sebastian = App.Post.find(1);
     var adam = App.Post.find(2);
     var stringComparatorPosts = App.Post.filter({
@@ -367,6 +345,7 @@ test('Test string sorting', function() {
 });
 
 test('Test object sorting', function() {
+    App.Post.loadAll([]);
     var sebastian = App.Post.find(1);
     var adam = App.Post.find(2);
     var noah = App.Post.find(3);
@@ -380,6 +359,7 @@ test('Test object sorting', function() {
 });
 
 test('Test object with multiple keys sorting', function() {
+    App.Post.loadAll([]);
     var adam = App.Post.find(2);
     var noah = App.Post.find(3);
     var multipleStringComparatorPosts = App.Post.filter({
@@ -393,7 +373,7 @@ test('Test object with multiple keys sorting', function() {
 
 test('Test #bigdata sorting', function() {
     BD.store.reset();
-    BD.store.loadMany(App.Category, [
+    BD.store.loadAll(App.Category, [
         {
             id: 0,
             name: 'B'

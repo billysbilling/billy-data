@@ -10,7 +10,7 @@ module('Sparse record array', {
 });
 
 test('Test AJAX options', function() {
-    expect(6);
+    expect(3);
     BD.ajax = function(hash) {
         equal(hash.type, 'GET');
         equal(hash.url, '/posts');
@@ -20,27 +20,16 @@ test('Test AJAX options', function() {
             state: 'draft'
         });
     };
-    var records = BD.SparseRecordArray.create({
-        type: App.Post,
+    App.Post.filter({
         pageSize: 3,
         query: {
             state: 'draft'
         }
     });
-    BD.ajax = function(hash) {
-        equal(hash.type, 'GET');
-        equal(hash.url, '/posts');
-        deepEqual(hash.data, {
-            offset: 9,
-            pageSize: 3,
-            state: 'draft'
-        });
-    };
-    records.objectAt(10);
 });
 
 test('Test AJAX options with special url', function() {
-    expect(6);
+    expect(3);
     BD.ajax = function(hash) {
         equal(hash.type, 'GET');
         equal(hash.url, '/weirdposts');
@@ -50,24 +39,57 @@ test('Test AJAX options with special url', function() {
             state: 'draft'
         });
     };
-    var records = BD.SparseRecordArray.create({
-        type: App.Post,
+    App.Post.filter({
         pageSize: 3,
         url: 'weirdposts',
         query: {
             state: 'draft'
         }
     });
-    BD.ajax = function(hash) {
-        equal(hash.type, 'GET');
-        equal(hash.url, '/weirdposts');
-        deepEqual(hash.data, {
-            offset: 9,
-            pageSize: 3,
+});
+
+test('Test AJAX options for second request', function() {
+    expect(3);
+    fakeAjaxSuccess({
+        meta: {
+            paging: {
+                total: 23
+            }
+        },
+        posts: [
+            {
+                id: 0,
+                title: 'Post 0'
+            },
+            {
+                id: 1,
+                title: 'Post 1'
+            },
+            {
+                id: 2,
+                title: 'Post 2'
+            }
+        ]
+    });
+    var records = App.Post.filter({
+        pageSize: 3,
+        query: {
             state: 'draft'
-        });
-    };
-    records.objectAt(10);
+        }
+    });
+    records.one('didLoad', function() {
+        BD.ajax = function(hash) {
+            equal(hash.type, 'GET');
+            equal(hash.url, '/posts');
+            deepEqual(hash.data, {
+                offset: 9,
+                pageSize: 3,
+                state: 'draft'
+            });
+        };
+        records.objectAt(10);
+    });
+    flushAjax();
 });
 
 test('Requesting indexes should load from server', function() {
@@ -92,13 +114,12 @@ test('Requesting indexes should load from server', function() {
             }
         ]
     });
-    var records = BD.SparseRecordArray.create({
-        type: App.Post,
+    var records = App.Post.filter({
         pageSize: 3
     })
     resetAjax();
-    equal(records.objectAt(0), BD.SPARSE_PLACEHOLDER); //These indexes should already be loading
-    equal(records.objectAt(1), BD.SPARSE_PLACEHOLDER);
+    equal(records.objectAt(0), null); //These indexes should be null, since length is still 0
+    equal(records.objectAt(1), null);
     flushAjax();
     equal(records.get('length'), 23);
     deepEqual(records.objectAt(0).getProperties(['id', 'title']), {id: 0, title: 'Post 0'});
@@ -126,7 +147,7 @@ test('Requesting indexes should load from server', function() {
             }
         ]
     });
-    equal(records.objectAt(10), BD.SPARSE_PLACEHOLDER);
+    equal(records.objectAt(10), BD.SPARSE_PLACEHOLDER); //These indexes should now be a BD.SPARSE_PLACEHOLDER, since we know have a length
     resetAjax();
     equal(records.objectAt(9), BD.SPARSE_PLACEHOLDER); //These two should not trigger a request
     equal(records.objectAt(11), BD.SPARSE_PLACEHOLDER);
@@ -145,8 +166,7 @@ test('Triggers didLoad every time something is loaded', function() {
             }
         }
     });
-    var records = BD.SparseRecordArray.create({
-        type: App.Post,
+    var records = App.Post.filter({
         pageSize: 3
     });
     records.on('didLoad', function() {
@@ -167,8 +187,7 @@ test('Triggers didLoad every time something is loaded', function() {
 
 test('Destroying a loading sparse array', function() {
     fakeAjaxSuccess();
-    var records = BD.SparseRecordArray.create({
-        type: App.Post,
+    var records = App.Post.filter({
         pageSize: 3
     });
     records.on('didLoad', function() {
@@ -193,8 +212,7 @@ test('Deleting a record that is in a sparse array', function() {
             }
         ]
     });
-    var records = BD.SparseRecordArray.create({
-        type: App.Post,
+    var records = App.Post.filter({
         pageSize: 1
     });
     equal(records.get('length'), 0);
