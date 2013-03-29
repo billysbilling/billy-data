@@ -132,7 +132,13 @@ BD.Store = Em.Object.extend({
                 recordArray.trigger('didLoad', payload);
             },
             error: function(xhr) {
-                if (xhr.status == 422) {
+                if (xhr.status === 0) {
+                    if (xhr.statusText === 'abort') {
+                        //Ignore
+                    } else {
+                        BD.printServerError('We\'re sorry, but the records could currently not be loaded. Please check your internet connection and try again.');
+                    }
+                } else if (xhr.status === 422) {
                     var payload = JSON.parse(xhr.responseText);
                     BD.printServerError(payload.errorMessage);
                 } else {
