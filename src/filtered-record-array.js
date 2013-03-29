@@ -354,7 +354,8 @@ BD.FilteredRecordArray = BD.RecordArray.extend({
     },
 
     qCallback: function() {
-        var q = this.get('q'),
+        var type = this.get('type'),
+            q = this.get('q'),
             regex,
             qProperties;
         if (Em.isEmpty(q)) {
@@ -362,11 +363,12 @@ BD.FilteredRecordArray = BD.RecordArray.extend({
         }
         regex = new RegExp(q, 'i');
         qProperties = Em.get(type, 'qProperties');
+        Em.assert("You need to set `qProperties` on the model class "+type.toString()+". As in `"+type.toString()+".reopenClass({qProperties: ['prop1', 'prop2']})`", Em.isArray(qProperties));
         return function(r) {
-            var match = true;
+            var match = false;
             qProperties.find(function(k) {
-                if (!regex.test(r.get(k))) {
-                    match = false;
+                if (regex.test(r.get(k))) {
+                    match = true;
                     return true;
                 }
                 return false;
