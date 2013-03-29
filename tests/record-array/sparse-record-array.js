@@ -267,4 +267,11 @@ test('Loading a record that belongs in a sorted sparse array', function() {
     equal(records.objectAt(2).get('id'), 2);
     equal(records.objectAt(3).get('id'), 3);
     equal(records.objectAt(4).get('id'), 4);
+    //Change the title of 3, so that it should be first
+    App.Post.find(3).set('title', 'A post that goes first');
+    equal(records.objectAt(0).get('id'), 3);
+    equal(records.objectAt(1).get('id'), 0);
+    equal(records.objectAt(2).get('id'), 1);
+    equal(records.objectAt(3).get('id'), 2);
+    equal(records.objectAt(4).get('id'), 4);
 });
