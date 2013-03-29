@@ -252,8 +252,13 @@ BD.FilteredRecordArray = BD.RecordArray.extend({
         if (r != BD.SPARSE_PLACEHOLDER) {
             this.set('length', this.get('length') + 1);
         }
-        var ret = this._super(index, r);
-        return ret;
+        return this._super(index, r);
+    },
+    pushObject: function(r) {
+        if (r != BD.SPARSE_PLACEHOLDER) {
+            this.set('length', this.get('length') + 1);
+        }
+        return this._super(r);
     },
     removeAt: function(index) {
         var r = this.objectAt(index);

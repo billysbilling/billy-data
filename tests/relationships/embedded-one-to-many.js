@@ -172,3 +172,14 @@ test('When saving a parent with a dirty child, the whole tree should be clean af
     equal(post.get('isDirty'), false, 'Child should be clean');
     equal(post.get('selfIsDirty'), false, 'Child should be self-clean');
 });
+
+test('Creating a new parent and a child', function() {
+    var category = App.Category.createRecord({
+        name: 'Exciting stuff'
+    });
+    var post = App.Post.createRecord({
+        category: category,
+        name: 'Parachuting is fun'
+    });
+    equal(category.get('posts.length'), 1);
+});
