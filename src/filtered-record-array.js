@@ -1,6 +1,6 @@
-BD.SPARSE_PLACEHOLDER = {
+BD.SPARSE_PLACEHOLDER = Ember.Object.create({
     isLoaded: false
-};
+});
 
 BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
 
