@@ -323,7 +323,8 @@ BD.Model.reopenClass({
         //Instantiate record
         properties = properties || {};
         var r = this._create({
-            isNew: true
+            isNew: true,
+            isLoaded: true
         });
         //Make sure that each hasMany relationship is registered as an empty RecordArray
         var data = r.get('_data');
