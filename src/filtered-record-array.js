@@ -2,7 +2,7 @@ BD.SPARSE_PLACEHOLDER = {
     isLoaded: false
 };
 
-BD.FilteredRecordArray = BD.RecordArray.extend({
+BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
 
     /**
      The model class for records contained in this array.
@@ -65,7 +65,7 @@ BD.FilteredRecordArray = BD.RecordArray.extend({
      @property {String}
      @default "ASC"
      */
-    sortDirection: 'ASC',
+    sortDirection: null,
 
     /**
      A comparator that's used to sort locally only. Can be any of:
@@ -111,7 +111,8 @@ BD.FilteredRecordArray = BD.RecordArray.extend({
     init: function() {
         this._requestedIndexes = {};
         this._pendingRequests = [];
-        this.set('content', Em.A());
+        this._content = {};
+        this._indexForRecord = {};
         this.set('length', 0);
         this._super();
         this._initData();
@@ -146,6 +147,9 @@ BD.FilteredRecordArray = BD.RecordArray.extend({
         }
         this.set('queryObservers', queryObservers);
         //Sort
+        if (Em.isEmpty(sortDirection)) {
+            sortDirection = 'ASC';
+        }
         if (!comparator && sortProperty) {
             comparator = {};
             comparator[sortProperty] = sortDirection;
@@ -182,18 +186,16 @@ BD.FilteredRecordArray = BD.RecordArray.extend({
             } else {
                 r = BD.store.find(type, id);
             }
-            if (r.get('isLoaded')) {
-                self._pushObjectSorted(r);
-            } else {
+            if (!r.get('isLoaded')) {
                 pending++;
                 r.one('didLoad', function() {
                     pending--;
                     if (pending == 0) {
                         self.set('isLoaded', true);
                     }
-                    self._pushObjectSorted(r);
                 });
             }
+            self._pushObjectSorted(r);
         }, this);
         if (pending == 0) {
             this.set('isLoaded', true);
@@ -202,29 +204,33 @@ BD.FilteredRecordArray = BD.RecordArray.extend({
 
     _filterLocally: function() {
         var self = this,
-            content = [];
+            records = [],
+            length;
         BD.store.eachRecordOfType(this.get('type'), function(r) {
             if (this._matchesQuery(r)) {
-                content.push(r);
+                records.push(r);
             }
         }, this);
-        content.sort(function(a, b) {
+        records.sort(function(a, b) {
             return self._compare(a, b);
         });
-        this.set('length', content.length);
-        this.set('content', content);
+        length = records.length;
+        this.set('length', length);
+        this.arrayContentWillChange(0, 0, length);
+        self._replace(0, records);
+        this.arrayContentDidChange(0, 0, length);
         this.set('isLoaded', true);
     },
 
     objectAt: function(index) {
-        if (index > this.get('length')-1) {
+        if (index < 0 || index > this.get('length')-1) {
             return null;
         }
-        var r = this._super(index);
-        if (r && r != BD.SPARSE_PLACEHOLDER) {
+        var r = this._content[index];
+        if (r) {
             return r;
         }
-        if (index < 0 || this._requestOffsetIsSuspended || BD.store.get('isResetting') || this.get('isDestroying')) {
+        if (this._requestOffsetIsSuspended || BD.store.get('isResetting') || this.get('isDestroying')) {
             return BD.SPARSE_PLACEHOLDER;
         }
         if (!this._requestedIndexes[index]) {
@@ -240,34 +246,68 @@ BD.FilteredRecordArray = BD.RecordArray.extend({
         }
         return BD.SPARSE_PLACEHOLDER;
     },
-
-    removeObject: function(o) {
-        this._requestOffsetIsSuspended = true;
-        var ret = this._super(o);
-        this._requestOffsetIsSuspended = false;
-        return ret;
+    
+    indexOf: function(r) {
+        return this._indexForRecord[r.clientId];
     },
-
-    insertAt: function(index, r) {
-        if (r != BD.SPARSE_PLACEHOLDER) {
-            this.set('length', this.get('length') + 1);
-        }
-        return this._super(index, r);
+    removeObject: function(r) {
+        this.removeAt(this.indexOf(r));
     },
     removeAt: function(index) {
-        var r = this.objectAt(index);
-        var ret = this._super(index);
-        if (r != BD.SPARSE_PLACEHOLDER) {
-            this.set('length', this.get('length') - 1);
+        var r = this._content[index];
+        if (r) {
+            this._requestOffsetIsSuspended = true;
+            this.arrayContentWillChange(index, 1, 0);
+            delete this._content[index];
+            delete this._indexForRecord[r.clientId];
+            var length = this.get('length');
+            for (var i = index+1; i < length; i++) {
+                this._move(i, i-1);
+            }
+            this.decrementProperty('length');
+            this.arrayContentDidChange(index, 1, 0);
+            this._requestOffsetIsSuspended = false;
         }
-        return ret;
     },
-
-    arrayContentDidChange: function(index, removed, added) {
+    _move: function(from, to) {
+        var r = this._content[from];
+        if (r) {
+            delete this._content[from];
+            delete this._indexForRecord[r.clientId];
+            this._content[to] = r;
+            this._indexForRecord[r.clientId] = to;
+        }
+    },
+    pushObject: function(r) {
+        this.insertAt(this.get('length'), r);
+    },
+    insertAt: function(index, r) {
         this._requestOffsetIsSuspended = true;
-        var ret = this._super.apply(this, arguments);
+        this.arrayContentWillChange(index, 0, 1);
+        var length = this.get('length');
+        for (var i = length-1; i >= index; i--) {
+            this._move(i, i+1);
+        }
+        this._content[index] = r;
+        this._indexForRecord[r.clientId] = index;
+        this.incrementProperty('length');
+        this.arrayContentDidChange(index, 0, 1);
         this._requestOffsetIsSuspended = false;
-        return ret;
+    },
+    _replace: function(index, records) {
+        var length = records.get('length');
+        records.forEach(function(r, recordIndex) {
+            this._content[index + recordIndex] = r;
+            this._indexForRecord[r.clientId] = index + recordIndex;
+        }, this);
+    },
+    forEach: function(callback, context) {
+        var content = this._content,
+            index;
+        for (index in content) {
+            if (!content.hasOwnProperty(index)) return;
+            callback.call(context, content[index], index);
+        }
     },
 
     _requestOffset: function(offset) {
@@ -278,19 +318,9 @@ BD.FilteredRecordArray = BD.RecordArray.extend({
             pageSize = this.get('pageSize'),
             length = this.get('length'),
             records,
-            i,
-            contentLength = this.get('content.length');
+            i;
         for (i = offset; i < offset + pageSize; i++) {
             this._requestedIndexes[i] = true;
-        }
-        if (offset + pageSize > contentLength) {
-            var placeholders = [];
-            for (i = contentLength; i <= offset + pageSize && i < length; i++) {
-                placeholders.push(BD.SPARSE_PLACEHOLDER);
-            }
-            this._requestOffsetIsSuspended = true;
-            this.replaceContent(offset + pageSize, contentLength, placeholders);
-            this._requestOffsetIsSuspended = false;
         }
         query.offset = offset;
         if (url) {
@@ -305,11 +335,14 @@ BD.FilteredRecordArray = BD.RecordArray.extend({
         records.one('didLoad', function(payload) {
             self._rejectAll = false;
             //Handle total
-            var total = Ember.get(payload, 'meta.paging.total') || records.get('length');
+            var recordsLength = records.get('length'),
+                total = Ember.get(payload, 'meta.paging.total') || recordsLength;
             self.set('length', total);
-            //Replace content
+            //Add records
             self._requestOffsetIsSuspended = true;
-            self.replaceContent(offset, records.get('content.length'), records.get('content'));
+            self.arrayContentWillChange(offset, 0, recordsLength);
+            self._replace(offset, records);
+            self.arrayContentDidChange(offset, 0, recordsLength);
             self._requestOffsetIsSuspended = false;
             //Set isLoaded state
             self.set('isLoaded', true);
@@ -463,19 +496,22 @@ BD.FilteredRecordArray = BD.RecordArray.extend({
             return;
         }
         var index = this.indexOf(r),
-            result;
+            o; //Other record
         //Check the previous and next records. If the order of those 3 don't match, then reinsert the record.
         if (index > 0) {
-            result = this._compare(r, this.objectAt(index-1));
-            if (result < 0) {
+            //If the record on the left is sparse, or this record is less than it, then reinsert
+            o = this._content[index-1];
+            if (!o || this._compare(r, o) < 0) {
+                //TODO: It should be more efficient to move an item
                 this.removeObject(r);
                 this._pushObjectSorted(r);
                 return;
             }
         }
         if (index < this.get('length') - 1) {
-            result = this._compare(r, this.objectAt(index+1));
-            if (result > 0) {
+            //If the record on the right is sparse, or this record is greater than it, then reinsert
+            o = this._content[index+1];
+            if (!o || this._compare(r, o) > 0) {
                 this.removeObject(r);
                 this._pushObjectSorted(r);
             }
@@ -486,7 +522,7 @@ BD.FilteredRecordArray = BD.RecordArray.extend({
         var insertIndex = null,
             length = this.get('length');
         if (this.get('comparator') && length) {
-            insertIndex = this._findInsertionPoint(r, 0, this.get('length')-1);
+            insertIndex = this._findInsertionPoint(r, 0, length-1);
         }
         if (insertIndex === null) {
             this.pushObject(r);
@@ -495,9 +531,56 @@ BD.FilteredRecordArray = BD.RecordArray.extend({
         }
     },
     _findInsertionPoint: function(r, min, max) {
-        var mid = Math.floor((min + max) / 2);
-        var o = this.objectAt(mid);
-        var s = this._compare(r, o)
+        var mid = Math.floor((min + max) / 2),
+            o, //Other record
+            s, //Sort value
+            sparseMin,
+            sparseMax;
+        o = this._content[mid];
+        //If no o was found, then look left for the first non-sparse record
+        if (!o) {
+            sparseMin = mid;
+            while (sparseMin >= min + 1) {
+                sparseMin--;
+                o = this._content[sparseMin];
+                if (o) {
+                    s = this._compare(r, o)
+                    if (s == 0) {
+                        //If a record was found that this record is equal to, then just return 0 here
+                        return 0;
+                    } else if (s < 0) {
+                        //If the insertion record is less than the found record, then continue with the found record as max
+                        return this._findInsertionPoint(r, min, sparseMin-1);
+                    }
+                    //Otherwise let the search continue
+                    //Add one to sparse min, since that's where we will insert the record, if no non-sparse are found to the right either
+                    sparseMin++;
+                    break;
+                }
+            }
+            //If still no o was found, then look right for the first non-sparse record
+            sparseMax = mid;
+            while (sparseMax <= max - 1) {
+                sparseMax++;
+                o = this._content[sparseMax];
+                if (o) {
+                    s = this._compare(r, o)
+                    if (s == 0) {
+                        //If a record was found that this record is equal to, then just return 0 here
+                        return 0;
+                    } else if (s > 0) {
+                        //If the insertion record is greater than the found record, then continue with the found record as min
+                        return this._findInsertionPoint(r, sparseMax+1, max);
+                    }
+                    //Otherwise let the search continue
+                    break;
+                }
+            }
+            //If there were no non-sparse records to either the left or the right, then the record must be inserted at min
+            return sparseMin;
+        }
+        //Compare normally
+        s = this._compare(r, o)
         if (s < 0) {
             if (mid == min) {
                 return mid;
@@ -514,7 +597,7 @@ BD.FilteredRecordArray = BD.RecordArray.extend({
     },
 
     willDestroy: function() {
-        BD.store.willDestroyRecordArray(this);
+        BD.store.willDestroyFilteredRecordArray(this);
         this._pendingRequests.forEach(function(records) {
             records.destroy();
         });

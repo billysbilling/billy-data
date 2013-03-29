@@ -1,17 +1,7 @@
-BD.RecordArray = Em.ArrayProxy.extend(Em.Evented, {
+BD.RecordArray = Em.Mixin.create(Em.Evented, {
 
     isLoaded: false,
-    content: null,
 
-    ajaxRequest: null,
-
-    init: function() {
-        this._super();
-        this.forEach(function(r) {
-            r.didAddToRecordArray(this);
-        }, this);
-    },
-    
     arrayContentWillChange: function(index, removed, added) {
         var ret = this._super.apply(this, arguments);
         var r,
@@ -40,27 +30,19 @@ BD.RecordArray = Em.ArrayProxy.extend(Em.Evented, {
         }
         return ret;
     },
-    
-    willDestroy: function() {
-        this._super();
-        var ajaxRequest = this.get('ajaxRequest');
-        if (ajaxRequest) {
-            ajaxRequest.abort();
-        }
-        this.forEach(function(r) {
-            if (r !== BD.SPARSE_PLACEHOLDER) {
-                r.didRemoveFromRecordArray(this);
-            }
-        }, this);
-        this._super();
-    },
-    
+
     whenLoaded: function(callback) {
         if (this.get('isLoaded')) {
             callback();
         } else {
             this.one('didLoad', callback);
         }
+    },
+
+    willDestroy: function() {
+        this.forEach(function(r) {
+            r.didRemoveFromRecordArray(this);
+        }, this);
     }
 
 });

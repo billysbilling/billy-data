@@ -224,3 +224,47 @@ test('Deleting a record that is in a sparse array', function() {
     flushAjax();
     equal(records.get('length'), 22);
 });
+
+test('Loading a record that belongs in a sorted sparse array', function() {
+    fakeAjaxSuccess({
+        meta: {
+            paging: {
+                total: 23
+            }
+        },
+        posts: [
+            {
+                id: 0,
+                title: 'Post 0'
+            },
+            {
+                id: 1,
+                title: 'Post 1'
+            },
+            {
+                id: 2,
+                title: 'Post 2'
+            }
+        ]
+    });
+    var records = App.Post.filter({
+        pageSize: 3,
+        sortProperty: 'title'
+    })
+    flushAjax();
+    //Insert 4 after 2
+    App.Post.load({
+        id: 4,
+        title: 'Post 4'
+    });
+    equal(records.objectAt(2).get('id'), 2);
+    equal(records.objectAt(3).get('id'), 4);
+    //Insert 3, which should go between 2 and 3
+    App.Post.load({
+        id: 3,
+        title: 'Post 3'
+    });
+    equal(records.objectAt(2).get('id'), 2);
+    equal(records.objectAt(3).get('id'), 3);
+    equal(records.objectAt(4).get('id'), 4);
+});

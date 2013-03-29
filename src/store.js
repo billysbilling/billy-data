@@ -103,7 +103,7 @@ BD.Store = Em.Object.extend({
                 records.push(this.find(type, id));
             }
         }, this);
-        var recordArray = BD.RecordArray.create({
+        var recordArray = BD.FindRecordArray.create({
             type: type,
             isLoaded: true,
             content: Em.A(records)
@@ -112,7 +112,7 @@ BD.Store = Em.Object.extend({
     },
     findByUrl: function(type, url, query) {
         type = BD.resolveType(type);
-        var recordArray = BD.RecordArray.create({
+        var recordArray = BD.FindRecordArray.create({
             type: type,
             content: Em.A(),
             url: url,
@@ -631,7 +631,7 @@ BD.Store = Em.Object.extend({
         }, this);
         this._recordAttributeDidChangeQueue = [];
     },
-    willDestroyRecordArray: function(recordArray) {
+    willDestroyFilteredRecordArray: function(recordArray) {
         var guid = Em.guidFor(recordArray),
             typeMap = this._typeMapFor(recordArray.get('type'));
         delete this._recordArrays[guid];
