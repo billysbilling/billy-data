@@ -352,10 +352,12 @@ test('Test object sorting', function() {
     var stringDescComparatorPosts = App.Post.filter({
         comparator: {'author': 'DESC'}
     });
-    deepEqual(stringDescComparatorPosts.mapProperty('id'), [1, 3, 2], 'Order should be correct');
+    deepEqual(stringDescComparatorPosts.mapProperty('author'), ['Sebastian', 'Noah', 'Adam'], 'Order should be correct');
     sebastian.set('author', 'Aase');
+    deepEqual(stringDescComparatorPosts.mapProperty('author'), ['Noah', 'Adam', 'Aase'], 'Order should be correct');
+    console.log('-----')
     adam.set('author', 'Zebra');
-    deepEqual(stringDescComparatorPosts.mapProperty('id'), [2, 3, 1], 'Order should be correct');
+    deepEqual(stringDescComparatorPosts.mapProperty('author'), ['Zebra', 'Noah', 'Aase'], 'Order should be correct');
 });
 
 test('Test object with multiple keys sorting', function() {

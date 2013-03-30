@@ -301,6 +301,40 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
             this._indexForRecord[r.clientId] = index + recordIndex;
         }, this);
     },
+    reinsertObject: function(r) {
+        var oldIndex = this._indexForRecord[r.clientId],
+            newIndex = this._findInsertIndex(r),
+            i,
+            diff,
+            changeIndex;
+        //We need to subtract one from the newIndex if it's greater than the old index, since one of those spots in between is itself
+        if (newIndex > oldIndex) {
+            newIndex--;
+        }
+        //Only reinsert the object if it has been moved
+        if (oldIndex != newIndex) {
+            this._requestOffsetIsSuspended = true;
+            changeIndex = Math.min(newIndex, oldIndex);
+            diff = Math.abs(newIndex - oldIndex) + 1;
+            this.arrayContentWillChange(changeIndex, diff, diff);
+            if (newIndex > oldIndex) {
+                //If an item is moved to the right
+                
+                for (i = oldIndex+1; i <= newIndex; i++) {
+                    this._move(i, i-1);
+                }
+            } else {
+                //If an item is moved to the left
+                for (i = oldIndex-1; i >= newIndex; i--) {
+                    this._move(i, i+1);
+                }
+            }
+            this._content[newIndex] = r;
+            this._indexForRecord[r.clientId] = newIndex;
+            this.arrayContentDidChange(changeIndex, diff, diff);
+            this._requestOffsetIsSuspended = false;
+        }
+    },
     forEach: function(callback, context) {
         var content = this._content,
             index;
@@ -491,6 +525,9 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
     },
 
     checkRecordAgainstComparator: function(r) {
+        if (this._rejectAll) {
+            return;
+        }
         //If the record array does not contain the record, then don't do anything
         if (!r.isInRecordArray(this)) {
             return;
@@ -502,9 +539,7 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
             //If the record on the left is sparse, or this record is less than it, then reinsert
             o = this._content[index-1];
             if (!o || this._compare(r, o) < 0) {
-                //TODO: It should be more efficient to move an item
-                this.removeObject(r);
-                this._pushObjectSorted(r);
+                this.reinsertObject(r);
                 return;
             }
         }
@@ -512,72 +547,55 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
             //If the record on the right is sparse, or this record is greater than it, then reinsert
             o = this._content[index+1];
             if (!o || this._compare(r, o) > 0) {
-                this.removeObject(r);
-                this._pushObjectSorted(r);
+                this.reinsertObject(r);
             }
         }
     },
 
     _pushObjectSorted: function(r) {
-        var insertIndex = null,
-            length = this.get('length');
-        if (this.get('comparator') && length) {
-            insertIndex = this._findInsertionPoint(r, 0, length-1);
-        }
+        var insertIndex = this._findInsertIndex(r);
         if (insertIndex === null) {
             this.pushObject(r);
         } else {
             this.insertAt(insertIndex, r);
         }
     },
-    _findInsertionPoint: function(r, min, max) {
+    _findInsertIndex: function(r) {
+        var insertIndex = null,
+            length = this.get('length');
+        if (this.get('comparator') && length) {
+            insertIndex = this._binarySearch(r, 0, length-1);
+        }
+        return insertIndex;
+    },
+    _binarySearch: function(r, min, max) {
         var mid = Math.floor((min + max) / 2),
             o, //Other record
             s, //Sort value
-            sparseMin,
-            sparseMax;
+            b; //Sub binary search result
         o = this._content[mid];
-        //If no o was found, then look left for the first non-sparse record
+        //If other record is equal to this record, then don't use it
+        if (o === r) {
+            o = null;
+        }
+        //If no o was found, then its either because mid is the current record or we've hit a sparse index
         if (!o) {
-            sparseMin = mid;
-            while (sparseMin >= min + 1) {
-                sparseMin--;
-                o = this._content[sparseMin];
-                if (o) {
-                    s = this._compare(r, o)
-                    if (s == 0) {
-                        //If a record was found that this record is equal to, then just return 0 here
-                        return 0;
-                    } else if (s < 0) {
-                        //If the insertion record is less than the found record, then continue with the found record as max
-                        return this._findInsertionPoint(r, min, sparseMin-1);
-                    }
-                    //Otherwise let the search continue
-                    //Add one to sparse min, since that's where we will insert the record, if no non-sparse are found to the right either
-                    sparseMin++;
-                    break;
-                }
+            //If mid is max, then mid is the final result
+            if (mid == max) {
+                return mid;
             }
-            //If still no o was found, then look right for the first non-sparse record
-            sparseMax = mid;
-            while (sparseMax <= max - 1) {
-                sparseMax++;
-                o = this._content[sparseMax];
-                if (o) {
-                    s = this._compare(r, o)
-                    if (s == 0) {
-                        //If a record was found that this record is equal to, then just return 0 here
-                        return 0;
-                    } else if (s > 0) {
-                        //If the insertion record is greater than the found record, then continue with the found record as min
-                        return this._findInsertionPoint(r, sparseMax+1, max);
-                    }
-                    //Otherwise let the search continue
-                    break;
-                }
+            //Do a binary search to the right (in the interval from mid (excluding mid) to max). If the insertion point is after this, then just return it 
+            b = this._binarySearch(r, mid+1, max);
+            if (b > mid+1) {
+                return b;
             }
-            //If there were no non-sparse records to either the left or the right, then the record must be inserted at min
-            return sparseMin;
+            //If mid is min, then mid is the final result
+            if (mid == min) {
+                return mid;
+            }
+            //Otherwise do a binary search to the left (in the interval from min to mid (excluding mid)) and use this result no matter what
+            b = this._binarySearch(r, min, mid-1);
+            return b;
         }
         //Compare normally
         s = this._compare(r, o)
@@ -585,12 +603,12 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
             if (mid == min) {
                 return mid;
             }
-            return this._findInsertionPoint(r, min, mid-1);
+            return this._binarySearch(r, min, mid-1);
         } else if (s > 0) {
             if (mid == max) {
                 return mid+1;
             }
-            return this._findInsertionPoint(r, mid+1, max);
+            return this._binarySearch(r, mid+1, max);
         } else  {
             return mid;
         }
