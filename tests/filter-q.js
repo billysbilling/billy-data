@@ -30,7 +30,7 @@ module('Filtered queries with q', {
     }
 });
 
-test('sss', function() {
+test('Filter with q', function() {
     var treePosts = App.Post.filter({
         q: 'tree',
         sortProperty: 'id'
@@ -45,4 +45,21 @@ test('sss', function() {
     post2.set('content', 'Accounting instead.');
     deepEqual(treePosts.mapProperty('id'), [1]);
     deepEqual(accountingPosts.mapProperty('id'), [1, 2, 3]);
+});
+
+test('Weird characters in q', function() {
+    var weirdPosts = App.Post.filter({
+        q: "weird\\"
+    });
+    deepEqual(weirdPosts.mapProperty('id'), []);
+    var post = App.Post.find(1);
+    post.set('title', "I am weird\\");
+    deepEqual(weirdPosts.mapProperty('id'), [1]);
+});
+
+test('Regex chars do not have special meaning', function() {
+    var posts = App.Post.filter({
+        q: 'Ember.j.'
+    });
+    deepEqual(posts.mapProperty('id'), []);
 });

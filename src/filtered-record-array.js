@@ -428,6 +428,7 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
         if (Em.isEmpty(q)) {
             return null;
         }
+        q = (q+'').replace(/([.?*+^$[\]\\(){}|-])/g, "\\$1");
         regex = new RegExp(q, 'i');
         qProperties = Em.get(type, 'qProperties');
         Em.assert("You need to set `qProperties` on the model class "+type.toString()+". As in `"+type.toString()+".reopenClass({qProperties: ['prop1', 'prop2']})`", Em.isArray(qProperties));
