@@ -389,14 +389,12 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
     
     _buildServerQuery: function() {
         var type = this.get('type'),
-            query = Em.copy(this.get('query')),
-            remoteQuery = this.get('remoteQuery'),
+            query = _.extend({}, this.get('query'), this.get('remoteQuery')),
             q = this.get('q'),
             sortProperty = this.get('sortProperty'),
             sortDirection = this.get('sortDirection'),
             pageSize = this.get('pageSize');
         _.each(query, function(value, key) {
-            query[key] = value;
             Ember.get(type, 'belongsToRelationships').forEach(function(belongsToKey, meta) {
                 if (belongsToKey == key) {
                     delete query[key];
@@ -413,9 +411,6 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
         }
         if (pageSize) {
             query.pageSize = pageSize;
-        }
-        if (remoteQuery) {
-            Em.merge(query, remoteQuery);
         }
         return query;
     },
