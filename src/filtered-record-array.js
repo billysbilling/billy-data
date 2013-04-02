@@ -192,6 +192,7 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
                     pending--;
                     if (pending == 0) {
                         self.set('isLoaded', true);
+                        self.trigger('didLoad');
                     }
                 });
             }
@@ -199,6 +200,9 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
         }, this);
         if (pending == 0) {
             this.set('isLoaded', true);
+            setTimeout(function() {
+                self.trigger('didLoad');
+            }, 0);
         }
     },
 
@@ -220,6 +224,9 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
         self._replace(0, records);
         this.arrayContentDidChange(0, 0, length);
         this.set('isLoaded', true);
+        setTimeout(function() {
+            self.trigger('didLoad');
+        }, 0);
     },
 
     objectAt: function(index) {

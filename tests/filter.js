@@ -433,3 +433,15 @@ test('Test #bigdata sorting', function() {
     });
     equal(all.indexOf(category), 11, 'Z goes last');
 });
+
+
+
+asyncTest('Local filter should fire didLoad async', function() {
+    expect(1);
+    App.Post.loadAll([]);
+    var posts = App.Post.filter();
+    posts.one('didLoad', function() {
+        ok(true, 'didLoad was triggered');
+        start();
+    });
+});
