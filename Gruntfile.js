@@ -6,6 +6,7 @@ module.exports = function(grunt) {
         },
         concat: {
             dist: {
+                separator: '\n\n',
                 src: [
                     'src/bd.js',
                     'src/store.js',
@@ -23,7 +24,7 @@ module.exports = function(grunt) {
                 dest: 'dist/billy-data.js'
             }
         },
-        min: {
+        uglify: {
             dist: {
                 src: ['dist/billy-data.js'],
                 dest: 'dist/billy-data.min.js'
@@ -31,6 +32,8 @@ module.exports = function(grunt) {
         }
     });
 
-    grunt.registerTask('default', 'concat min');
+    grunt.loadNpmTasks('grunt-contrib-concat');
+    grunt.loadNpmTasks('grunt-contrib-uglify');
+    grunt.registerTask('default', ['concat', 'uglify']);
 
 };
