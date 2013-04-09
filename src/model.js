@@ -239,15 +239,15 @@ BD.Model = Em.Object.extend(Em.Evented, {
     
     serialize: function(options) {
         options = options || {};
-        options.properties = options.properties || {};
         var serialized = {},
+            optionProperties = options.properties || {},
             data = this.get('_data');
         serialized._clientId = this.get('clientId');
         if (!this.get('isNew')) {
             serialized.id = this.get('id');
         }
         this.eachAttribute(function(key, meta) {
-            var value = options.properties[key] || data.attributes[key];
+            var value = optionProperties.hasOwnProperty(key) ? optionProperties[key] : data.attributes[key];
             if (typeof value != 'undefined') {
                 serialized[key] = BD.transforms[meta.type].serialize(value);
             }
@@ -255,8 +255,8 @@ BD.Model = Em.Object.extend(Em.Evented, {
         this.eachBelongsTo(function(key, meta) {
             if (!options.isEmbedded || !meta.options.isParent) {
                 var id;
-                if (options.properties[key]) {
-                    id = options.properties[key].get('id');
+                if (optionProperties.hasOwnProperty(key)) {
+                    id = optionProperties[key] ? optionProperties[key].get('id') : null;
                 } else {
                     id = data.belongsTo[key];
                 }

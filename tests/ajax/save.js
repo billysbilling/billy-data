@@ -112,6 +112,34 @@ test('Test save() with properties, belongsTo', function() {
     equal(post.get('category'), uncommonCategory);
 });
 
+test('Test save() with properties, normal null attribute', function() {
+    expect(1);
+    var post = App.Post.find(101);
+    BD.ajax = function(hash) {
+        console.log(hash)
+        equal(hash.data.post.title, null);
+    };
+    post.save({
+        properties: {
+            title: null
+        }
+    });
+});
+
+test('Test save() with properties, null belongsTo', function() {
+    expect(1);
+    var post = App.Post.find(101);
+    BD.ajax = function(hash) {
+        console.log(hash)
+        equal(hash.data.post.categoryId, null);
+    };
+    post.save({
+        properties: {
+            category: null
+        }
+    });
+});
+
 test('Test error validation', function() {
     var post = App.Post.find(101);
     var expectedValidationErrors = {};
