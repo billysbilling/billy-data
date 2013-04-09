@@ -116,7 +116,7 @@ test('Test save() with properties, normal null attribute', function() {
     expect(1);
     var post = App.Post.find(101);
     BD.ajax = function(hash) {
-        equal(hash.data.post.title, null);
+        strictEqual(hash.data.post.title, null);
     };
     post.save({
         properties: {
@@ -129,7 +129,7 @@ test('Test save() with properties, null belongsTo', function() {
     expect(1);
     var post = App.Post.find(101);
     BD.ajax = function(hash) {
-        equal(hash.data.post.categoryId, null);
+        strictEqual(hash.data.post.categoryId, null);
     };
     post.save({
         properties: {

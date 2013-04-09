@@ -248,9 +248,10 @@ BD.Model = Em.Object.extend(Em.Evented, {
         }
         this.eachAttribute(function(key, meta) {
             var value = optionProperties.hasOwnProperty(key) ? optionProperties[key] : data.attributes[key];
-            if (typeof value != 'undefined') {
-                serialized[key] = BD.transforms[meta.type].serialize(value);
+            if (typeof value == 'undefined') {
+                value = null;
             }
+            serialized[key] = BD.transforms[meta.type].serialize(value);
         }, this);
         this.eachBelongsTo(function(key, meta) {
             if (!options.isEmbedded || !meta.options.isParent) {
@@ -258,14 +259,12 @@ BD.Model = Em.Object.extend(Em.Evented, {
                 if (optionProperties.hasOwnProperty(key)) {
                     id = optionProperties[key] ? optionProperties[key].get('id') : null;
                 } else {
-                    id = data.belongsTo[key];
+                    id = data.belongsTo[key] || null;
                 }
-                if (id) {
-                    if (typeof id === 'object') {
-                        id = BD.store.findByClientId(id.clientId).get(meta.idProperty);
-                    }
-                    meta.serialize(serialized, key, id);
+                if (id && typeof id === 'object') {
+                    id = BD.store.findByClientId(id.clientId).get(meta.idProperty);
                 }
+                meta.serialize(serialized, key, id);
             }
         }, this);
         if (options.embed) {
