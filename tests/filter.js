@@ -355,7 +355,6 @@ test('Test object sorting', function() {
     deepEqual(stringDescComparatorPosts.mapProperty('author'), ['Sebastian', 'Noah', 'Adam'], 'Order should be correct');
     sebastian.set('author', 'Aase');
     deepEqual(stringDescComparatorPosts.mapProperty('author'), ['Noah', 'Adam', 'Aase'], 'Order should be correct');
-    console.log('-----')
     adam.set('author', 'Zebra');
     deepEqual(stringDescComparatorPosts.mapProperty('author'), ['Zebra', 'Noah', 'Aase'], 'Order should be correct');
 });
