@@ -247,14 +247,16 @@ BD.Model = Em.Object.extend(Em.Evented, {
             serialized.id = this.get('id');
         }
         this.eachAttribute(function(key, meta) {
-            var value = optionProperties.hasOwnProperty(key) ? optionProperties[key] : data.attributes[key];
-            if (typeof value == 'undefined') {
-                value = null;
+            if (!meta.options.readonly) {
+                var value = optionProperties.hasOwnProperty(key) ? optionProperties[key] : data.attributes[key];
+                if (typeof value == 'undefined') {
+                    value = null;
+                }
+                serialized[key] = BD.transforms[meta.type].serialize(value);
             }
-            serialized[key] = BD.transforms[meta.type].serialize(value);
         }, this);
         this.eachBelongsTo(function(key, meta) {
-            if (!options.isEmbedded || !meta.options.isParent) {
+            if (!meta.options.readonly && (!options.isEmbedded || !meta.options.isParent)) {
                 var id;
                 if (optionProperties.hasOwnProperty(key)) {
                     id = optionProperties[key] ? optionProperties[key].get('id') : null;

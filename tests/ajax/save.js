@@ -6,7 +6,8 @@ module('Ajax save', {
         App.Post = BD.Model.extend({
             category: BD.belongsTo('App.Category'),
             title: BD.attr('string'),
-            comments: BD.hasMany('App.Comment', 'post', {isEmbedded: true})
+            comments: BD.hasMany('App.Comment', 'post', {isEmbedded: true}),
+            createdTime: BD.attr('date', {readonly: true})
         });
         App.Comment = BD.Model.extend({
             post: BD.belongsTo('App.Post', {isParent: true}),
