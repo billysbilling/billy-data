@@ -467,6 +467,7 @@ BD.Store = Em.Object.extend({
             var type = BD.lookupTypeByName(key);
             if (!type) {
                 Ember.warn('JSON payload had unknown key "'+key+'"');
+                continue;
             }
             //Load records of this type
             var records = this._loadMany(type, payload[key]);
