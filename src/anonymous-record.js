@@ -38,11 +38,15 @@ BD.AnonymousRecord = Em.ObjectProxy.extend({
         return promise;
     },
     _handleValidationErrors: function(xhr) {
-        var data = JSON.parse(xhr.responseText);
-        if (!data.validationErrors) {
+        var payload = null;;
+        try {
+            payload = JSON.parse(xhr.responseText);
+        } catch (e) {
+        }
+        if (!payload || !payload.validationErrors) {
             return;
         }
-        var rawErrors = data.validationErrors.record;
+        var rawErrors = payload.validationErrors.record;
         if (!rawErrors) {
             return;
         }
