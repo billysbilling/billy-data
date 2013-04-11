@@ -129,6 +129,13 @@ BD.Model = Em.Object.extend(Em.Evented, {
         //
         delete this._serializedData;
     },
+    whenLoaded: function(callback) {
+        if (this.get('isLoaded')) {
+            callback();
+        } else {
+            this.one('didLoad', callback);
+        }
+    },
 
     include: function(include) {
         BD.store.findByIdInclude(this.constructor, this.get('id'), include);
