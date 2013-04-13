@@ -199,8 +199,8 @@ BD.Store = Em.Object.extend({
                 promise.trigger('success', payload);
             },
             error: function(xhr) {
-                var errorMessage;
-                var payload = this._parseResponseJson(xhr.responseText);
+                var errorMessage,
+                    payload = this._parseResponseJson(xhr.responseText);
                 if (xhr.status == 422 && payload) {
                     errorMessage = payload.errorMessage;
                     this._handleValidationErrors(payload);
