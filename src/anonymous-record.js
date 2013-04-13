@@ -25,24 +25,27 @@ BD.AnonymousRecord = Em.ObjectProxy.extend({
                 promise.trigger('success', payload);
             },
             error: function(xhr) {
-                if (xhr.status == 422) {
-                    this._handleValidationErrors(xhr);
+                var errorMessage,
+                    payload = null;;
+                try {
+                    payload = JSON.parse(xhr.responseText);
+                } catch (e) {
+                }
+                if (xhr.status == 422 && payload) {
+                    errorMessage = payload.errorMessage;
+                    this._handleValidationErrors(payload);
                 } else {
-                    this.set('error', 'We\'re sorry but we couldn\'t successfully send your request. Please try again.');
+                    errorMessage = 'We\'re sorry but we couldn\'t successfully send your request. Please try again.';
+                    this.set('error', errorMessage);
                 }
                 promise.trigger('complete');
-                promise.trigger('error');
+                promise.trigger('error', errorMessage, xhr);
             },
             context: this
         });
         return promise;
     },
-    _handleValidationErrors: function(xhr) {
-        var payload = null;;
-        try {
-            payload = JSON.parse(xhr.responseText);
-        } catch (e) {
-        }
+    _handleValidationErrors: function(payload) {
         if (!payload || !payload.validationErrors) {
             return;
         }
