@@ -37,8 +37,23 @@ BD.transforms = {
             return Boolean(deserialized);
         }
     },
-    
+
     date: {
+        deserialize: function(serialized) {
+            if (Em.isEmpty(serialized)) {
+                return null;
+            }
+            return moment.utc(serialized).startOf('day');
+        },
+        serialize: function(date) {
+            if (!date) {
+                return null;
+            }
+            return date.format('YYYY-MM-DD');
+        }
+    },
+
+    datetime: {
         deserialize: function(serialized) {
             if (Em.isEmpty(serialized)) {
                 return null;
