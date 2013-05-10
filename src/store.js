@@ -486,6 +486,7 @@ BD.Store = Em.Object.extend({
     loadAll: function(type, dataItems) {
         var typeMap = this._typeMapFor(type);
         typeMap.allIsLoaded = true;
+        BD.set('loadedAll.'+BD.pluralize(Em.get(type, 'root')), true);
         return this.loadMany(type, dataItems);
     },
     allOfTypeIsLoaded: function(type) {

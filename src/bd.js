@@ -77,7 +77,9 @@ var BD = Ember.Namespace.create({
 
     printServerError: function(message) {
         console.error('Server error: ' + message);
-    }
+    },
+    
+    loadedAll: Em.Object.create()
 
 });
 
