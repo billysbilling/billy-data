@@ -209,7 +209,7 @@ BD.Store = Em.Object.extend({
                     r.set('error', errorMessage);
                 }
                 promise.trigger('complete');
-                promise.trigger('error', errorMessage, xhr);
+                promise.trigger('error', errorMessage, payload, xhr);
             }
         });
         return promise;
@@ -281,7 +281,7 @@ BD.Store = Em.Object.extend({
                     }, this);
                 }
                 transaction.trigger('complete');
-                transaction.trigger('error', errorMessage, xhr);
+                transaction.trigger('error', errorMessage, payload, xhr);
             }
         });
     },
@@ -423,7 +423,7 @@ BD.Store = Em.Object.extend({
             errorMessage = 'We\'re sorry, but the record could currently not be deleted. Please try again.';
         }
         promise.trigger('complete');
-        promise.trigger('error', errorMessage, xhr);
+        promise.trigger('error', errorMessage, payload, xhr);
     },
     _unloadServerDeletedRecords: function(payload) {
         var meta = payload.meta,
