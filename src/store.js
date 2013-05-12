@@ -662,6 +662,18 @@ BD.Store = Em.Object.extend({
             delete typeMap.recordArrayComparatorObservers[key][guid];
         })
     },
+    
+    allLocal: function(type) {
+        var records = Em.A(),
+            typeMap = this._typeMapFor(type),
+            idToRecord = typeMap.idToRecord,
+            id;
+        for (id in idToRecord) {
+            if (!idToRecord.hasOwnProperty(id)) continue;
+            records.pushObject(idToRecord[id]);
+        }
+        return records;
+    },
 
     parseReference: function(reference) {
         var s = reference.split(':'),

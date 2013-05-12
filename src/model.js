@@ -411,6 +411,9 @@ BD.Model.reopenClass({
     all: function() {
         return BD.store.all(this);
     },
+    allLocal: function() {
+        return BD.store.allLocal(this);
+    },
     filter: function(filter, comparator) {
         return BD.store.filter(this, filter, comparator);
     },
