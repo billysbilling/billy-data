@@ -6,11 +6,16 @@ BD.AnonymousRecord = Em.ObjectProxy.extend({
         return {};
     }.property(),
     
-    save: function(url) {
-        var promise = BD.ModelOperationPromise.create();
+    save: function(url, options) {
+        options = options || {};
+        var promise = BD.ModelOperationPromise.create(),
+            serialized = {};
         //Payload
-        var serialized = {};
         _.each(this.get('content'), function(value, key) {
+            if (options.models && options.models.contains(key)) {
+                key = key + 'Id';
+                value = value ? value.get('id') : null;
+            }
             serialized[key] = value;
         });
         //Make PUT/POST request
