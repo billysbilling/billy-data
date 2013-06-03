@@ -454,9 +454,16 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
         if (typeof query === 'object') {
             match = true;
             _.find(query, function(v, k) {
-                if (r.get(k) !== v) {
-                    match = false;
-                    return true;
+                if (Ember.isArray(v)) {
+                    if (!v.contains(r.get(k))) {
+                        match = false;
+                        return true;
+                    }
+                } else {
+                    if (r.get(k) !== v) {
+                        match = false;
+                        return true;
+                    }
                 }
                 return false;
             });

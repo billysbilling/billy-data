@@ -300,7 +300,7 @@ test('Remote filtered record arrays should be filled by belongsTo', function() {
     deepEqual(techPosts.mapProperty('id'), [1, 4, 5], 'The right posts');
 });
 
-test('Creating a new record that\'s added to an empty local filtered array with a comparator', function() {
+test('Creating a new record that\'s added to an empty local filtered record array with a comparator', function() {
     App.Category.loadAll([]);
     var dogCategories = App.Category.filter({
         query: {
@@ -313,6 +313,16 @@ test('Creating a new record that\'s added to an empty local filtered array with 
         name: 'Dog'
     });
     equal(dogCategories.get('length'), 1, 'There is now one Dog category');
+});
+
+test('Query works with array values', function() {
+    App.Post.loadAll([]);
+    var postsByAmericans = App.Post.filter({
+        query: {
+            author: ['Adam', 'Noah']
+        }
+    });
+    equal(postsByAmericans.get('length'), 2);
 });
 
 test('Test callback sorting', function() {
