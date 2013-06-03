@@ -28,7 +28,15 @@ var BD = Ember.Namespace.create({
 
     plurals: {},
     pluralize: function(name) {
-        return this.plurals[name] || name+'s';
+        if (this.plurals[name]) {
+            return this.plurals[name];
+        } else if (name.slice(-1) == 'y') {
+            return name.substring(0, name.length - 1)+'ies';
+        } else if (name.slice(-1) == 's') {
+            return name+'es';
+        } else {
+            return name+'s';
+        }
     },
     singularize: function(name) {
         if (!this.singulars) {
@@ -38,7 +46,15 @@ var BD = Ember.Namespace.create({
                 this.singulars[this.plurals[k]] = k;
             }
         }
-        return this.singulars[name] || name.substring(0, name.length-1);
+        if (this.singulars[name]) {
+            return this.singulars[name];
+        } else if (name.slice(-3) == 'ies') {
+            return name.substring(0, name.length-3)+'y';
+        } else if (name.slice(-3) == 'ses') {
+            return name.substring(0, name.length-2);
+        } else {
+            return name.substring(0, name.length-1);
+        }
     },
     classify: function(name) {
         return name.substring(0, 1).toUpperCase()+name.substring(1);
