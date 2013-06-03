@@ -34,12 +34,6 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
     remoteQuery: null,
 
     /**
-     An optional URL where the records should be loaded from. Defaults to the conventional URL for `type`.
-     @property {String}
-     */
-    url: null,
-
-    /**
      String. Will be sent as its string value with all server requests. When matching local records `q` will be
      pattern matched on all property names defined in `type`'s `qProperties` property. Example:
      
@@ -372,7 +366,6 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
     _requestOffset: function(offset) {
         var self = this,
             type = this.get('type'),
-            url = this.get('url'),
             query = this._buildServerQuery(),
             pageSize = this.get('pageSize'),
             length = this.get('length'),
@@ -382,11 +375,7 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
             this._requestedIndexes[i] = true;
         }
         query.offset = offset;
-        if (url) {
-            records = type.findByUrl(url, query);
-        } else {
-            records = type.findByQuery(query);
-        }
+        records = type.findByQuery(query);
         this._pendingRequests.push(records);
         records.one('willLoad', function() {
             self._rejectAll = true;

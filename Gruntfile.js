@@ -9,6 +9,9 @@ module.exports = function(grunt) {
                 separator: '\n\n',
                 src: [
                     'src/bd.js',
+                    'src/adapter/fixture-request.js',
+                    'src/adapter/fixture-adapter.js',
+                    'src/adapter/rest-adapter.js',
                     'src/store.js',
                     'src/anonymous-record.js',
                     'src/model.js',

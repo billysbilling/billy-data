@@ -29,10 +29,9 @@ test('Test AJAX options', function() {
 });
 
 test('Test AJAX options with special url', function() {
-    expect(3);
+    expect(2);
     BD.ajax = function(hash) {
         equal(hash.type, 'GET');
-        equal(hash.url, '/weirdposts');
         deepEqual(hash.data, {
             offset: 0,
             pageSize: 3,
@@ -41,7 +40,6 @@ test('Test AJAX options with special url', function() {
     };
     App.Post.filter({
         pageSize: 3,
-        url: 'weirdposts',
         query: {
             state: 'draft'
         }
