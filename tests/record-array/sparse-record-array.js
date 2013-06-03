@@ -186,16 +186,21 @@ test('Triggers didLoad every time something is loaded', function() {
 });
 
 test('Destroying a loading sparse array', function() {
+    var records;
     fakeAjaxSuccess();
-    var records = App.Post.filter({
-        pageSize: 3
+    Ember.run(function() {
+        records = App.Post.filter({
+            pageSize: 3
+        });
+        records.on('didLoad', function() {
+            fail('Should not be called.');
+        });
+        records.destroy();
     });
-    records.on('didLoad', function() {
-        fail('Should not be called.');
+    Ember.run(function() {
+        flushAjax();
+        equal(records.get('isDestroying'), true);
     });
-    records.destroy();
-    flushAjax();
-    equal(records.get('isDestroying'), true);
 });
 
 test('Deleting a record that is in a sparse array', function() {

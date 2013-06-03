@@ -656,11 +656,15 @@ BD.Store = Em.Object.extend({
             typeMap = this._typeMapFor(recordArray.get('type'));
         delete this._recordArrays[guid];
         recordArray.get('queryObservers').forEach(function(key) {
-            delete typeMap.recordArrayQueryObservers[key][guid];
-        })
+            if (typeMap.recordArrayQueryObservers[key]) {
+                delete typeMap.recordArrayQueryObservers[key][guid];
+            }
+        });
         recordArray.get('comparatorObservers').forEach(function(key) {
-            delete typeMap.recordArrayComparatorObservers[key][guid];
-        })
+            if (typeMap.recordArrayComparatorObservers[key]) {
+                delete typeMap.recordArrayComparatorObservers[key][guid];
+            }
+        });
     },
     
     allLocal: function(type) {

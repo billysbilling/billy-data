@@ -64,48 +64,59 @@ test('When deleting a record, it should be removed from all record arrays contai
 });
 
 test('When destroying a record array it should be removed from all records', function() {
-    App.Post.loadAll([]);
-    var post = App.Post.find(101);
-    var posts = App.Post.all();
-    var expected = {};
-    expected[Em.guidFor(posts)] = posts;
-    deepEqual(post._inRecordArrays, expected, 'Post knows about its record array');
-    posts.destroy();
-    deepEqual(post._inRecordArrays, {}, 'Post no longer knows about its record array');
+    var post;
+    Ember.run(function() {
+        App.Post.loadAll([]);
+        post = App.Post.find(101);
+        var posts = App.Post.all();
+        var expected = {};
+        expected[Em.guidFor(posts)] = posts;
+        deepEqual(post._inRecordArrays, expected, 'Post knows about its record array');
+        posts.destroy();
+    });
+    Ember.run(function() {
+        deepEqual(post._inRecordArrays, {}, 'Post no longer knows about its record array');
+    });
 });
 
-asyncTest('Record arrays should be destroyed on reset', function() {
-    App.Post.loadAll([]);
+test('Record arrays should be destroyed on reset', function() {
     expect(3);
-    var publicPosts = App.Post.filter({
-        query: {
-            isPublic: true
-        }
+    var publicPosts;
+    Ember.run(function() {
+        App.Post.loadAll([]);
+        publicPosts = App.Post.filter({
+            query: {
+                isPublic: true
+            }
+        });
+        equal(publicPosts.get('isDestroyed'), false, 'Record array should not be destroyed');
+        BD.store.reset();
+        equal(publicPosts.get('isDestroying'), true, 'Record array should be destroying');
     });
-    equal(publicPosts.get('isDestroyed'), false, 'Record array should not be destroyed');
-    BD.store.reset();
-    equal(publicPosts.get('isDestroying'), true, 'Record array should be destroying');
-    setTimeout(function() {
+    Ember.run(function() {
         equal(publicPosts.get('isDestroyed'), true, 'Record array should be destroyed');
-        start();
-    }, 1);
+    });
 });
 
 test('Record arrays should be removed from store when destroyed', function() {
-    App.Post.loadAll([]);
-    var publicPosts = App.Post.filter({
-        query: {
-            isPublic: true
-        },
-        comparator: 'isPublic'
+    Ember.run(function() {
+        App.Post.loadAll([]);
+        var publicPosts = App.Post.filter({
+            query: {
+                isPublic: true
+            },
+            comparator: 'isPublic'
+        });
+        var expectedRecordArrays = {};
+        expectedRecordArrays[Em.guidFor(publicPosts)] = publicPosts;
+        deepEqual(BD.store._recordArrays, expectedRecordArrays, 'There should be one record array');
+        deepEqual(BD.store._typeMapFor(App.Post).recordArrayQueryObservers.isPublic, expectedRecordArrays, 'There should be one query observer');
+        deepEqual(BD.store._typeMapFor(App.Post).recordArrayComparatorObservers.isPublic, expectedRecordArrays, 'There should be one comparator observer');
+        publicPosts.destroy();
     });
-    var expectedRecordArrays = {};
-    expectedRecordArrays[Em.guidFor(publicPosts)] = publicPosts;
-    deepEqual(BD.store._recordArrays, expectedRecordArrays, 'There should be one record array');
-    deepEqual(BD.store._typeMapFor(App.Post).recordArrayQueryObservers.isPublic, expectedRecordArrays, 'There should be one query observer');
-    deepEqual(BD.store._typeMapFor(App.Post).recordArrayComparatorObservers.isPublic, expectedRecordArrays, 'There should be one comparator observer');
-    publicPosts.destroy();
-    deepEqual(BD.store._recordArrays, {}, 'There should not be any record arrays');
-    deepEqual(BD.store._typeMapFor(App.Post).recordArrayQueryObservers.isPublic, {}, 'There should not be any query observers left');
-    deepEqual(BD.store._typeMapFor(App.Post).recordArrayComparatorObservers.isPublic, {}, 'There should not be any comparator observers left');
+    Ember.run(function() {
+        deepEqual(BD.store._recordArrays, {}, 'There should not be any record arrays');
+        deepEqual(BD.store._typeMapFor(App.Post).recordArrayQueryObservers.isPublic, {}, 'There should not be any query observers left');
+        deepEqual(BD.store._typeMapFor(App.Post).recordArrayComparatorObservers.isPublic, {}, 'There should not be any comparator observers left');
+    });
 });
