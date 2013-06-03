@@ -33,7 +33,7 @@ module('Data materialization', {
 test('All attributes, belongsTo and hasMany should be setup before firing belongsToDidChange when loading child records from server', function() {
     expect(2);
     var post = App.Post.find(101);
-    fakeAjaxSuccess({
+    var req = fakeAjax(200, {
         comments: [
             {
                 id: 301,
@@ -51,7 +51,7 @@ test('All attributes, belongsTo and hasMany should be setup before firing belong
             equal(comment.get('text'), 'I agree!', 'Text should match');
         }.observes('post.comments.@each')
     }).create({post: post});
-    flushAjax();
+    req.respond();
     o.destroy();
 });
 
@@ -60,11 +60,11 @@ test('All attributes, belongsTo and hasMany should be setup before firing belong
     var post = App.Post.find(101);
     var author = App.Author.find(201);
     //First make sure that comments are loaded, and are empty
-    fakeAjaxSuccess({
+    var req = fakeAjax(200, {
         comments: []
     });
     post.get('comments');
-    flushAjax();
+    req.respond();
     //Then do the real test
     var o = Ember.Object.extend({
         post: null,

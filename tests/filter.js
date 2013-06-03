@@ -91,9 +91,9 @@ test('Test local all()', function() {
     equal(allPosts.get('length'), 3, 'Expect 3 posts in total');
     //Delete a record
     post = App.Post.find(1);
-    fakeAjaxSuccess();
+    var req = fakeAjax(200);
     post.deleteRecord();
-    flushAjax();
+    req.respond();
     equal(allPosts.get('length'), 2, 'Expect 2 posts in total');
     //Create a new record
     App.Post.createRecord({
@@ -146,10 +146,10 @@ test('Deleting an existing record should remove it from filtered arrays', functi
     });
     equal(publicPosts.get('length'), 2, 'There are three public posts');
     var post = App.Post.find(1);
-    fakeAjaxSuccess();
+    var req = fakeAjax(200);
     post.deleteRecord();
     equal(publicPosts.get('length'), 2, 'There are still two public posts');
-    flushAjax();
+    req.respond();
     equal(publicPosts.get('length'), 1, 'There are now one public post');
 });
 
@@ -179,7 +179,7 @@ test('Loading records via AJAX should add them to the filtered record array', fu
         }
     });
     equal(publicPosts.get('length'), 2, 'There are two public posts');
-    fakeAjaxSuccess({
+    var req = fakeAjax(200, {
         posts: [
             {
                 id: 4,
@@ -192,7 +192,7 @@ test('Loading records via AJAX should add them to the filtered record array', fu
         ]
     });
     App.Post.find({something: 1});
-    flushAjax();
+    req.respond();
     equal(publicPosts.get('length'), 3, 'There are now three public posts');
 });
 
@@ -230,7 +230,7 @@ test('Test AJAX options for remote filtered record arrays with remoteQuery', fun
 });
 
 test('Remote filtered record arrays should be filled', function() {
-    fakeAjaxSuccess({
+    var req = fakeAjax(200, {
         posts: [
             {
                 id: 4,
@@ -252,7 +252,7 @@ test('Remote filtered record arrays should be filled', function() {
         }
     });
     equal(brucePosts.get('length'), 0, '0 posts before load');
-    flushAjax();
+    req.respond();
     equal(brucePosts.get('length'), 3, '3 posts before load');
     deepEqual(brucePosts.mapProperty('id'), [4, 5, 6], 'The right posts');
 });
@@ -273,7 +273,7 @@ test('Test AJAX options for remote filtered record arrays by belongsTo', functio
 });
 
 test('Remote filtered record arrays should be filled by belongsTo', function() {
-    fakeAjaxSuccess({
+    var req = fakeAjax(200, {
         posts: [
             {
                 id: 1,
@@ -295,7 +295,7 @@ test('Remote filtered record arrays should be filled by belongsTo', function() {
         }
     });
     equal(techPosts.get('length'), 0, '0 posts before load');
-    flushAjax();
+    req.respond();
     equal(techPosts.get('length'), 3, '3 posts before load'); //Should ignore existing ones
     deepEqual(techPosts.mapProperty('id'), [1, 4, 5], 'The right posts');
 });

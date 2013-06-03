@@ -50,7 +50,7 @@ test('Test AJAX options with special url', function() {
 
 test('Test AJAX options for second request', function() {
     expect(3);
-    fakeAjaxSuccess({
+    var req = fakeAjax(200, {
         meta: {
             paging: {
                 total: 23
@@ -89,11 +89,11 @@ test('Test AJAX options for second request', function() {
         };
         records.objectAt(10);
     });
-    flushAjax();
+    req.respond();
 });
 
 test('Requesting indexes should load from server', function() {
-    fakeAjaxSuccess({
+    var req1 = fakeAjax(200, {
         meta: {
             paging: {
                 total: 23
@@ -120,13 +120,13 @@ test('Requesting indexes should load from server', function() {
     resetAjax();
     equal(records.objectAt(0), null); //These indexes should be null, since length is still 0
     equal(records.objectAt(1), null);
-    flushAjax();
+    req1.respond();
     equal(records.get('length'), 23);
     deepEqual(records.objectAt(0).getProperties(['id', 'title']), {id: 0, title: 'Post 0'});
     deepEqual(records.objectAt(1).getProperties(['id', 'title']), {id: 1, title: 'Post 1'});
     deepEqual(records.objectAt(2).getProperties(['id', 'title']), {id: 2, title: 'Post 2'});
     //Trigger a load of another set
-    fakeAjaxSuccess({
+    var req2 = fakeAjax(200, {
         meta: {
             paging: {
                 total: 23
@@ -151,7 +151,7 @@ test('Requesting indexes should load from server', function() {
     resetAjax();
     equal(records.objectAt(9), BD.SPARSE_PLACEHOLDER); //These two should not trigger a request
     equal(records.objectAt(11), BD.SPARSE_PLACEHOLDER);
-    flushAjax();
+    req2.respond();
     deepEqual(records.objectAt(9).getProperties(['id', 'title']), {id: 9, title: 'Post 9'});
     deepEqual(records.objectAt(10).getProperties(['id', 'title']), {id: 10, title: 'Post 10'});
     deepEqual(records.objectAt(11).getProperties(['id', 'title']), {id: 11, title: 'Post 11'});
@@ -159,7 +159,7 @@ test('Requesting indexes should load from server', function() {
 
 test('Triggers didLoad every time something is loaded', function() {
     var didLoadCount = 0;
-    fakeAjaxSuccess({
+    var req1 = fakeAjax(200, {
         meta: {
             paging: {
                 total: 23
@@ -172,8 +172,8 @@ test('Triggers didLoad every time something is loaded', function() {
     records.on('didLoad', function() {
         didLoadCount++;
     });
-    flushAjax();
-    fakeAjaxSuccess({
+    req1.respond();
+    var req2 = fakeAjax(200, {
         meta: {
             paging: {
                 total: 23
@@ -181,13 +181,13 @@ test('Triggers didLoad every time something is loaded', function() {
         }
     });
     records.objectAt(9);
-    flushAjax();
+    req2.respond();
     equal(didLoadCount, 2);
 });
 
 test('Destroying a loading sparse array', function() {
     var records;
-    fakeAjaxSuccess();
+    var req = fakeAjax(200);
     Ember.run(function() {
         records = App.Post.filter({
             pageSize: 3
@@ -198,13 +198,13 @@ test('Destroying a loading sparse array', function() {
         records.destroy();
     });
     Ember.run(function() {
-        flushAjax();
-        equal(records.get('isDestroying'), true);
+        ok(records.get('isDestroyed'), 'Record array should be destroyed');
+        ok(req.isAborted, 'AJAX request should be aborted');
     });
 });
 
 test('Deleting a record that is in a sparse array', function() {
-    fakeAjaxSuccess({
+    var req1 = fakeAjax(200, {
         meta: {
             paging: {
                 total: 23
@@ -221,17 +221,17 @@ test('Deleting a record that is in a sparse array', function() {
         pageSize: 1
     });
     equal(records.get('length'), 0);
-    flushAjax();
+    req1.respond();
     equal(records.get('length'), 23);
     var r = App.Post.find(0);
-    fakeAjaxSuccess();
+    var req2 = fakeAjax(200);
     r.deleteRecord();
-    flushAjax();
+    req2.respond();
     equal(records.get('length'), 22);
 });
 
 test('Loading a record that belongs in a sorted sparse array', function() {
-    fakeAjaxSuccess({
+    var req = fakeAjax(200, {
         meta: {
             paging: {
                 total: 23
@@ -256,7 +256,7 @@ test('Loading a record that belongs in a sorted sparse array', function() {
         pageSize: 3,
         sortProperty: 'title'
     })
-    flushAjax();
+    req.respond();
     //Insert 4 after 2
     App.Post.load({
         id: 4,

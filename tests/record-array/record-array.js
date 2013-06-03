@@ -17,7 +17,7 @@ module('RecordArray', {
 });
 
 test('When deleting a record, it should be removed from all record arrays containing it', function() {
-    fakeAjaxSuccess({
+    var req1 = fakeAjax(200, {
         posts: [
             {
                 id: 1,
@@ -32,8 +32,8 @@ test('When deleting a record, it should be removed from all record arrays contai
     var posts1 = App.Post.find({
         something: 1
     });
-    flushAjax();
-    fakeAjaxSuccess({
+    req1.respond();
+    var req2 = fakeAjax(200, {
         posts: [
             {
                 id: 1,
@@ -48,15 +48,15 @@ test('When deleting a record, it should be removed from all record arrays contai
     var posts2 = App.Post.find({
         somethingElse: 1
     });
-    flushAjax();
+    req2.respond();
     equal(posts1.get('length'), 2, 'Before deleting, there should be two posts in posts1');
     equal(posts2.get('length'), 2, 'Before deleting, there should be two posts in posts2');
     var post1 = App.Post.find(1);
     var post2 = App.Post.find(2);
     var post3 = App.Post.find(3);
-    fakeAjaxSuccess();
+    var req3 = fakeAjax(200);
     post1.deleteRecord();
-    flushAjax();
+    req3.respond();
     equal(posts1.get('length'), 1, 'After deleting, there should be one post in posts1');
     equal(posts1.get('firstObject'), post2, 'The only object in posts1 is post2');
     equal(posts2.get('length'), 1), 'After deleting, there should be one post in posts2';

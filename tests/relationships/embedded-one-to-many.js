@@ -54,7 +54,7 @@ test('Many arrays should update when child record changes its parent', function(
 test('When deleting a child record, it should be removed from the parent and parent should be dirty', function() {
     var tech = App.Category.find(201);
     var post = App.Post.find(1);
-    fakeAjaxSuccess();
+    var req = fakeAjax(200);
     post.deleteRecord();
     equal(tech.get('posts.length'), 0, 'Tech should not have anymore posts now');
     equal(tech.get('isDirty'), true, 'Parent should be dirty');
@@ -101,15 +101,15 @@ test('When loading a child record, its parent\'s hasMany should be updated', fun
 });
 
 test('Loading a parent, and then its children', function() {
-    fakeAjaxSuccess({
+    var req1 = fakeAjax(200, {
         category: {
             id: 203,
             name: 'Startup'
         }
     });
     var category = App.Category.find(203);
-    flushAjax();
-    fakeAjaxSuccess({
+    req1.respond();
+    var req2 = fakeAjax(200, {
         posts: [
             {
                 id: 2,
@@ -118,7 +118,7 @@ test('Loading a parent, and then its children', function() {
         ]
     });
     category.get('posts');
-    flushAjax();
+    req2.respond();
     equal(category.get('posts.length'), 1);
 });
 
@@ -188,11 +188,11 @@ test('When saving a parent with a dirty child, the whole tree should be clean af
     equal(category.get('childIsDirty'), true, 'Parent should have a dirty child');
     equal(post.get('isDirty'), true, 'Child should be dirty');
     equal(post.get('selfIsDirty'), true, 'Child should be be self-dirty');
-    fakeAjaxSuccess();
+    var req = fakeAjax(200);
     category.save({
         embed: ['posts']
     });
-    flushAjax();
+    req.respond();
     equal(category.get('isDirty'), false, 'Parent should be clean');
     equal(category.get('selfIsDirty'), false, 'Parent should be self-clean');
     equal(category.get('childIsDirty'), false, 'Parent should not have any dirty children');

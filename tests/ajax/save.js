@@ -70,18 +70,18 @@ test('Test PUT ajax request options', function() {
 
 test('Test PUT', function() {
     var post = App.Post.find(101);
-    fakeAjaxSuccess();
+    var req = fakeAjax(200);
     post.set('title', 'This is a good day to die');
     equal(post.get('isDirty'), true);
     post.save();
-    flushAjax();
+    req.respond();
     equal(post.get('isDirty'), false);
     equal(post.get('title'), 'This is a good day to die');
 });
 
 test('Test save() with properties, normal attribute', function() {
     var post = App.Post.find(101);
-    fakeAjaxSuccess();
+    var req = fakeAjax(200);
     post.save({
         properties: {
             title: 'This is a good day to die'
@@ -90,7 +90,7 @@ test('Test save() with properties, normal attribute', function() {
     equal(post.get('isDirty'), false);
     equal(post.get('title'), 'This is a good day to live');
     post.save();
-    flushAjax();
+    req.respond();
     equal(post.get('isDirty'), false);
     equal(post.get('title'), 'This is a good day to die');
 });
@@ -99,7 +99,7 @@ test('Test save() with properties, belongsTo', function() {
     var commonCategory = App.Category.find(301);
     var uncommonCategory = App.Category.find(302);
     var post = App.Post.find(101);
-    fakeAjaxSuccess();
+    var req = fakeAjax(200);
     post.save({
         properties: {
             category: uncommonCategory
@@ -108,7 +108,7 @@ test('Test save() with properties, belongsTo', function() {
     equal(post.get('isDirty'), false);
     equal(post.get('category'), commonCategory);
     post.save();
-    flushAjax();
+    req.respond();
     equal(post.get('isDirty'), false);
     equal(post.get('category'), uncommonCategory);
 });
@@ -148,12 +148,12 @@ test('Test error validation', function() {
             title: 'This is wrong.'
         }
     };
-    fakeAjaxError(422, {
+    var req = fakeAjax(422, {
         validationErrors: expectedValidationErrors
     });
     post.set('title', 'This is a good day to die'); //Set something so .save() actually commits the record
     post.save();
-    flushAjax();
+    req.respond();
     equal(post.get('error'), 'All of it is wrong.');
     equal(post.get('errors.title'), 'This is wrong.');
 });

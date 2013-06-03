@@ -67,7 +67,7 @@ test('Transaction for model that supports bulk updates', function() {
     expect(9);
     var post1 = App.Post.find(101);
     var post2 = App.Post.find(102);
-    fakeAjaxSuccess();
+    var req = fakeAjax(200);
     BD.transaction()
         .add(post1, {
             properties: {
@@ -87,7 +87,7 @@ test('Transaction for model that supports bulk updates', function() {
     equal(post1.get('state'), 'hidden');
     equal(post2.get('isDirty'), false);
     equal(post2.get('state'), 'hidden');
-    flushAjax();
+    req.respond();
     equal(post1.get('isDirty'), false);
     equal(post1.get('state'), 'public');
     equal(post2.get('isDirty'), false);
@@ -98,7 +98,7 @@ test('saveRecords() transaction shortcut', function() {
     expect(9);
     var post1 = App.Post.find(101);
     var post2 = App.Post.find(102);
-    fakeAjaxSuccess();
+    var req = fakeAjax(200);
     BD
         .saveRecords([post1, post2], {
             properties: {
@@ -112,7 +112,7 @@ test('saveRecords() transaction shortcut', function() {
     equal(post1.get('state'), 'hidden');
     equal(post2.get('isDirty'), false);
     equal(post2.get('state'), 'hidden');
-    flushAjax();
+    req.respond();
     equal(post1.get('isDirty'), false);
     equal(post1.get('state'), 'public');
     equal(post2.get('isDirty'), false);

@@ -41,7 +41,7 @@ asyncTest('Bulk DELETE for model that supports bulk deletes', function() {
     expect(7);
     var post1 = App.Post.find(101);
     var post2 = App.Post.find(102);
-    fakeAjaxSuccess();
+    var req = fakeAjax(200);
     BD
         .deleteRecords([post1, post2])
         .success(function() {
@@ -49,7 +49,7 @@ asyncTest('Bulk DELETE for model that supports bulk deletes', function() {
         });
     equal(post1.get('isDeleted'), true);
     equal(post2.get('isDeleted'), true);
-    flushAjax();
+    req.respond();
     equal(post1.get('isUnloaded'), true);
     equal(post2.get('isUnloaded'), true);
     setTimeout(function() {
