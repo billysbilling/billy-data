@@ -178,8 +178,8 @@ BD.Model = Em.Object.extend(Em.Evented, {
         this.set('childIsDirty', childIsDirty);
     },
     didDeleteEmbeddedRecord: function(r) {
-        this.checkEmbeddedChildrenDirty();
         this._deletedEmbeddedRecords.push(r);
+        this.checkEmbeddedChildrenDirty();
     },
     becameClean: function() {
         this.checkEmbeddedChildrenDirty();

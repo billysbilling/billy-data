@@ -152,6 +152,33 @@ test('When deleting an embedded child record, and then rolling back the parent, 
     o.destroy();
 });
 
+
+test('When deleting a "new" embedded record, the parent should not try to roll it back when the parent is rolled back, since the child has already been deleted.', function() {
+    expect(2);
+    var category,
+        post;
+    Ember.run(function() {
+        category = App.Category.createRecord({
+            name: 'Drinks'
+        });
+        post = App.Post.createRecord({
+            category: category,
+            title: 'Beers'
+        });
+        post.deleteRecord();
+    });
+
+    Ember.run(function() {
+        ok(post.get('isDestroyed'));
+        category.rollback();
+    });
+    
+    Ember.run(function() {
+        ok(category.get('isDestroyed'));
+    });
+});
+
+
 test('When saving a parent with a dirty child, the whole tree should be clean afterwards', function() {
     var category = App.Category.find(201);
     var post = App.Post.find(1);
