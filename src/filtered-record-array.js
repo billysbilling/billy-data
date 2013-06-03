@@ -220,9 +220,7 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
         });
         length = records.length;
         this.set('length', length);
-        this.arrayContentWillChange(0, 0, length);
         self._replace(0, records);
-        this.arrayContentDidChange(0, 0, length);
         this.set('isLoaded', true);
         setTimeout(function() {
             self.trigger('didLoad');
@@ -302,11 +300,32 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
         this._requestOffsetIsSuspended = false;
     },
     _replace: function(index, records) {
-        var length = records.get('length');
-        records.forEach(function(r, recordIndex) {
-            this._content[index + recordIndex] = r;
-            this._indexForRecord[r.clientId] = index + recordIndex;
-        }, this);
+        var length = records.get('length'),
+            i,
+            hasRecords = false;
+        //Figure out if the record array has any records at the indexes where we're about to insert records
+        for (i = 0; i < length; i++) {
+            if (this._content[index + i]) {
+                hasRecords = true;
+                break;
+            }
+        }
+        if (hasRecords) {
+            //If the record array already contains records at the given indexes, then we need to push the new records sorted
+            records.forEach(function(r) {
+                if (Em.isEmpty(this._indexForRecord[r.clientId])) {
+                    this._pushObjectSorted(r);
+                }
+            }, this);
+        } else {
+            //Otherwise we can just add all the records
+            this.arrayContentWillChange(index, 0, length);
+            records.forEach(function(r, recordIndex) {
+                this._content[index + recordIndex] = r;
+                this._indexForRecord[r.clientId] = index + recordIndex;
+            }, this);
+            this.arrayContentDidChange(index, 0, length);
+        }
     },
     reinsertObject: function(r) {
         var oldIndex = this._indexForRecord[r.clientId],
@@ -326,7 +345,6 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
             this.arrayContentWillChange(changeIndex, diff, diff);
             if (newIndex > oldIndex) {
                 //If an item is moved to the right
-                
                 for (i = oldIndex+1; i <= newIndex; i++) {
                     this._move(i, i-1);
                 }
@@ -381,9 +399,7 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
             self.set('length', total);
             //Add records
             self._requestOffsetIsSuspended = true;
-            self.arrayContentWillChange(offset, 0, recordsLength);
             self._replace(offset, records);
-            self.arrayContentDidChange(offset, 0, recordsLength);
             self._requestOffsetIsSuspended = false;
             //Set isLoaded state
             self.set('isLoaded', true);
