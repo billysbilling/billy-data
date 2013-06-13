@@ -484,6 +484,7 @@ BD.Store = Em.Object.extend({
         }
     },
     loadAll: function(type, dataItems) {
+        Ember.assert("You must pass an array when using loadAll.", Ember.typeOf(dataItems) == "array");
         var typeMap = this._typeMapFor(type);
         typeMap.allIsLoaded = true;
         BD.set('loadedAll.'+BD.pluralize(Em.get(type, 'root')), true);
