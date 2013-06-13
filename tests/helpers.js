@@ -3,8 +3,8 @@ if (window.isCli) {
         failures: [],
         isDone: false
     };
-    QUnit.testDone(function(details) {
-        if (details.failed) {
+    QUnit.log(function(details) {
+        if (!details.result) {
             window.cliResults.failures.push(details);
         }
     });

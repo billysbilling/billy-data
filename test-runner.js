@@ -21,12 +21,19 @@ function checkDone() {
     var details = result.details;
     console.log("Total: " + details.total+ ", Failed: " + details.failed + ", Passed: " + details.passed + ", Runtime: " + details.runtime);
     if (details.failed) {
-        console.log('TESTS FAILED');
+        console.log('\033[0;31mTests failed\033[0m');
         result.failures.forEach(function(details) {
+            console.log('---------------------------------------------------------------------------');
             console.log(details.module + ': ' + details.name);
+            console.log(details.message || 'Failed');
+            if (details.actual || details.expected) {
+                console.log('Expected: '+JSON.stringify(details.expected));
+                console.log('Result: '+JSON.stringify(details.actual));
+            }
+            console.log(details.source);
         }, this);
     } else {
-        console.log('SUCCESS');
+        console.log('\033[0;32mAll tests passed\033[0m');
     }
     phantom.exit(details.failed ? 1 : 0);
 }
