@@ -35,7 +35,25 @@ for that to the Ember.js guys.
 
 ## Building
 
-Install [grunt.js](https://github.com/gruntjs/grunt/blob/0.3-stable/docs/toc.md).
+Install the npm packages
+
+```
+npm install
+```
+
+Install the Grunt CLI
+
+If you have installed Grunt globally in the past, you will need to remove it first:
+
+```
+npm uninstall -g grunt
+```
+
+And then do:
+
+```
+npm install -g grunt-cli
+```
 
 Go to Terminal and `cd` into the billy-data folder and run:
 
