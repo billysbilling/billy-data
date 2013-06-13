@@ -35,11 +35,12 @@ for that to the Ember.js guys.
 
 ## Building
 
-Install [grunt.js](https://github.com/gruntjs/grunt/blob/0.3-stable/docs/toc.md).
+Install [grunt-cli](https://github.com/gruntjs/grunt-cli).
 
 Go to Terminal and `cd` into the billy-data folder and run:
 
 ```
+npm install
 grunt
 ```
 
