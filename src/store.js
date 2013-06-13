@@ -74,24 +74,26 @@ BD.Store = Em.Object.extend({
         return this.findByIdQuery(type, id, {include: include});
     },
     _findOne: function(type, r, id, query) {
+        var self = this;
+
         r.set('isLoading', true);
-        this._ajax({
-            type: 'GET',
-            url: '/' + BD.pluralize(this._rootForType(type)) + '/' + encodeURIComponent(id),
-            data: query,
-            success: function(payload) {
-                r.set('isLoading', false);
-                this.sideload(payload);
-            },
-            error: function(xhr) {
-                var payload = this._parseResponseJson(xhr.responseText);
-                if (xhr.status == 422 && payload) {
-                    BD.printServerError(payload.errorMessage);
-                } else {
-                    BD.printServerError('We\'re sorry, but the record could currently not be loaded. Please try again.');
-                }
+
+        var success = function(payload) {
+            r.set('isLoading', false);
+            self.sideload(payload);
+        };
+
+        var error = function(payload, status) {
+            var msg;
+            if (status == 422 && payload) {
+                msg = payload.errorMessage;
+            } else {
+                msg = 'We\'re sorry, but the record could currently not be loaded. Please try again.';
             }
-        });
+            BD.printServerError(msg);
+        };
+
+        this.get('adapter').findOne(this, type, r, id, query, success, error);
     },
     findMany: function(type, ids) {
         type = BD.resolveType(type);
@@ -110,50 +112,51 @@ BD.Store = Em.Object.extend({
         });
         return recordArray;
     },
-    findByUrl: function(type, url, query) {
+
+    findByQuery: function(type, query) {
         type = BD.resolveType(type);
+
+        var self = this;
+
         var recordArray = BD.FindRecordArray.create({
             type: type,
             content: Em.A(),
-            url: url,
             query: query
         });
-        var ajaxRequest = this._ajax({
-            type: 'GET',
-            url: '/' + url,
-            data: query,
-            complete: function() {
-                recordArray.set('ajaxRequest', null);
-            },
-            success: function(payload) {
-                recordArray.trigger('willLoad', payload);
-                this.sideload(payload, BD.pluralize(this._rootForType(type)), recordArray);
-                recordArray.set('isLoaded', true);
-                recordArray.trigger('didLoad', payload);
-            },
-            error: function(xhr) {
-                if (xhr.status === 0) {
-                    if (xhr.statusText === 'abort') {
-                        //Ignore
-                    } else {
-                        BD.printServerError('We\'re sorry, but the records could currently not be loaded. Please check your internet connection and try again.');
-                    }
-                } else {
-                    var payload = this._parseResponseJson(xhr.responseText);
-                    if (xhr.status === 422 && payload) {
-                        BD.printServerError(payload.errorMessage);
-                    } else {
-                        BD.printServerError('We\'re sorry, but the records could currently not be loaded. Please try again.');
-                    }
-                }
+
+        var complete = function() {
+            recordArray.set('ajaxRequest', null);
+        };
+
+        var success = function(payload) {
+            recordArray.trigger('willLoad', payload);
+            self.sideload(payload,
+                          BD.pluralize(self._rootForType(type)),
+                          recordArray);
+            recordArray.set('isLoaded', true);
+            recordArray.trigger('didLoad', payload);
+        };
+
+        var error = function(payload, status) {
+            var msg = 'We\'re sorry, but the records could currently not be loaded. Please try again.';
+
+            if (status === 0) {
+                msg = 'We\'re sorry, but the records could currently not be loaded. Please check your internet connection and try again.';
             }
-        });
+
+            if (status === 422 && payload) {
+                msg = payload.errorMessage;
+            }
+
+            BD.printServerError(msg);
+        };
+
+        var ajaxRequest = this.get('adapter').findByQuery(
+            this, type, query, success, error, complete
+        );
+
         recordArray.set('ajaxRequest', ajaxRequest);
         return recordArray;
-    },
-    findByQuery: function(type, query) {
-        type = BD.resolveType(type);
-        return this.findByUrl(type, BD.pluralize(this._rootForType(type)), query);
     },
 
     _normalizeSaveOptions: function(options) {
@@ -168,6 +171,7 @@ BD.Store = Em.Object.extend({
     },
     saveRecord: function(r, options) {
         options = this._normalizeSaveOptions(options);
+        var self = this;
         var promise = BD.ModelOperationPromise.create();
         //Don't save if the record is clean
         if (!r.get('isDirty') && !options.properties) {
@@ -177,41 +181,34 @@ BD.Store = Em.Object.extend({
             }, 1);
             return promise;
         }
-        //Construct URL
-        var isNew = r.get('isNew'),
-            root = this._rootForType(r.constructor),
-            url = '/' + BD.pluralize(root);
-        if (!isNew) {
-            url += '/' + encodeURIComponent(r.get('id'));
-        }
+
         //Payload
         var data = {};
-        data[root] = r.serialize(options);
-        //Make PUT/POST request
-        this._ajax({
-            type: isNew ? 'POST' : 'PUT',
-            url: url,
-            data: data,
-            success: function(payload) {
-                r.didCommit(options);
-                this.sideload(payload);
-                promise.trigger('complete');
-                promise.trigger('success', payload);
-            },
-            error: function(xhr) {
-                var errorMessage,
-                    payload = this._parseResponseJson(xhr.responseText);
-                if (xhr.status == 422 && payload) {
-                    errorMessage = payload.errorMessage;
-                    this._handleValidationErrors(payload);
-                } else {
-                    errorMessage = 'We\'re sorry but we couldn\'t save your data. Please try again.';
-                    r.set('error', errorMessage);
-                }
-                promise.trigger('complete');
-                promise.trigger('error', errorMessage, payload, xhr);
+        data[this._rootForType(r.constructor)] = r.serialize(options);
+
+        var success = function(payload) {
+            r.didCommit(options);
+            self.sideload(payload);
+            promise.trigger('complete');
+            promise.trigger('success', payload);
+        };
+
+        var error = function(payload, status) {
+            var errorMessage;
+            if (status == 422 && payload) {
+                errorMessage = payload.errorMessage;
+                self._handleValidationErrors(payload);
+            } else {
+                errorMessage = 'We\'re sorry but we couldn\'t save your data. Please try again.';
+                r.set('error', errorMessage);
             }
-        });
+            promise.trigger('complete');
+            promise.trigger('error', errorMessage, payload);
+        };
+
+        //Make PUT/POST request
+        this.get('adapter').saveRecord(this, r, data, success, error);
+
         return promise;
     },
     commitTransaction: function(transaction) {
@@ -233,7 +230,8 @@ BD.Store = Em.Object.extend({
         return transaction;
     },
     _commitTransactionBulk: function(transaction) {
-        var serializedItems = [],
+        var self = this,
+            serializedItems = [],
             type = transaction.get('type'),
             rootPlural = BD.pluralize(this._rootForType(type)),
             data  = {};
@@ -255,35 +253,32 @@ BD.Store = Em.Object.extend({
         }
         //Payload
         data[rootPlural] = serializedItems;
-        //Make PATCH request
-        this._ajax({
-            type: 'PATCH',
-            url: '/' + rootPlural,
-            data: data,
-            success: function(payload) {
+
+        var success = function(payload) {
+            transaction.get('records').forEach(function(r, options) {
+                r.didCommit(options);
+            }, self);
+            self.sideload(payload);
+            transaction.trigger('complete');
+            transaction.trigger('success', payload);
+        };
+
+        var error = function(payload, status) {
+            var errorMessage;
+            if (status == 422 && payload) {
+                errorMessage = payload.errorMessage;
+                self._handleValidationErrors(payload);
+            } else {
+                errorMessage = 'We\'re sorry but we couldn\'t save your data. Please try again.';
                 transaction.get('records').forEach(function(r, options) {
-                    r.didCommit(options);
-                }, this);
-                this.sideload(payload);
-                transaction.trigger('complete');
-                transaction.trigger('success', payload);
-            },
-            error: function(xhr) {
-                var errorMessage,
-                    payload = this._parseResponseJson(xhr.responseText);
-                if (xhr.status == 422 && payload) {
-                    errorMessage = payload.errorMessage;
-                    this._handleValidationErrors(payload);
-                } else {
-                    errorMessage = 'We\'re sorry but we couldn\'t save your data. Please try again.';
-                    transaction.get('records').forEach(function(r, options) {
-                        r.set('error', errorMessage);
-                    }, this);
-                }
-                transaction.trigger('complete');
-                transaction.trigger('error', errorMessage, payload, xhr);
+                    r.set('error', errorMessage);
+                }, self);
             }
-        });
+            transaction.trigger('complete');
+            transaction.trigger('error', errorMessage, payload);
+        };
+
+        this.get('adapter').commitTransactionBulk(this, type, rootPlural, data, success, error);
     },
     _handleValidationErrors: function(payload) {
         if (!payload.validationErrors) {
@@ -329,7 +324,8 @@ BD.Store = Em.Object.extend({
         }, this);
     },
     deleteRecord: function(r) {
-        var id = r.get('id'),
+        var self = this,
+            id = r.get('id'),
             isEmbedded = r.get('isEmbedded'),
             promise = BD.ModelOperationPromise.create();
         this._prepareRecordForDeletion(r);
@@ -346,27 +342,29 @@ BD.Store = Em.Object.extend({
             promise.trigger('success', null);
             return;
         }
+
+        var success = function(payload) {
+            r.unload();
+            self._unloadServerDeletedRecords(payload);
+            promise.trigger('complete');
+            promise.trigger('success', payload);
+        };
+
+        var error = function(payload, status) {
+            self._handleDeleteServerError(promise, payload, status);
+        };
+
         //Make DELETE request
-        this._ajax({
-            type: 'DELETE',
-            url: '/' + BD.pluralize(this._rootForType(r.constructor)) + '/' + encodeURIComponent(id),
-            success: function(payload) {
-                r.unload();
-                this._unloadServerDeletedRecords(payload);
-                promise.trigger('complete');
-                promise.trigger('success', payload);
-            },
-            error: function(xhr) {
-                this._handleDeleteServerError(promise, xhr);
-            }
-        });
+        this.get('adapter').deleteRecord(this, r, id, success, error);
+
         return promise;
     },
     deleteRecords: function(records) {
-        var type,
+        var self = this,
+            type,
             recordsToDelete = [],
-            promise = BD.ModelOperationPromise.create(),
-            idsQuery;
+            promise = BD.ModelOperationPromise.create();
+
         records.forEach(function(r) {
             var id = r.get('id'),
                 isEmbedded = r.get('isEmbedded');
@@ -393,37 +391,33 @@ BD.Store = Em.Object.extend({
             promise.trigger('success', null);
             return;
         }
-        idsQuery = recordsToDelete.map(function(r) {
-            return 'ids[]='+encodeURIComponent(r.get('id'));
-        }).join('&');
+
+        var success = function(payload) {
+            recordsToDelete.forEach(function(r) {
+                r.unload();
+            });
+            self._unloadServerDeletedRecords(payload);
+            promise.trigger('complete');
+            promise.trigger('success', payload);
+        };
+
+        var error = function(payload, status) {
+            self._handleDeleteServerError(promise, payload, status);
+        };
+
         //Make DELETE request
-        this._ajax({
-            type: 'DELETE',
-            url: '/' + BD.pluralize(this._rootForType(type)) + '?' + idsQuery,
-            success: function(payload) {
-                recordsToDelete.forEach(function(r) {
-                    r.unload();
-                });
-                this._unloadServerDeletedRecords(payload);
-                promise.trigger('complete');
-                promise.trigger('success', payload);
-            },
-            error: function(xhr) {
-                this._handleDeleteServerError(promise, xhr);
-            }
-        });
+        this.get('adapter').deleteRecords(this, type, recordsToDelete, success, error);
         return promise;
     },
-    _handleDeleteServerError: function(promise, xhr) {
-        var errorMessage,
-            payload = this._parseResponseJson(xhr.responseText);
-        if (xhr.status == 422 && payload) {
+    _handleDeleteServerError: function(promise, payload, status) {
+        var errorMessage;
+        if (status == 422 && payload) {
             errorMessage = payload.errorMessage;
         } else {
             errorMessage = 'We\'re sorry, but the record could currently not be deleted. Please try again.';
         }
         promise.trigger('complete');
-        promise.trigger('error', errorMessage, payload, xhr);
+        promise.trigger('error', errorMessage, payload);
     },
     _unloadServerDeletedRecords: function(payload) {
         var meta = payload.meta,
@@ -570,19 +564,6 @@ BD.Store = Em.Object.extend({
         this._typeMapFor(r.constructor).idToRecord[id] = r;
     },
 
-    _ajax: function(hash) {
-        hash.context = this;
-        return BD.ajax(hash);
-    },
-    _parseResponseJson: function(responseText) {
-        var payload = null;;
-        try {
-            payload = JSON.parse(responseText);
-        } catch (e) {
-        }
-        return payload;
-    },
-    
     /**
      @param {string} type The model class to load records of.
      @param {Object} options Properties to pass on the filtered record array. `type` will automatically be set.
@@ -714,4 +695,6 @@ BD.Store = Em.Object.extend({
     
 });
 
-BD.store = BD.Store.create({});
+BD.store = BD.Store.create({
+  adapter: BD.RestAdapter.create({})
+});
