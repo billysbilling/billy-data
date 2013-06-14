@@ -15,6 +15,37 @@ asyncTest('`schedule` schedules a callback to run later', function() {
     });
 });
 
+asyncTest('`schedule` triggers an ajax start', function() {
+    expect(1);
+    ajax = BD.FixtureRequest.create();
+    ajax.triggerAjaxStart = function() {
+        ok(true);
+        start();
+    };
+    ajax.schedule($.noop);
+});
+
+asyncTest('`schedule` triggers an ajax stop', function() {
+    expect(1);
+    ajax = BD.FixtureRequest.create();
+    ajax.triggerAjaxStop = function() {
+        ok(true);
+        start();
+    };
+    ajax.schedule($.noop);
+});
+
+asyncTest('`abort` triggers an ajax stop', function() {
+    expect(1);
+    ajax = BD.FixtureRequest.create();
+    ajax.triggerAjaxStop = function() {
+        ok(true);
+        start();
+    };
+    ajax.schedule($.noop);
+    ajax.abort();
+});
+
 asyncTest('`abort` removes the scheduled callback', function() {
     expect(1)
     ajax = BD.FixtureRequest.create();
