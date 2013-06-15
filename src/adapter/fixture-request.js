@@ -7,21 +7,22 @@ BD.FixtureRequest = Ember.Object.extend({
     },
 
     abort: function() {
-        if (!this.timeoutId) {
+        if (this.timeoutId) {
+            this.triggerAjaxStop();
+            this.clearTimeout(this.timeoutId);
+            this.timeoutId = null;
+        } else {
             Ember.warn('There is no scheduled callback');
         }
-
-        this.triggerAjaxStop();
-        this.clearTimeout(this.timeoutId);
-        this.timeoutId = null;
     },
 
     schedule: function(cb) {
         var self = this;
         this.triggerAjaxStart();
         this.timeoutId = this.setTimeout(function() {
-            self.triggerAjaxStop();
             cb();
+            self.timeoutId = null;
+            self.triggerAjaxStop();
         }, this.DELAY);
     },
 
