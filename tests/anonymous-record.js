@@ -15,6 +15,17 @@ module('BD.AnonymousRecord', {
     }
 });
 
+test('returns a correct value for a Moment object', function() {
+    expect(1);
+    var r = BD.AnonymousRecord.createRecord({
+        date: moment(new Date('2000/01/01'))
+    });
+    BD.ajax = function(hash) {
+        equal(hash.data.record.date, '2000-01-01');
+    };
+    r.save('/stories/milk');
+});
+
 test('Sends correct AJAX options', function() {
     expect(4);
     var r = BD.AnonymousRecord.createRecord({
