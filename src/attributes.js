@@ -89,7 +89,8 @@ BD.belongsTo = function(type, options) {
             serialized[key+'Id'] = id;
         },
         addToQuery: function(query, belongsToKey, parent) {
-            query[belongsToKey+'Id'] = parent.get('id');
+            var id = parent ? parent.get('id') : null;
+            query[belongsToKey+'Id'] = id;
         }
     }, options);
 };
