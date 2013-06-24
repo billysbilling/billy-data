@@ -454,3 +454,12 @@ asyncTest('Local filter should fire didLoad async', function() {
         start();
     });
 });
+
+asyncTest('should be able to find a belongs to association with null', function() {
+    BD.ajax = function(hash) {
+        equal(hash.data.categoryId, null);
+        start();
+    };
+    var posts = App.Post.filter({ query: { category: null }});
+    equal(posts.length, 0);
+});
