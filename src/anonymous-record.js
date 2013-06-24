@@ -16,6 +16,11 @@ BD.AnonymousRecord = Em.ObjectProxy.extend({
                 key = key + 'Id';
                 value = value ? value.get('id') : null;
             }
+
+            // Moment Object
+            if (moment.isMoment(value)) {
+                value = value.format('YYYY-MM-DD');
+            }
             serialized[key] = value;
         });
         //Make PUT/POST request
