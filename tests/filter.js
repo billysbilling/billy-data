@@ -460,6 +460,5 @@ asyncTest('should be able to find a belongs to association with null', function(
         equal(hash.data.categoryId, null);
         start();
     };
-    var posts = App.Post.filter({ query: { category: null }});
-    equal(posts.length, 0);
+    App.Post.filter({ query: { category: null }});
 });
