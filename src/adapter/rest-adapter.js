@@ -14,6 +14,9 @@ BD.RestAdapter = Em.Object.extend({
         return payload;
     },
 
+    loadRecord: function(store, type, record) {
+    },
+
     deleteRecord: function(store, r, id, success, error) {
         var url = '/' + BD.pluralize(store._rootForType(r.constructor)) + '/' + encodeURIComponent(id);
         this._ajax({

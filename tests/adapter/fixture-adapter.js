@@ -30,6 +30,13 @@ module('BD.FixtureAdapter', {
 
 });
 
+test('`loadRecord` persists the data in the fixtures', function() {
+    expect(1);
+    App.Category.FIXTURES = [];
+    adapter.loadRecord(BD.store, App.Category, App.Category.find(1));
+    equal(App.Category.FIXTURES.length, 1);
+});
+
 asyncTest('`deleteRecords` deletes multiple records', function() {
     var records = [App.Category.find(1), App.Category.find(2)];
     var success = function(payload) {

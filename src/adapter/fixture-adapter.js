@@ -16,6 +16,10 @@ BD.FixtureAdapter = Em.Object.extend({
         return type.FIXTURES;
     },
 
+    loadRecord: function(store, type, record) {
+        this._persist(type, record.serialize());
+    },
+
     deleteRecords: function(store, type, records, success, error) {
         return this._simulateRemoteCall(function() {
             this._didDeleteRecords(store, type, records, success, error);
@@ -107,12 +111,19 @@ BD.FixtureAdapter = Em.Object.extend({
         var fixtures = this.rawFixturesForType(type);
 
         if (obj.id) {
-            fixtures.find(function(item, idx) {
+            var fixture = fixtures.find(function(item, idx) {
                 if (item.id == obj.id) {
                     fixtures[idx] = $.extend({}, item, obj);
                     return true;
                 }
             });
+
+            // Means we are coming from `loadRecord`, also means that
+            // we got a response from BD.AnonymousRecord#save and we
+            // want to load the data into the fixtures.
+            if (!fixture) {
+                fixtures.push(obj);
+            }
         } else {
             obj.id = this._incrementIdInFixtures(type);
             fixtures.push(obj);

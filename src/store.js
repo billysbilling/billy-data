@@ -537,6 +537,7 @@ BD.Store = Em.Object.extend({
         //Update data
         r.loadData(data);
         this._unmaterializedRecords.push(r);
+        this.get('adapter').loadRecord(this, type, r);
         return r;
     },
     _materializeRecords: function() {

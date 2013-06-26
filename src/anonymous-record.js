@@ -31,6 +31,7 @@ BD.AnonymousRecord = Em.ObjectProxy.extend({
                 record: serialized
             },
             success: function(payload) {
+                BD.store.sideload(payload);
                 promise.trigger('complete');
                 promise.trigger('success', payload);
             },
