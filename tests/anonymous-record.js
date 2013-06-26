@@ -83,3 +83,16 @@ test('Sends correct AJAX options with null model', function() {
         models: ['post']
     });
 });
+
+test('calls `sideload` after a successful response', function() {
+  expect(1);
+  var oldSideload = BD.store.sideload;
+  BD.store.sideload = function() {
+      ok(true);
+  };
+  BD.ajax = function(hash) {
+      hash.success({});
+      BD.store.sideload = oldSideload;
+  };
+  BD.AnonymousRecord.createRecord().save('/somewhere');
+});
