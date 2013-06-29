@@ -80,6 +80,7 @@ BD.FixtureAdapter = Em.Object.extend({
     },
 
     _didSaveRecord: function(store, r, data, success, error) {
+        data = data[BD.store._rootForType(r.constructor)];
         this._persist(r.constructor, data);
         success({ meta: { statusCode: 200, success: true } });
     },
