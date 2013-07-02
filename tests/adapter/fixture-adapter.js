@@ -73,15 +73,21 @@ asyncTest('`findOne` should return the found model', function() {
 });
 
 asyncTest('`saveRecord` adds one item when fixtures are empty', function() {
-    expect(1);
+    expect(3);
     App.Category.FIXTURES = [];
     var success = function(payload) {
         equal(App.Category.FIXTURES.length, 1);
+
+        var category = App.Category.FIXTURES[0];
+        equal(category.id, 1);
+        equal(category.name, 'Adam');
         start();
     };
     var error = function() {};
     var record = App.Category.createRecord({ name: 'Adam' });
-    adapter.saveRecord(BD.store, record, record.serialize([]), success, error);
+    var data = {};
+    data[BD.store._rootForType(record.constructor)] = record.serialize();
+    adapter.saveRecord(BD.store, record, data, success, error);
 });
 
 asyncTest('`saveRecord` adds one item when we fixtures exist', function() {
@@ -93,7 +99,9 @@ asyncTest('`saveRecord` adds one item when we fixtures exist', function() {
     };
     var error = function() {};
     var record = App.Category.createRecord({ name: 'Adam' });
-    adapter.saveRecord(BD.store, record, record.serialize([]), success, error);
+    var data = {};
+    data[BD.store._rootForType(record.constructor)] = record.serialize();
+    adapter.saveRecord(BD.store, record, data, success, error);
 });
 
 asyncTest('`saveRecord` calls `success` with a payload', function() {
@@ -105,7 +113,9 @@ asyncTest('`saveRecord` calls `success` with a payload', function() {
       start();
   };
   var record = App.Category.find(1);
-  adapter.saveRecord(BD.store, record, record.serialize([]), success, error);
+  var data = {};
+  data[BD.store._rootForType(record.constructor)] = record.serialize();
+  adapter.saveRecord(BD.store, record, data, success, error);
 });
 
 asyncTest('`reset` resets the fixtures to the original content', function() {
