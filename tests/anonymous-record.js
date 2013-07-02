@@ -96,3 +96,26 @@ test('calls `sideload` after a successful response', function() {
   };
   BD.AnonymousRecord.createRecord().save('/somewhere');
 });
+
+test('`_handleValidationErrors` serializes the models errors', function() {
+    expect(2);
+    var record = BD.AnonymousRecord.createRecord({ post: null });
+    BD.ajax = function(opts) {
+        opts.error({
+            status: 422,
+            responseText: JSON.stringify({
+                validationErrors: {
+                    record: {
+                        attributes: {
+                            postId: 'Thisfieldmustnotbeblank.',
+                            unitPrice: 'Thisfieldmustnotbeblank.'
+                        }
+                    }
+                }
+            })
+        });
+        equal(record.get('errors.post'), 'Thisfieldmustnotbeblank.');
+        equal(record.get('errors.unitPrice'), 'Thisfieldmustnotbeblank.');
+    };
+    record.save('/stories/milk', { models: ['post'] });
+});

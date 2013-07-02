@@ -8,7 +8,8 @@ BD.AnonymousRecord = Em.ObjectProxy.extend({
     
     save: function(url, options) {
         options = options || {};
-        var promise = BD.ModelOperationPromise.create(),
+        var self = this,
+            promise = BD.ModelOperationPromise.create(),
             serialized = {};
         //Payload
         _.each(this.get('content'), function(value, key) {
@@ -37,17 +38,17 @@ BD.AnonymousRecord = Em.ObjectProxy.extend({
             },
             error: function(xhr) {
                 var errorMessage,
-                    payload = null;;
+                    payload = null;
                 try {
                     payload = JSON.parse(xhr.responseText);
                 } catch (e) {
                 }
                 if (xhr.status == 422 && payload) {
                     errorMessage = payload.errorMessage;
-                    this._handleValidationErrors(payload);
+                    self._handleValidationErrors(payload, options);
                 } else {
                     errorMessage = 'We\'re sorry but we couldn\'t successfully send your request. Please try again.';
-                    this.set('error', errorMessage);
+                    self.set('error', errorMessage);
                 }
                 promise.trigger('complete');
                 promise.trigger('error', errorMessage, xhr);
@@ -56,14 +57,30 @@ BD.AnonymousRecord = Em.ObjectProxy.extend({
         });
         return promise;
     },
-    _handleValidationErrors: function(payload) {
+    _handleValidationErrors: function(payload, options) {
+        var i,
+            models = options.models,
+            model,
+            rawErrors;
+
         if (!payload || !payload.validationErrors) {
             return;
         }
-        var rawErrors = payload.validationErrors.record;
+        rawErrors = payload.validationErrors.record;
         if (!rawErrors) {
             return;
         }
+
+        if (models && rawErrors.attributes) {
+            for (i = 0; i < models.length; i += 1) {
+                model = models[0];
+                if (rawErrors.attributes.hasOwnProperty(model + 'Id')) {
+                    rawErrors.attributes[model] = rawErrors.attributes[model + 'Id'];
+                    delete rawErrors.attributes[model + 'Id'];
+                }
+            }
+        };
+
         this.set('error', rawErrors.message);
         this.set('errors', rawErrors.attributes);
     }
