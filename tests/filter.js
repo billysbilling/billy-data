@@ -443,8 +443,6 @@ test('Test #bigdata sorting', function() {
     equal(all.indexOf(category), 11, 'Z goes last');
 });
 
-
-
 asyncTest('Local filter should fire didLoad async', function() {
     expect(1);
     App.Post.loadAll([]);
@@ -458,6 +456,20 @@ asyncTest('Local filter should fire didLoad async', function() {
 asyncTest('should be able to find a belongs to association with null', function() {
     BD.ajax = function(hash) {
         equal(hash.data.categoryId, null);
+        start();
+    };
+    App.Post.filter({ query: { category: null }});
+});
+
+asyncTest('should be able to find a belongs to reference association with null', function() {
+    App.Post = BD.Model.extend({
+        category: BD.belongsToReference('App.Category'),
+        author: BD.attr('string'),
+        title: BD.attr('string'),
+        isPublic: BD.attr('boolean')
+    });
+    BD.ajax = function(hash) {
+        equal(hash.data.categoryReference, null);
         start();
     };
     App.Post.filter({ query: { category: null }});

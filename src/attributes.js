@@ -119,7 +119,8 @@ BD.belongsToReference = function(options) {
             serialized[key+'Reference'] = reference;
         },
         addToQuery: function(query, belongsToKey, parent) {
-            query[belongsToKey+'Reference'] = parent.get('reference');
+            var id = parent ? parent.get('id') : null;
+            query[belongsToKey+'Reference'] = id;
         }
     }, options);
 };
