@@ -8,14 +8,6 @@ BD.FindRecordArray = Em.ArrayProxy.extend(BD.RecordArray, {
             ajaxRequest.abort();
         }
         this._super();
-    },
-
-    whenLoaded: function(callback) {
-        if (this.get('isLoaded')) {
-            callback();
-        } else {
-            this.one('didLoad', callback);
-        }
     }
 
 });
