@@ -445,11 +445,10 @@ test('Test #bigdata sorting', function() {
 
 
 
-asyncTest('Local filter should fire didLoad async', function() {
+asyncTest('Local filter should fire promise.then async', function() {
     expect(1);
     App.Post.loadAll([]);
-    var posts = App.Post.filter();
-    posts.one('didLoad', function() {
+    App.Post.filter().promise.then(function() {
         ok(true, 'didLoad was triggered');
         start();
     });

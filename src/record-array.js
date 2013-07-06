@@ -1,6 +1,18 @@
 BD.RecordArray = Em.Mixin.create(Em.Evented, {
 
     isLoaded: false,
+    
+    init: function() {
+        this._super();
+        var self = this;
+        this.promise = new Em.RSVP.Promise(function(resolve, reject) {
+            self.one('didLoad', function() {
+                self.set('isLoaded', true);
+                resolve(self);
+            });
+            self.one('didError', reject);
+        });
+    },
 
     arrayContentWillChange: function(index, removed, added) {
         var ret = this._super.apply(this, arguments);
@@ -29,14 +41,6 @@ BD.RecordArray = Em.Mixin.create(Em.Evented, {
             }
         }
         return ret;
-    },
-
-    whenLoaded: function(callback) {
-        if (this.get('isLoaded')) {
-            callback();
-        } else {
-            this.one('didLoad', callback);
-        }
     },
 
     willDestroy: function() {

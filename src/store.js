@@ -107,9 +107,9 @@ BD.Store = Em.Object.extend({
         }, this);
         var recordArray = BD.FindRecordArray.create({
             type: type,
-            isLoaded: true,
             content: Em.A(records)
         });
+        recordArray.trigger('didLoad');
         return recordArray;
     },
 
@@ -133,7 +133,6 @@ BD.Store = Em.Object.extend({
             self.sideload(payload,
                           BD.pluralize(self._rootForType(type)),
                           recordArray);
-            recordArray.set('isLoaded', true);
             recordArray.trigger('didLoad', payload);
         };
 
@@ -149,6 +148,8 @@ BD.Store = Em.Object.extend({
             }
 
             BD.printServerError(msg);
+            
+            recordArray.trigger('didError', msg);
         };
 
         var ajaxRequest = this.get('adapter').findByQuery(
@@ -546,9 +547,8 @@ BD.Store = Em.Object.extend({
         });
         this._unmaterializedRecords.forEach(function(r) {
             if (!r.get('isLoaded')) {
-                r.set('isLoaded', true);
+                r.trigger('didLoad');
             }
-            r.trigger('didLoad');
         });
         this._unmaterializedRecords = [];
     },
@@ -692,6 +692,7 @@ BD.Store = Em.Object.extend({
         this._unmaterializedRecords = [];
         this._recordAttributeDidChangeQueue = [];
         this._recordArrays = {};
+        Em.set(BD, 'loadedAll', Em.Object.create());
     }
     
 });

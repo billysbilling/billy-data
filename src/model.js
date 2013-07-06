@@ -13,6 +13,7 @@ BD.Model = Em.Object.extend(Em.Evented, {
     errors: null,
 
     init: function() {
+        var self = this;
         this._hasManyRecordArrays = {};
         this._deletedEmbeddedRecords = [];
         this._inRecordArrays = {};
@@ -20,6 +21,13 @@ BD.Model = Em.Object.extend(Em.Evented, {
             attributes: {},
             belongsTo: {},
             hasMany: {}
+        });
+        this.promise = new Em.RSVP.Promise(function(resolve, reject) {
+            self.one('didLoad', function() {
+                self.set('isLoaded', true);
+                resolve(self);
+            });
+            self.one('didError', reject);
         });
         BD.store.didInstantiateRecord(this);
         this._super();
@@ -128,13 +136,6 @@ BD.Model = Em.Object.extend(Em.Evented, {
         BD.store.resumeRecordAttributeDidChange();
         //
         delete this._serializedData;
-    },
-    whenLoaded: function(callback) {
-        if (this.get('isLoaded')) {
-            callback();
-        } else {
-            this.one('didLoad', callback);
-        }
     },
 
     include: function(include) {

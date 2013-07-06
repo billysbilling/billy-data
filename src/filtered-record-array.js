@@ -182,21 +182,19 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
             }
             if (!r.get('isLoaded')) {
                 pending++;
-                r.one('didLoad', function() {
+                r.promise.then(function() {
                     pending--;
                     if (pending == 0) {
-                        self.set('isLoaded', true);
                         self.trigger('didLoad');
                     }
+                }, function(err) {
+                    self.trigger('didError', err);
                 });
             }
             self._pushObjectSorted(r);
         }, this);
         if (pending == 0) {
-            this.set('isLoaded', true);
-            setTimeout(function() {
-                self.trigger('didLoad');
-            }, 0);
+            self.trigger('didLoad');
         }
     },
 
@@ -215,10 +213,7 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
         length = records.length;
         this.set('length', length);
         self._replace(0, records);
-        this.set('isLoaded', true);
-        setTimeout(function() {
-            self.trigger('didLoad');
-        }, 0);
+        self.trigger('didLoad');
     },
 
     objectAt: function(index) {
@@ -379,8 +374,8 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
         this._pendingRequests.push(records);
         records.one('willLoad', function() {
             self._rejectAll = true;
-        })
-        records.one('didLoad', function(payload) {
+        });
+        records.on('didLoad', function(payload) {
             self._rejectAll = false;
             //Handle total
             var recordsLength = records.get('length'),
@@ -390,12 +385,14 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
             self._requestOffsetIsSuspended = true;
             self._replace(offset, records);
             self._requestOffsetIsSuspended = false;
-            //Set isLoaded state
-            self.set('isLoaded', true);
+            //Trigger didLoad event
             self.trigger('didLoad', payload);
             //Clean up
             self._pendingRequests.removeObject(records);
             records.destroy();
+        });
+        records.on('didError', function() {
+            self._rejectAll = false;
         });
     },
     

@@ -16,7 +16,7 @@ module('RecordArray', {
     }
 });
 
-test('whenLoaded() with findByQuery() before loaded', function() {
+asyncTest('promise.then() with findByQuery() before loaded', function() {
     expect(1);
     var req = fakeAjax(200, {
         posts: [
@@ -29,12 +29,13 @@ test('whenLoaded() with findByQuery() before loaded', function() {
         something: 1
     });
     req.respond();
-    posts.whenLoaded(function() {
+    posts.promise.then(function() {
         equal(posts.get('length'), 1);
+        start();
     });
 });
 
-test('whenLoaded() with findByQuery() after loaded', function() {
+asyncTest('promise.then() with findByQuery() after loaded', function() {
     expect(1);
     var req = fakeAjax(200, {
         posts: [
@@ -46,13 +47,14 @@ test('whenLoaded() with findByQuery() after loaded', function() {
     var posts = App.Post.findByQuery({
         something: 1
     });
-    posts.whenLoaded(function() {
+    posts.promise.then(function() {
         equal(posts.get('length'), 1);
+        start();
     });
     req.respond();
 });
 
-test('whenLoaded() with findMany() before loaded', function() {
+asyncTest('promise.then() with findMany() before loaded', function() {
     expect(1);
     var req = fakeAjax(200, {
         posts: [
@@ -62,13 +64,14 @@ test('whenLoaded() with findMany() before loaded', function() {
         ]
     });
     var posts = App.Post.findMany([999]);
-    posts.whenLoaded(function() {
+    posts.promise.then(function() {
         equal(posts.get('length'), 1);
+        start();
     });
     req.respond();
 });
 
-test('whenLoaded() with findMany() after loaded', function() {
+asyncTest('promise.then() with findMany() after loaded', function() {
     expect(1);
     var req = fakeAjax(200, {
         posts: [
@@ -79,12 +82,13 @@ test('whenLoaded() with findMany() after loaded', function() {
     });
     var posts = App.Post.findMany([999]);
     req.respond();
-    posts.whenLoaded(function() {
+    posts.promise.then(function() {
         equal(posts.get('length'), 1);
+        start();
     });
 });
 
-test('whenLoaded() with filter() local', function() {
+asyncTest('promise.then() with filter() local', function() {
     expect(1);
     App.Post.loadAll([]);
     var posts = App.Post.filter({
@@ -92,12 +96,13 @@ test('whenLoaded() with filter() local', function() {
             title: 'Dirty secrets'
         }
     });
-    posts.whenLoaded(function() {
+    posts.promise.then(function() {
         equal(posts.get('length'), 1);
+        start();
     });
 });
 
-test('whenLoaded() with filter() remote before loaded', function() {
+asyncTest('promise.then() with filter() remote before loaded', function() {
     expect(1);
     var req = fakeAjax(200, {
         posts: [
@@ -111,13 +116,14 @@ test('whenLoaded() with filter() remote before loaded', function() {
             title: 'Dirty secrets'
         }
     });
-    posts.whenLoaded(function() {
+    posts.promise.then(function() {
         equal(posts.get('length'), 1);
+        start();
     });
     req.respond();
 });
 
-test('whenLoaded() with filter() remote after loaded', function() {
+asyncTest('promise.then() with filter() remote after loaded', function() {
     expect(1);
     var req = fakeAjax(200, {
         posts: [
@@ -132,7 +138,8 @@ test('whenLoaded() with filter() remote after loaded', function() {
         }
     });
     req.respond();
-    posts.whenLoaded(function() {
+    posts.promise.then(function() {
         equal(posts.get('length'), 1);
+        start();
     });
 });
