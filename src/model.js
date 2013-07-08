@@ -6,6 +6,8 @@ BD.Model = Em.Object.extend(Em.Evented, {
     selfIsDirty: false,
     childIsDirty: false,
     
+    isNotLoaded: Em.computed.not('isLoaded'),
+    
     clientId: null,
     id: null,
     _data: null,

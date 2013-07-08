@@ -1,6 +1,8 @@
 BD.RecordArray = Em.Mixin.create(Em.Evented, {
 
     isLoaded: false,
+
+    isNotLoaded: Em.computed.not('isLoaded'),
     
     init: function() {
         this._super();
