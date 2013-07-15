@@ -34,6 +34,8 @@ var BD = Ember.Namespace.create({
             return name.substring(0, name.length - 1)+'ies';
         } else if (name.slice(-1) == 's') {
             return name+'es';
+        } else if (name.slice(-3) == 'tch') {
+            return name+'es';
         } else {
             return name+'s';
         }
@@ -51,6 +53,8 @@ var BD = Ember.Namespace.create({
         } else if (name.slice(-3) == 'ies') {
             return name.substring(0, name.length-3)+'y';
         } else if (name.slice(-3) == 'ses') {
+            return name.substring(0, name.length-2);
+        } else if (name.slice(-5) == 'tches') {
             return name.substring(0, name.length-2);
         } else {
             return name.substring(0, name.length-1);
