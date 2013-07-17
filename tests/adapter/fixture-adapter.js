@@ -8,7 +8,7 @@ module('BD.FixtureAdapter', {
         adapter    = BD.FixtureAdapter.create();
         BD.store.set('adapter', adapter);
         App.Category = BD.Model.extend({
-            name: BD.attr('string'),
+            name: BD.attr('string')
         });
         App.Category.FIXTURES = [
             {
@@ -132,15 +132,18 @@ asyncTest('`reset` resets the fixtures to the original content', function() {
                                   data, success, $.noop);
 });
 
-asyncTest('`findByUrl` calls success with a payload', function() {
-    expect(1);
+asyncTest('`findByQuery` calls success with a filtered payload', function() {
+    expect(3);
     var success = function(payload) {
-        ok(payload.hasOwnProperty('categories'));
+        equal(payload.categories.length, 1);
+        equal(payload.categories[0].id, 2);
+        equal(payload.categories[0].name, 'Noah');
         start();
     };
-    var record = App.Category.find(1);
-    adapter.findByQuery(BD.store, record.constructor, {},
-                      success, $.noop, $.noop);
+    var query = {
+        name: 'Noah'
+    };
+    adapter.findByQuery(BD.store, App.Category, query, success, $.noop, $.noop);
 });
 
 asyncTest('`commitTransactionBulk` adds items not saved in the fixtures', function() {

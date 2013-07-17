@@ -27,7 +27,6 @@ BD.FixtureAdapter = Em.Object.extend({
     },
 
     _didDeleteRecords: function(store, type, records, success, error) {
-        var fixtures = this.rawFixturesForType(type);
         records.forEach(function(record) {
             this._remove(type, record.get('id'));
         }, this);
@@ -68,9 +67,26 @@ BD.FixtureAdapter = Em.Object.extend({
 
     _didFindByQuery: function(store, type, query, success, error, complete) {
         complete();
-        var payload = {};
+        var payload = {},
+            records = [],
+            name;
         payload.meta = { statusCode: 200, success: true };
-        payload[BD.pluralize(store._rootForType(type))] = this.rawFixturesForType(type);
+        this.rawFixturesForType(type).forEach(function(data) {
+            var match = true;
+            if (query) {
+                for (name in query) {
+                    if (!query.hasOwnProperty(name)) continue;
+                    if (data[name] !== query[name]) {
+                        match = false;
+                        break;
+                    }
+                }
+            }
+            if (match) {
+                records.push(data);
+            }
+        });
+        payload[BD.pluralize(store._rootForType(type))] = records;
         success(payload);
     },
 
