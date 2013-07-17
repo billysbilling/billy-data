@@ -67,6 +67,7 @@ BD.FixtureAdapter = Em.Object.extend({
     },
 
     _didFindByQuery: function(store, type, query, success, error, complete) {
+        complete();
         var payload = {};
         payload.meta = { statusCode: 200, success: true };
         payload[BD.pluralize(store._rootForType(type))] = this.rawFixturesForType(type);
