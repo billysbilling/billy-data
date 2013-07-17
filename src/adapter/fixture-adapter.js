@@ -75,7 +75,7 @@ BD.FixtureAdapter = Em.Object.extend({
             var match = true;
             if (query) {
                 for (name in query) {
-                    if (!query.hasOwnProperty(name)) continue;
+                    if (!query.hasOwnProperty(name) || name === 'pageSize' || name === 'offset') continue;
                     if (data[name] !== query[name]) {
                         match = false;
                         break;

@@ -136,7 +136,7 @@ asyncTest('`reset` resets the fixtures to the original content', function() {
                                   data, success, $.noop);
 });
 
-asyncTest('`findByQuery` calls success with a filtered payload', function() {
+asyncTest('`findByQuery` calls success with a filtered payload and ignores pageSize and offset', function() {
     expect(3);
     var success = function(payload) {
         equal(payload.categories.length, 1);
@@ -145,7 +145,9 @@ asyncTest('`findByQuery` calls success with a filtered payload', function() {
         start();
     };
     var query = {
-        name: 'Noah'
+        name: 'Noah',
+        pageSize: 100,
+        offset: 100
     };
     adapter.findByQuery(BD.store, App.Category, query, success, $.noop, $.noop);
 });
