@@ -10,14 +10,3 @@ test('should be able to set the adapter', function() {
     ok(BD.store.get('adapter').toString().match(/BD.FixtureAdapter/));
     BD.store.set('adapter', oldAdapter);
 });
-
-test('`_load` should save call the adapter `loadRecord` method', function() {
-    var oldAdapter = BD.store.get('adapter');
-    var adapter = BD.FixtureAdapter.create();
-    adapter.loadRecord = function() {
-        ok(true);
-    };
-    BD.store.set('adapter', adapter);
-    App.Contact = BD.Model.extend({ name: BD.attr('string') });
-    BD.store._load(App.Contact, { name: 'Seebass' });
-});

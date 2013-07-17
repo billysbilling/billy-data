@@ -14,7 +14,7 @@ BD.RestAdapter = Em.Object.extend({
         return payload;
     },
 
-    loadRecord: function(store, type, record) {
+    loadRecord: function(store, record) {
     },
 
     deleteRecord: function(store, r, id, success, error) {

@@ -30,11 +30,15 @@ module('BD.FixtureAdapter', {
 
 });
 
-test('`loadRecord` persists the data in the fixtures', function() {
-    expect(1);
+test('`load` persists the data in the fixtures', function() {
     App.Category.FIXTURES = [];
-    adapter.loadRecord(BD.store, App.Category, App.Category.find(1));
+    App.Category.load({
+        id: 3,
+        name: 'Sebastian'
+    });
     equal(App.Category.FIXTURES.length, 1);
+    equal(App.Category.FIXTURES[0].id, 3);
+    equal(App.Category.FIXTURES[0].name, 'Sebastian');
 });
 
 asyncTest('`deleteRecords` deletes multiple records', function() {

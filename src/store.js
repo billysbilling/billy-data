@@ -538,12 +538,13 @@ BD.Store = Em.Object.extend({
         //Update data
         r.loadData(data);
         this._unmaterializedRecords.push(r);
-        this.get('adapter').loadRecord(this, type, r);
         return r;
     },
     _materializeRecords: function() {
+        var adapter = this.get('adapter');
         this._unmaterializedRecords.forEach(function(r) {
             r.materializeData();
+            adapter.loadRecord(this, r);
         });
         this._unmaterializedRecords.forEach(function(r) {
             if (!r.get('isLoaded')) {
