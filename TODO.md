@@ -25,6 +25,8 @@
 
 ## Wish list
 
+### Binary search tree storage of records in sorted record arrays
+
 ### Smarter filtered record arrays
 - Let `BD.store.filter` return a `BD.FilteredRecordArray`, which is automatically updated when relevant records are changed.
 
