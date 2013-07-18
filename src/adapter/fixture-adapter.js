@@ -56,14 +56,26 @@ BD.FixtureAdapter = Em.Object.extend({
     },
 
     _didFindOne: function(store, type, r, id, query, success, error) {
-        // TODO: Remove redundancy from #findOne
-        var fixtures = this.fixturesForType(type);
-        var payload = { meta: { statusCode: 200, success: true } };
-        var fixture = fixtures.find(function(item) {
+        var fixtures = this.fixturesForType(type),
+            fixture,
+            payload;
+        fixture = fixtures.find(function(item) {
             return item.id == id
         });
-        payload[store._rootForType(type)] = JSON.parse(JSON.stringify(fixture));
-        success(payload);
+        if (fixture) {
+            payload = { meta: { statusCode: 200, success: true } };
+            payload[store._rootForType(type)] = JSON.parse(JSON.stringify(fixture));
+            success(payload);
+        } else {
+            payload = {
+                meta: {
+                    statusCode: 404,
+                    success: false
+                },
+                errorMessage: 'The record was not found.'
+            };
+            error(payload, 404)
+        }
     },
 
     findByQuery: function(store, type, query, success, error, complete) {

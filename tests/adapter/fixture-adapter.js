@@ -72,6 +72,18 @@ asyncTest('`findOne` should return the found model', function() {
     adapter.findOne(BD.store, App.Category, category, 1, {}, success, $.noop);
 });
 
+asyncTest('`findOne` should call error if the model is not found in fixtures', function() {
+    var category = App.Category.createRecord();
+    var success = function() {
+        throw new Error('Should not be called.');
+    };
+    var error = function(payload, statusCode) {
+        equal(statusCode, 404);
+        start();
+    };
+    adapter.findOne(BD.store, App.Category, category, 999, {}, success, error);
+});
+
 asyncTest('`saveRecord` adds one item when fixtures are empty', function() {
     expect(3);
     adapter.setFixtures(App.Category, []);
