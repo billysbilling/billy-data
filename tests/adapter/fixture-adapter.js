@@ -147,7 +147,8 @@ asyncTest('`findByQuery` calls success with a filtered payload and ignores pageS
     var query = {
         name: 'Noah',
         pageSize: 100,
-        offset: 100
+        offset: 100,
+        include: 'category.thing'
     };
     adapter.findByQuery(BD.store, App.Category, query, success, $.noop, $.noop);
 });
