@@ -11,11 +11,12 @@ module('BD.Model', {
 });
 
 asyncTest('Promise of loaded record should be resolved', function() {
-    expect(0);
+    expect(1);
     var post = App.Post.load({
         id: 1
     });
-    post.promise.then(function() {
+    post.promise.then(function(resolvedPost) {
+        strictEqual(resolvedPost, post, 'Should resolve with the post as the value');
         start();
     })
 });

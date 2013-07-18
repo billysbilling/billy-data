@@ -26,7 +26,7 @@ BD.Model = Em.Object.extend(Em.Evented, {
         });
         this.promise = new Em.RSVP.Promise(function(resolve, reject) {
             if (self.get('isLoaded')) {
-                resolve();
+                resolve(self);
             } else {
                 self.one('didLoad', function() {
                     self.set('isLoaded', true);
