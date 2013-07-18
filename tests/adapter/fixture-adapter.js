@@ -145,6 +145,33 @@ asyncTest('`findByQuery` calls success with a filtered payload and ignores pageS
     adapter.findByQuery(BD.store, App.Category, query, success, $.noop, $.noop);
 });
 
+asyncTest('`findByQuery` respects sortProperty', function() {
+    var success = function(payload) {
+        equal(payload.categories.length, 2);
+        equal(payload.categories[0].name, 'Billy');
+        equal(payload.categories[1].name, 'Noah');
+        start();
+    };
+    var query = {
+        sortProperty: 'name'
+    };
+    adapter.findByQuery(BD.store, App.Category, query, success, $.noop, $.noop);
+});
+
+asyncTest('`findByQuery` respects sortProperty and sortDirection', function() {
+    var success = function(payload) {
+        equal(payload.categories.length, 2);
+        equal(payload.categories[0].name, 'Noah');
+        equal(payload.categories[1].name, 'Billy');
+        start();
+    };
+    var query = {
+        sortProperty: 'name',
+        sortDirection: 'DESC'
+    };
+    adapter.findByQuery(BD.store, App.Category, query, success, $.noop, $.noop);
+});
+
 asyncTest('`commitTransactionBulk` adds items not saved in the fixtures', function() {
     expect(1);
     var error = function() {};

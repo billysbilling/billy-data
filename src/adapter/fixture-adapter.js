@@ -88,13 +88,15 @@ BD.FixtureAdapter = Em.Object.extend({
         complete();
         var payload = {},
             records = [],
-            name;
+            name,
+            sortProperty = query.sortProperty,
+            sortFactor = query.sortDirection === 'DESC' ? -1 : 1;
         payload.meta = { statusCode: 200, success: true };
         this.fixturesForType(type).forEach(function(data) {
             var match = true;
             if (query) {
                 for (name in query) {
-                    if (!query.hasOwnProperty(name) || name === 'pageSize' || name === 'offset' || name === 'include') continue;
+                    if (!query.hasOwnProperty(name) || name === 'pageSize' || name === 'offset' || name === 'include' || name === 'sortProperty' || name === 'sortDirection') continue;
                     if (data[name] !== query[name]) {
                         match = false;
                         break;
@@ -105,6 +107,17 @@ BD.FixtureAdapter = Em.Object.extend({
                 records.push(JSON.parse(JSON.stringify(data)));
             }
         });
+        if (sortProperty) {
+            records.sort(function(a, b) {
+                var av = a[sortProperty],
+                    bv = b[sortProperty];
+                if (typeof av === 'number' && typeof bv === 'number') {
+                    return sortFactor * (av - bv);
+                } else {
+                    return sortFactor * av.localeCompare(bv);
+                }
+            });
+        }
         payload[BD.pluralize(store._rootForType(type))] = records;
         success(payload);
     },
