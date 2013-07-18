@@ -111,10 +111,10 @@ BD.FixtureAdapter = Em.Object.extend({
             records.sort(function(a, b) {
                 var av = a[sortProperty],
                     bv = b[sortProperty];
-                if (typeof av === 'number' && typeof bv === 'number') {
-                    return sortFactor * (av - bv);
-                } else {
+                if (typeof av === 'string' && typeof bv === 'string') {
                     return sortFactor * av.localeCompare(bv);
+                } else {
+                    return sortFactor * (av - bv);
                 }
             });
         }
