@@ -8,16 +8,19 @@ module('BD.FixtureAdapter', {
         adapter    = BD.FixtureAdapter.create();
         BD.store.set('adapter', adapter);
         App.Category = BD.Model.extend({
-            name: BD.attr('string')
+            name: BD.attr('string'),
+            luckyNumber: BD.attr('number')
         });
         adapter.setFixtures(App.Category, [
             {
                 id: 1,
-                name: 'Billy'
+                name: 'Billy',
+                luckyNumber: 77
             },
             {
                 id: 2,
-                name: 'Noah'
+                name: 'Noah',
+                luckyNumber: 2
             }
         ]);
     },
@@ -170,6 +173,24 @@ asyncTest('`findByQuery` respects sortProperty and sortDirection', function() {
         sortDirection: 'DESC'
     };
     adapter.findByQuery(BD.store, App.Category, query, success, $.noop, $.noop);
+});
+
+asyncTest('`findByQuery` sortProperty on numbers', function() {
+    adapter.findByQuery(BD.store, App.Category, {sortProperty: 'luckyNumber'}, function(payload) {
+        equal(payload.categories.length, 2);
+        equal(payload.categories[0].luckyNumber, 2);
+        equal(payload.categories[1].luckyNumber, 77);
+        start();
+    }, $.noop, $.noop);
+});
+
+asyncTest('`findByQuery` sortProperty on numbers DESC', function() {
+    adapter.findByQuery(BD.store, App.Category, {sortProperty: 'luckyNumber', sortDirection: 'DESC'}, function(payload) {
+        equal(payload.categories.length, 2);
+        equal(payload.categories[0].luckyNumber, 77);
+        equal(payload.categories[1].luckyNumber, 2);
+        start();
+    }, $.noop, $.noop);
 });
 
 asyncTest('`commitTransactionBulk` adds items not saved in the fixtures', function() {
