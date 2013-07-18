@@ -25,11 +25,15 @@ BD.Model = Em.Object.extend(Em.Evented, {
             hasMany: {}
         });
         this.promise = new Em.RSVP.Promise(function(resolve, reject) {
-            self.one('didLoad', function() {
-                self.set('isLoaded', true);
-                resolve(self);
-            });
-            self.one('didError', reject);
+            if (self.get('isLoaded')) {
+                resolve();
+            } else {
+                self.one('didLoad', function() {
+                    self.set('isLoaded', true);
+                    resolve(self);
+                });
+                self.one('didError', reject);
+            }
         });
         BD.store.didInstantiateRecord(this);
         this._super();
