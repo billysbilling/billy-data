@@ -70,6 +70,7 @@ asyncTest('`deleteRecord` deletes the record', function() {
 asyncTest('`findOne` should return the found model', function() {
     var category = App.Category.createRecord();
     var success = function(payload) {
+        notStrictEqual(payload.category, App.Category.FIXTURES[0], 'data should be a copy');
         equal(payload.category.name, 'Billy');
         start();
     };
@@ -137,9 +138,9 @@ asyncTest('`reset` resets the fixtures to the original content', function() {
 });
 
 asyncTest('`findByQuery` calls success with a filtered payload and ignores pageSize and offset', function() {
-    expect(3);
     var success = function(payload) {
         equal(payload.categories.length, 1);
+        notStrictEqual(payload.categories[0], App.Category.FIXTURES[1], 'data should be a copy');
         equal(payload.categories[0].id, 2);
         equal(payload.categories[0].name, 'Noah');
         start();

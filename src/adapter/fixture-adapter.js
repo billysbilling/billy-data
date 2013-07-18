@@ -54,8 +54,10 @@ BD.FixtureAdapter = Em.Object.extend({
         // TODO: Remove redundancy from #findOne
         var fixtures = this.rawFixturesForType(type);
         var payload = { meta: { statusCode: 200, success: true } };
-        var fixture = fixtures.find(function(item) { return item.id == id });
-        payload[store._rootForType(type)] = fixture;
+        var fixture = fixtures.find(function(item) {
+            return item.id == id
+        });
+        payload[store._rootForType(type)] = JSON.parse(JSON.stringify(fixture));
         success(payload);
     },
 
@@ -83,7 +85,7 @@ BD.FixtureAdapter = Em.Object.extend({
                 }
             }
             if (match) {
-                records.push(data);
+                records.push(JSON.parse(JSON.stringify(data)));
             }
         });
         payload[BD.pluralize(store._rootForType(type))] = records;
