@@ -1,5 +1,8 @@
 BD.RestAdapter = Em.Object.extend({
 
+    reset: function() {
+    },
+    
     _ajax: function(hash) {
         hash.context = this;
         return BD.ajax(hash);

@@ -10,7 +10,7 @@ module('BD.FixtureAdapter', {
         App.Category = BD.Model.extend({
             name: BD.attr('string')
         });
-        App.Category.FIXTURES = [
+        adapter.setFixtures(App.Category, [
             {
                 id: 1,
                 name: 'Billy'
@@ -19,7 +19,7 @@ module('BD.FixtureAdapter', {
                 id: 2,
                 name: 'Noah'
             }
-        ];
+        ]);
     },
 
     teardown: function() {
@@ -31,25 +31,21 @@ module('BD.FixtureAdapter', {
 });
 
 test('`load` persists the data in the fixtures', function() {
-    App.Category.FIXTURES = [];
+    adapter.setFixtures(App.Category, []);
     App.Category.load({
         id: 3,
         name: 'Sebastian'
     });
-    equal(App.Category.FIXTURES.length, 1);
-    equal(App.Category.FIXTURES[0].id, 3);
-    equal(App.Category.FIXTURES[0].name, 'Sebastian');
+    var fixtures = adapter.fixturesForType(App.Category);
+    equal(fixtures.length, 1);
+    equal(fixtures[0].id, 3);
+    equal(fixtures[0].name, 'Sebastian');
 });
 
 asyncTest('`deleteRecords` deletes multiple records', function() {
     var records = [App.Category.find(1), App.Category.find(2)];
     var success = function(payload) {
-        var fixtures = Ember.A(App.Category.FIXTURES);
-        var category1 = fixtures.find(function(item) { return item.id == 1 });
-        var category2 = fixtures.find(function(item) { return item.id == 2 });
-        equal(fixtures.length, 0)
-        equal(category1, null);
-        equal(category2, null);
+        equal(adapter.fixturesForType(App.Category).length, 0)
         start();
     };
     adapter.deleteRecords(BD.store, App.Category, records, success, $.noop);
@@ -58,10 +54,9 @@ asyncTest('`deleteRecords` deletes multiple records', function() {
 asyncTest('`deleteRecord` deletes the record', function() {
     var category = App.Category.find(1);
     var success = function(payload) {
-        var fixtures = Ember.A(App.Category.FIXTURES);
-        var fixture = fixtures.find(function(item) { return item.id == 1 });
+        var fixtures = adapter.fixturesForType(App.Category);
         equal(fixtures.length, 1)
-        equal(fixture, null);
+        equal(fixtures[0].id, 2);
         start();
     };
     adapter.deleteRecord(BD.store, category, 1, success, $.noop);
@@ -70,7 +65,7 @@ asyncTest('`deleteRecord` deletes the record', function() {
 asyncTest('`findOne` should return the found model', function() {
     var category = App.Category.createRecord();
     var success = function(payload) {
-        notStrictEqual(payload.category, App.Category.FIXTURES[0], 'data should be a copy');
+        notStrictEqual(payload.category, adapter.fixturesForType(App.Category)[0], 'data should be a copy');
         equal(payload.category.name, 'Billy');
         start();
     };
@@ -79,13 +74,12 @@ asyncTest('`findOne` should return the found model', function() {
 
 asyncTest('`saveRecord` adds one item when fixtures are empty', function() {
     expect(3);
-    App.Category.FIXTURES = [];
+    adapter.setFixtures(App.Category, []);
     var success = function(payload) {
-        equal(App.Category.FIXTURES.length, 1);
-
-        var category = App.Category.FIXTURES[0];
-        equal(category.id, 1);
-        equal(category.name, 'Adam');
+        var fixtures = adapter.fixturesForType(App.Category);
+        equal(fixtures.length, 1);
+        equal(fixtures[0].id, 1);
+        equal(fixtures[0].name, 'Adam');
         start();
     };
     var error = function() {};
@@ -95,11 +89,10 @@ asyncTest('`saveRecord` adds one item when fixtures are empty', function() {
     adapter.saveRecord(BD.store, record, data, success, error);
 });
 
-asyncTest('`saveRecord` adds one item when we fixtures exist', function() {
+asyncTest('`saveRecord` adds one item when already fixtures exist', function() {
     expect(1);
-    var oldLength = App.Category.FIXTURES.length;
     var success = function(payload) {
-        equal(App.Category.FIXTURES.length, oldLength + 1);
+        equal(adapter.fixturesForType(App.Category).length, 3);
         start();
     };
     var error = function() {};
@@ -123,24 +116,10 @@ asyncTest('`saveRecord` calls `success` with a payload', function() {
   adapter.saveRecord(BD.store, record, data, success, error);
 });
 
-asyncTest('`reset` resets the fixtures to the original content', function() {
-    expect(1);
-    var oldLength = App.Category.FIXTURES.length;
-    var data = { categories: [{name: 'Tesla'}, {name: 'Edison'}] };
-    var success = function(payload) {
-        adapter.reset(BD.store, App.Category, function() {
-            equal(App.Category.FIXTURES.length, 2);
-            start();
-        });
-    };
-    adapter.commitTransactionBulk(BD.store, App.Category, 'categories',
-                                  data, success, $.noop);
-});
-
 asyncTest('`findByQuery` calls success with a filtered payload and ignores pageSize and offset', function() {
     var success = function(payload) {
         equal(payload.categories.length, 1);
-        notStrictEqual(payload.categories[0], App.Category.FIXTURES[1], 'data should be a copy');
+        notStrictEqual(payload.categories[0], adapter.fixturesForType(App.Category)[1], 'data should be a copy');
         equal(payload.categories[0].id, 2);
         equal(payload.categories[0].name, 'Noah');
         start();
@@ -156,11 +135,10 @@ asyncTest('`findByQuery` calls success with a filtered payload and ignores pageS
 
 asyncTest('`commitTransactionBulk` adds items not saved in the fixtures', function() {
     expect(1);
-    var oldLength = App.Category.FIXTURES.length;
     var error = function() {};
     var data = { categories: [{name: 'Tesla'}, {name: 'Edison'}] };
     var success = function(payload) {
-        equal(App.Category.FIXTURES.length, oldLength + 2);
+        equal(adapter.fixturesForType(App.Category).length, 4);
         start();
     };
     adapter.commitTransactionBulk(BD.store, App.Category, 'categories',
@@ -169,11 +147,11 @@ asyncTest('`commitTransactionBulk` adds items not saved in the fixtures', functi
 
 asyncTest('`commitTransactionBulk` updates items saved in the fixtures', function() {
     expect(2);
-    var oldLength = App.Category.FIXTURES.length;
     var data = { categories: [{ id: 1, name: 'New Billy' }] };
     var success = function(payload) {
-        equal(App.Category.FIXTURES.length, oldLength);
-        equal(App.Category.FIXTURES[0].name, 'New Billy');
+        var fixtures = adapter.fixturesForType(App.Category);
+        equal(fixtures.length, 2);
+        equal(fixtures[0].name, 'New Billy');
         start();
     };
     adapter.commitTransactionBulk(BD.store, App.Category, 'categories',
@@ -182,7 +160,6 @@ asyncTest('`commitTransactionBulk` updates items saved in the fixtures', functio
 
 asyncTest('`commitTransactionBulk` calls success with a payload', function() {
     expect(1);
-    var record = App.Category.find(1);
     var success = function(payload) {
         ok(payload.hasOwnProperty('meta'));
         start();

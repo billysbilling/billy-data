@@ -1,19 +1,24 @@
 BD.FixtureAdapter = Em.Object.extend({
 
-    reset: function(store, type, success) {
-        success(type.FIXTURES = $.extend(true, [], type.DEFAULT_FIXTURES));
+    init: function() {
+        this._super();
+        this._fixtures = {};
+    },
+    
+    reset: function() {
+        this._fixtures = {};
     },
 
-    rawFixturesForType: function(type) {
-        if (!type.FIXTURES) {
-            type.FIXTURES = [];
+    fixturesForType: function(type) {
+        var guidForType = Ember.guidFor(type);
+        if (!this._fixtures[guidForType]) {
+            this._fixtures[guidForType] = [];
         }
-
-        if (!type.DEFAULT_FIXTURES) {
-            type.DEFAULT_FIXTURES = $.extend(true, [], type.FIXTURES);
-        }
-
-        return type.FIXTURES;
+        return this._fixtures[guidForType];
+    },
+    
+    setFixtures: function(type, fixtures) {
+        this._fixtures[Ember.guidFor(type)] = fixtures;
     },
 
     loadRecord: function(store, record) {
@@ -52,7 +57,7 @@ BD.FixtureAdapter = Em.Object.extend({
 
     _didFindOne: function(store, type, r, id, query, success, error) {
         // TODO: Remove redundancy from #findOne
-        var fixtures = this.rawFixturesForType(type);
+        var fixtures = this.fixturesForType(type);
         var payload = { meta: { statusCode: 200, success: true } };
         var fixture = fixtures.find(function(item) {
             return item.id == id
@@ -73,7 +78,7 @@ BD.FixtureAdapter = Em.Object.extend({
             records = [],
             name;
         payload.meta = { statusCode: 200, success: true };
-        this.rawFixturesForType(type).forEach(function(data) {
+        this.fixturesForType(type).forEach(function(data) {
             var match = true;
             if (query) {
                 for (name in query) {
@@ -118,7 +123,7 @@ BD.FixtureAdapter = Em.Object.extend({
     },
 
     _remove: function(type, id) {
-        var fixtures = this.rawFixturesForType(type);
+        var fixtures = this.fixturesForType(type);
         fixtures.find(function(item, idx) {
             if (item.id == id) {
                 fixtures.splice(idx, 1);
@@ -128,7 +133,7 @@ BD.FixtureAdapter = Em.Object.extend({
     },
 
     _persist: function(type, obj) {
-        var fixtures = this.rawFixturesForType(type);
+        var fixtures = this.fixturesForType(type);
 
         if (obj.id) {
             var fixture = fixtures.find(function(item, idx) {
@@ -151,7 +156,7 @@ BD.FixtureAdapter = Em.Object.extend({
     },
 
     _incrementIdInFixtures: function(type) {
-        var fixtures = this.rawFixturesForType(type);
+        var fixtures = this.fixturesForType(type);
         return fixtures.length > 1 ? fixtures[fixtures.length - 1].id + 1 : 1;
 
     },

@@ -683,6 +683,7 @@ BD.Store = Em.Object.extend({
         _.each(this._recordArrays, function(recordArray) {
             recordArray.destroy();
         });
+        this.get('adapter').reset();
         this._resetContainers();
         this.set('isResetting', false);
     },
