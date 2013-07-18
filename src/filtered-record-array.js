@@ -393,6 +393,7 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
         });
         records.on('didError', function() {
             self._rejectAll = false;
+            self.trigger('didError');
         });
     },
     
