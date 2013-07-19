@@ -141,12 +141,7 @@ BD.FixtureAdapter = Em.Object.extend({
             //Persist root record in fixtures and add its id to the response (id will be set by self._persist)
             data = payload[root];
             self._persist(type, data);
-            response[BD.pluralize(root)] = [
-                {
-                    _clientId: r.get('clientId'),
-                    id: data.id
-                }
-            ];
+            response[BD.pluralize(root)] = data;
             //Check for embedded records
             if (options.embed) {
                 options.embed.forEach(function(name) {
@@ -160,10 +155,7 @@ BD.FixtureAdapter = Em.Object.extend({
                     data[name].forEach(function(childData) {
                         //Persist the embedded record in fixtures and add its id to the response
                         self._persist(childType, childData);
-                        response[childRootPlural].push({
-                            _clientId: childData._clientId,
-                            id: childData.id
-                        });
+                        response[childRootPlural].push(childData);
                     });
                 });
             }

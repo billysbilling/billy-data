@@ -151,6 +151,8 @@ asyncTest('Calling `save` on a record with embedded records should persist them 
         .success(function() {
             equal(adapter.fixturesForType(App.Category).length, 1, 'Category was persisted');
             equal(adapter.fixturesForType(App.Post).length, 1, 'Post was persisted');
+            ok(category.get('name'), 'Crazy');
+            ok(post.get('title'), 'This is crazy');
             ok(!Em.isEmpty(category.get('id')), 'Category got an id');
             ok(!Em.isEmpty(post.get('id')), 'Post got an id');
             start();
