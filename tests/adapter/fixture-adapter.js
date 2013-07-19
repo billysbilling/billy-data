@@ -158,6 +158,8 @@ asyncTest('Calling `save` on a record with embedded records should persist them 
             equal(category.get('id'), 'category1');
             equal(post1.get('id'), 'post1');
             equal(post2.get('id'), 'post2');
+            strictEqual(post1.get('category'), category);
+            strictEqual(post2.get('category'), category);
             equal(category.get('name'), 'Crazy');
             equal(post1.get('title'), 'This is crazy');
             equal(post2.get('title'), 'This is also crazy');

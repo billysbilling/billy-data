@@ -132,6 +132,7 @@ BD.FixtureAdapter = Em.Object.extend({
             data,
             childType,
             childRootPlural,
+            hasManyRelationship,
             response;
         return this._simulateRemoteCall(function() {
             //Setup response
@@ -148,7 +149,8 @@ BD.FixtureAdapter = Em.Object.extend({
             //Check for embedded records
             if (options.embed) {
                 options.embed.forEach(function(name) {
-                    childType = BD.resolveType(Em.get(type, 'hasManyRelationships').get(name).type);
+                    hasManyRelationship = Em.get(type, 'hasManyRelationships').get(name);
+                    childType = BD.resolveType(hasManyRelationship.type);
                     //Make sure the child type's root is present in the response as an array so we can push to it
                     childRootPlural = BD.pluralize(BD.store._rootForType(childType));
                     if (!response[childRootPlural]) {
@@ -156,6 +158,8 @@ BD.FixtureAdapter = Em.Object.extend({
                     }
                     //Go over each embedded record of this child type
                     data[name].forEach(function(childData) {
+                        //Add parent key to child data
+                        childData[hasManyRelationship.belongsToKey+'Id'] = data.id;
                         //Persist the embedded record in fixtures and add its id to the response
                         self._persist(childType, childData);
                         response[childRootPlural].push(childData);
