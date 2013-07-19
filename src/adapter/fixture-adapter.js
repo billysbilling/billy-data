@@ -122,16 +122,28 @@ BD.FixtureAdapter = Em.Object.extend({
         success(payload);
     },
 
-    saveRecord: function(store, r, data, success, error) {
+    saveRecord: function(store, r, data, options, success, error) {
+        var self = this,
+            type = r.constructor,
+            childType;
         return this._simulateRemoteCall(function() {
-            this._didSaveRecord(store, r, data, success, error);
+            data = data[BD.store._rootForType(type)];
+            self._persist(type, data);
+            if (options.embed) {
+                options.embed.forEach(function(name) {
+                    childType = BD.resolveType(Em.get(type, 'hasManyRelationships').get(name).type);
+                    data[name].forEach(function(childData) {
+                        self._persist(childType, childData);
+                    });
+                });
+            }
+            success({
+                meta: {
+                    statusCode: 200,
+                    success: true
+                }
+            });
         }, this);
-    },
-
-    _didSaveRecord: function(store, r, data, success, error) {
-        data = data[BD.store._rootForType(r.constructor)];
-        this._persist(r.constructor, data);
-        success({ meta: { statusCode: 200, success: true } });
     },
 
     commitTransactionBulk: function(store, type, rootPlural, data, success, error) {

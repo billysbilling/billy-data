@@ -84,7 +84,7 @@ BD.RestAdapter = Em.Object.extend({
         });
     },
 
-    saveRecord: function(store, r, data, success, error) {
+    saveRecord: function(store, r, data, options, success, error) {
         //Construct URL
         var isNew = r.get('isNew'),
             root = store._rootForType(r.constructor),

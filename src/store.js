@@ -208,7 +208,7 @@ BD.Store = Em.Object.extend({
         };
 
         //Make PUT/POST request
-        this.get('adapter').saveRecord(this, r, data, success, error);
+        this.get('adapter').saveRecord(this, r, data, options, success, error);
 
         return promise;
     },

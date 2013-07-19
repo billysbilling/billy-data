@@ -5,11 +5,16 @@ module('BD.FixtureAdapter', {
     setup: function() {
         BD.FixtureRequest.reopen({ DELAY: 0 });
         oldAdapter = BD.store.get('adapter');
-        adapter    = BD.FixtureAdapter.create();
+        adapter = BD.FixtureAdapter.create();
         BD.store.set('adapter', adapter);
         App.Category = BD.Model.extend({
             name: BD.attr('string'),
-            luckyNumber: BD.attr('number')
+            luckyNumber: BD.attr('number'),
+            posts: BD.hasMany('App.Post', 'category')
+        });
+        App.Post = BD.Model.extend({
+            category: BD.belongsTo('App.Category'),
+            title: BD.attr('string')
         });
         adapter.setFixtures(App.Category, [
             {
@@ -101,7 +106,7 @@ asyncTest('`saveRecord` adds one item when fixtures are empty', function() {
     var record = App.Category.createRecord({ name: 'Adam' });
     var data = {};
     data[BD.store._rootForType(record.constructor)] = record.serialize();
-    adapter.saveRecord(BD.store, record, data, success, error);
+    adapter.saveRecord(BD.store, record, data, {}, success, error);
 });
 
 asyncTest('`saveRecord` adds one item when already fixtures exist', function() {
@@ -114,7 +119,7 @@ asyncTest('`saveRecord` adds one item when already fixtures exist', function() {
     var record = App.Category.createRecord({ name: 'Adam' });
     var data = {};
     data[BD.store._rootForType(record.constructor)] = record.serialize();
-    adapter.saveRecord(BD.store, record, data, success, error);
+    adapter.saveRecord(BD.store, record, data, {}, success, error);
 });
 
 asyncTest('`saveRecord` calls `success` with a payload', function() {
@@ -128,7 +133,26 @@ asyncTest('`saveRecord` calls `success` with a payload', function() {
   var record = App.Category.find(1);
   var data = {};
   data[BD.store._rootForType(record.constructor)] = record.serialize();
-  adapter.saveRecord(BD.store, record, data, success, error);
+  adapter.saveRecord(BD.store, record, data, {}, success, error);
+});
+
+asyncTest('Calling `save` on a record with embedded records should persist them all in fixtures', function() {
+    adapter.setFixtures(App.Category, []);
+    var category = App.Category.createRecord({
+        name: 'Crazy'
+    });
+    App.Post.createRecord({
+        category: category,
+        title: 'This is crazy'
+    });
+    category.save({
+        embed: ['posts']
+    })
+        .success(function() {
+            equal(adapter.fixturesForType(App.Category).length, 1, 'Category was persisted');
+            equal(adapter.fixturesForType(App.Post).length, 1, 'Post was persisted');
+            start();
+        });
 });
 
 asyncTest('`findByQuery` calls success with a filtered payload and ignores pageSize and offset', function() {
