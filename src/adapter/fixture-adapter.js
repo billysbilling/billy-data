@@ -10,11 +10,14 @@ BD.FixtureAdapter = Em.Object.extend({
     },
 
     fixturesForType: function(type) {
-        var guidForType = Ember.guidFor(type);
-        if (!this._fixtures[guidForType]) {
-            this._fixtures[guidForType] = [];
+        var guidForType = Ember.guidFor(type),
+            fixtures = this._fixtures[guidForType];
+        
+        if (!fixtures) {
+            fixtures = [];
+            this._fixtures[guidForType] = fixtures;
         }
-        return this._fixtures[guidForType];
+        return fixtures;
     },
     
     setFixtures: function(type, fixtures) {
@@ -211,7 +214,12 @@ BD.FixtureAdapter = Em.Object.extend({
 
     _incrementIdInFixtures: function(type) {
         var fixtures = this.fixturesForType(type);
-        return fixtures.length > 1 ? fixtures[fixtures.length - 1].id + 1 : 1;
+        if (fixtures.idCounter) {
+            fixtures.idCounter++;
+        } else {
+            fixtures.idCounter = 1;
+        }
+        return BD.store._rootForType(type)+fixtures.idCounter;
 
     },
 

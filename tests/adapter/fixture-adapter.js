@@ -98,7 +98,7 @@ asyncTest('`saveRecord` adds one item when fixtures are empty', function() {
     var success = function(payload) {
         var fixtures = adapter.fixturesForType(App.Category);
         equal(fixtures.length, 1);
-        equal(fixtures[0].id, 1);
+        equal(fixtures[0].id, 'category1');
         equal(fixtures[0].name, 'Adam');
         start();
     };
@@ -141,20 +141,26 @@ asyncTest('Calling `save` on a record with embedded records should persist them 
     var category = App.Category.createRecord({
         name: 'Crazy'
     });
-    var post = App.Post.createRecord({
+    var post1 = App.Post.createRecord({
         category: category,
         title: 'This is crazy'
+    });
+    var post2 = App.Post.createRecord({
+        category: category,
+        title: 'This is also crazy'
     });
     category.save({
         embed: ['posts']
     })
         .success(function() {
             equal(adapter.fixturesForType(App.Category).length, 1, 'Category was persisted');
-            equal(adapter.fixturesForType(App.Post).length, 1, 'Post was persisted');
-            ok(category.get('name'), 'Crazy');
-            ok(post.get('title'), 'This is crazy');
-            ok(!Em.isEmpty(category.get('id')), 'Category got an id');
-            ok(!Em.isEmpty(post.get('id')), 'Post got an id');
+            equal(adapter.fixturesForType(App.Post).length, 2, 'Posts were persisted');
+            equal(category.get('id'), 'category1');
+            equal(post1.get('id'), 'post1');
+            equal(post2.get('id'), 'post2');
+            equal(category.get('name'), 'Crazy');
+            equal(post1.get('title'), 'This is crazy');
+            equal(post2.get('title'), 'This is also crazy');
             start();
         });
 });
