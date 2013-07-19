@@ -122,27 +122,52 @@ BD.FixtureAdapter = Em.Object.extend({
         success(payload);
     },
 
-    saveRecord: function(store, r, data, options, success, error) {
+    saveRecord: function(store, r, payload, options, success, error) {
         var self = this,
             type = r.constructor,
-            childType;
+            root = BD.store._rootForType(type),
+            data,
+            childType,
+            childRootPlural,
+            response;
         return this._simulateRemoteCall(function() {
-            data = data[BD.store._rootForType(type)];
-            self._persist(type, data);
-            if (options.embed) {
-                options.embed.forEach(function(name) {
-                    childType = BD.resolveType(Em.get(type, 'hasManyRelationships').get(name).type);
-                    data[name].forEach(function(childData) {
-                        self._persist(childType, childData);
-                    });
-                });
-            }
-            success({
+            //Setup response
+            response = {
                 meta: {
                     statusCode: 200,
                     success: true
                 }
-            });
+            };
+            //Persist root record in fixtures and add its id to the response (id will be set by self._persist)
+            data = payload[root];
+            self._persist(type, data);
+            response[BD.pluralize(root)] = [
+                {
+                    _clientId: r.get('clientId'),
+                    id: data.id
+                }
+            ];
+            //Check for embedded records
+            if (options.embed) {
+                options.embed.forEach(function(name) {
+                    childType = BD.resolveType(Em.get(type, 'hasManyRelationships').get(name).type);
+                    //Make sure the child type's root is present in the response as an array so we can push to it
+                    childRootPlural = BD.pluralize(BD.store._rootForType(childType));
+                    if (!response[childRootPlural]) {
+                        response[childRootPlural] = [];
+                    }
+                    //Go over each embedded record of this child type
+                    data[name].forEach(function(childData) {
+                        //Persist the embedded record in fixtures and add its id to the response
+                        self._persist(childType, childData);
+                        response[childRootPlural].push({
+                            _clientId: childData._clientId,
+                            id: childData.id
+                        });
+                    });
+                });
+            }
+            success(response);
         }, this);
     },
 
