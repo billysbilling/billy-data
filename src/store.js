@@ -187,6 +187,11 @@ BD.Store = Em.Object.extend({
         var data = {};
         data[this._rootForType(r.constructor)] = r.serialize(options);
 
+        //Extra payload data
+        if (options.payloadData) {
+            Ember.merge(data, options.payloadData);
+        }
+
         var success = function(payload) {
             r.didCommit(options);
             self.sideload(payload);

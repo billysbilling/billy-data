@@ -1,3 +1,5 @@
+var originalAjax = BD.ajax;
+
 module('Ajax save', {
     setup: function() {
         App.Category = BD.Model.extend({
@@ -44,8 +46,8 @@ module('Ajax save', {
         ]);
     },
     teardown: function() {
-        
         BD.store.reset();
+        BD.ajax = originalAjax;
     }
 });
 
@@ -122,6 +124,27 @@ test('Test save() with properties, normal null attribute', function() {
     post.save({
         properties: {
             title: null
+        }
+    });
+});
+
+test('Test save() with payloadData, simple property and object', function() {
+    expect(3);
+    var post = App.Post.find(101);
+    BD.ajax = function(hash) {
+        strictEqual(hash.data.post.title, 'Post title');
+        strictEqual(hash.data.randomProperty, 'Weee!');
+        strictEqual(hash.data.randomObject.foo, 'bar');
+    };
+    post.save({
+        properties: {
+            title: 'Post title'
+        },
+        payloadData: {
+            randomProperty: 'Weee!',
+            randomObject: {
+                foo: 'bar'
+            }
         }
     });
 });
