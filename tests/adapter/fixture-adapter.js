@@ -59,7 +59,7 @@ asyncTest('`deleteRecords` deletes multiple records', function() {
     adapter.deleteRecords(BD.store, App.Category, records, success, $.noop);
 });
 
-asyncTest('`deleteRecord` deletes the record', function() {
+asyncTest('`adapter.deleteRecord` deletes the record', function() {
     var category = App.Category.find(1);
     var success = function(payload) {
         var fixtures = adapter.fixturesForType(App.Category);
@@ -68,6 +68,17 @@ asyncTest('`deleteRecord` deletes the record', function() {
         start();
     };
     adapter.deleteRecord(BD.store, category, 1, success, $.noop);
+});
+
+asyncTest('`record.deleteRecord` deletes the record', function() {
+    var category = App.Category.find(1);
+    category.deleteRecord()
+        .success(function() {
+            var fixtures = adapter.fixturesForType(App.Category);
+            equal(fixtures.length, 1);
+            equal(fixtures[0].id, 2);
+            start();
+        });
 });
 
 asyncTest('`findOne` should return the found model', function() {
