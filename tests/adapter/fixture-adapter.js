@@ -10,7 +10,8 @@ module('BD.FixtureAdapter', {
         App.Category = BD.Model.extend({
             name: BD.attr('string'),
             luckyNumber: BD.attr('number'),
-            posts: BD.hasMany('App.Post', 'category')
+            posts: BD.hasMany('App.Post', 'category'),
+            isPublic: BD.attr('boolean', {readonly: true})
         });
         App.Post = BD.Model.extend({
             category: BD.belongsTo('App.Category'),
@@ -42,12 +43,14 @@ test('`load` persists the data in the fixtures', function() {
     adapter.setFixtures(App.Category, []);
     App.Category.load({
         id: 3,
-        name: 'Sebastian'
+        name: 'Sebastian',
+        isPublic: true
     });
     var fixtures = adapter.fixturesForType(App.Category);
     equal(fixtures.length, 1);
     equal(fixtures[0].id, 3);
     equal(fixtures[0].name, 'Sebastian');
+    equal(fixtures[0].isPublic, true);
 });
 
 asyncTest('`deleteRecords` deletes multiple records', function() {

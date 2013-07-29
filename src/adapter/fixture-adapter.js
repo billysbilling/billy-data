@@ -25,7 +25,9 @@ BD.FixtureAdapter = Em.Object.extend({
     },
 
     loadRecord: function(store, record) {
-        this._persist(record.constructor, record.serialize());
+        this._persist(record.constructor, record.serialize({
+            includeReadonly: true
+        }));
     },
 
     deleteRecords: function(store, type, records, success, error) {
