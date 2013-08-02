@@ -9,6 +9,10 @@ module('Filtered queries', {
             title: BD.attr('string'),
             isPublic: BD.attr('boolean')
         });
+        App.Post.registerSortMacro('macroTest', ['author', 'title'], function(a, b) {
+            //Sort by combined char length of author and title
+            return (a.get('author').length + a.get('title').length) - (b.get('author').length + b.get('title').length)
+        });
         BD.store.loadMany(App.Category, [
             {
                 id: 201,
@@ -30,7 +34,7 @@ module('Filtered queries', {
             {
                 id: 2,
                 categoryId: 201,
-                author: 'Adam',
+                author: 'Adam R',
                 title: 'B',
                 isPublic: false
             },
@@ -319,7 +323,7 @@ test('Query works with array values', function() {
     App.Post.loadAll([]);
     var postsByAmericans = App.Post.filter({
         query: {
-            author: ['Adam', 'Noah']
+            author: ['Adam R', 'Noah']
         }
     });
     equal(postsByAmericans.get('length'), 2);
@@ -362,9 +366,9 @@ test('Test object sorting', function() {
     var stringDescComparatorPosts = App.Post.filter({
         comparator: {'author': 'DESC'}
     });
-    deepEqual(stringDescComparatorPosts.mapProperty('author'), ['Sebastian', 'Noah', 'Adam'], 'Order should be correct');
+    deepEqual(stringDescComparatorPosts.mapProperty('author'), ['Sebastian', 'Noah', 'Adam R'], 'Order should be correct');
     sebastian.set('author', 'Aase');
-    deepEqual(stringDescComparatorPosts.mapProperty('author'), ['Noah', 'Adam', 'Aase'], 'Order should be correct');
+    deepEqual(stringDescComparatorPosts.mapProperty('author'), ['Noah', 'Adam R', 'Aase'], 'Order should be correct');
     adam.set('author', 'Zebra');
     deepEqual(stringDescComparatorPosts.mapProperty('author'), ['Zebra', 'Noah', 'Aase'], 'Order should be correct');
 });
@@ -380,6 +384,31 @@ test('Test object with multiple keys sorting', function() {
     noah.set('title', 'A');
     adam.set('author', 'Zebra');
     deepEqual(multipleStringComparatorPosts.mapProperty('id'), [1, 2, 3], 'Order should be correct');
+});
+
+test('Test macro sorting ASC', function() {
+    App.Post.loadAll([]);
+    var sebastian = App.Post.find(1);
+    var posts = App.Post.filter({
+        sortProperty: 'macroTest'
+    });
+    deepEqual(posts.get('comparatorObservers'), ['author', 'title']);
+    deepEqual(posts.mapProperty('id'), [3, 2, 1], 'Order should be correct');
+    sebastian.set('author', '1');
+    deepEqual(posts.mapProperty('id'), [1, 3, 2], 'Order should be correct');
+});
+
+test('Test macro sorting DESC', function() {
+    App.Post.loadAll([]);
+    var sebastian = App.Post.find(1);
+    var posts = App.Post.filter({
+        sortProperty: 'macroTest',
+        sortDirection: 'DESC'
+    });
+    deepEqual(posts.get('comparatorObservers'), ['author', 'title']);
+    deepEqual(posts.mapProperty('id'), [1, 2, 3], 'Order should be correct');
+    sebastian.set('author', '1');
+    deepEqual(posts.mapProperty('id'), [2, 3, 1], 'Order should be correct');
 });
 
 test('Test #bigdata sorting', function() {

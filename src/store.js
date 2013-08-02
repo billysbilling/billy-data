@@ -13,7 +13,8 @@ BD.Store = Em.Object.extend({
                 allIsLoaded: false,
                 idToRecord: {},
                 recordArrayQueryObservers: {},
-                recordArrayComparatorObservers: {}
+                recordArrayComparatorObservers: {},
+                sortMacros: {}
             };
         }
         return this._typeMaps[guidForType];
@@ -678,6 +679,19 @@ BD.Store = Em.Object.extend({
             type: type,
             id: s[1]
         };
+    },
+
+    registerSortMacro: function(type, name, dependencies, comparator) {
+        var typeMap = this._typeMapFor(type);
+        typeMap.sortMacros[name] = {
+            dependencies: dependencies,
+            comparator: comparator
+        };
+    },
+
+    getSortMacro: function(type, name) {
+        var typeMap = this._typeMapFor(type);
+        return typeMap.sortMacros[name];
     },
     
     reset: function() {

@@ -13,6 +13,10 @@ module('BD.FixtureAdapter', {
             posts: BD.hasMany('App.Post', 'category'),
             isPublic: BD.attr('boolean', {readonly: true})
         });
+        App.Category.registerSortMacro('macroTest', ['name'], function(a, b) {
+            //Sort by char length of name
+            return a.get('name').length - b.get('name').length;
+        });
         App.Post = BD.Model.extend({
             category: BD.belongsTo('App.Category'),
             title: BD.attr('string')
@@ -239,6 +243,24 @@ asyncTest('`findByQuery` sortProperty on numbers DESC', function() {
         equal(payload.categories.length, 2);
         equal(payload.categories[0].luckyNumber, 77);
         equal(payload.categories[1].luckyNumber, 2);
+        start();
+    }, $.noop, $.noop);
+});
+
+asyncTest('`findByQuery` sort using sort macro ASC', function() {
+    adapter.findByQuery(BD.store, App.Category, {sortProperty: 'macroTest'}, function(payload) {
+        equal(payload.categories.length, 2);
+        equal(payload.categories[0].name, 'Noah');
+        equal(payload.categories[1].name, 'Billy');
+        start();
+    }, $.noop, $.noop);
+});
+
+asyncTest('`findByQuery` sort using sort macro DESC', function() {
+    adapter.findByQuery(BD.store, App.Category, {sortProperty: 'macroTest', sortDirection: 'DESC'}, function(payload) {
+        equal(payload.categories.length, 2);
+        equal(payload.categories[0].name, 'Billy');
+        equal(payload.categories[1].name, 'Noah');
         start();
     }, $.noop, $.noop);
 });

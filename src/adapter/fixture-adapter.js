@@ -113,15 +113,22 @@ BD.FixtureAdapter = Em.Object.extend({
             }
         });
         if (sortProperty) {
-            records.sort(function(a, b) {
-                var av = a[sortProperty],
-                    bv = b[sortProperty];
-                if (typeof av === 'string' && typeof bv === 'string') {
-                    return sortFactor * av.localeCompare(bv);
-                } else {
-                    return sortFactor * (av - bv);
-                }
-            });
+            var sortMacro = BD.store.getSortMacro(type, sortProperty);
+            if (sortMacro) {
+                records.sort(function(a, b) {
+                    return sortFactor * sortMacro.comparator(Ember.Object.create(a), Ember.Object.create(b));
+                });
+            } else {
+                records.sort(function(a, b) {
+                    var av = a[sortProperty],
+                        bv = b[sortProperty];
+                    if (typeof av === 'string' && typeof bv === 'string') {
+                        return sortFactor * av.localeCompare(bv);
+                    } else {
+                        return sortFactor * (av - bv);
+                    }
+                });
+            }
         }
         payload[BD.pluralize(store._rootForType(type))] = records;
         success(payload);

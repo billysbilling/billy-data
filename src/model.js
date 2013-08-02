@@ -432,6 +432,9 @@ BD.Model.reopenClass({
     },
     load: function(data) {
         return BD.store.load(this, data);
+    },
+
+    registerSortMacro: function(name, dependencies, comparator) {
+        BD.store.registerSortMacro(this, name, dependencies, comparator);
     }
-    
 });

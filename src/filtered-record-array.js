@@ -121,7 +121,7 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
             sortProperty = this.get('sortProperty'),
             sortDirection = this.get('sortDirection'),
             comparator = this.get('comparator'),
-            comparatorObservers = this.get('comparatorObservers');
+            comparatorObservers = this.get('comparatorObservers') || [];
         //Normalize query
         if (!_.isObject(query)) {
             Ember.assert('`query` must be either undefined or an object.', !query);
@@ -145,12 +145,19 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
             sortDirection = 'ASC';
         }
         if (!comparator && sortProperty) {
-            comparator = {};
-            comparator[sortProperty] = sortDirection;
+            var sortMacro = BD.store.getSortMacro(type, sortProperty);
+            if (sortMacro) {
+                comparator = function(a, b) {
+                    return (sortDirection === 'DESC' ? -1 : 1) * sortMacro.comparator(a, b);
+                };
+                comparatorObservers.pushObjects(sortMacro.dependencies);
+            } else {
+                comparator = {};
+                comparator[sortProperty] = sortDirection;
+            }
             this.set('comparator', comparator);
         }
         //Normalize comparator properties to observe
-        comparatorObservers = comparatorObservers || [];
         if (typeof comparator == 'object') {
             _.each(comparator, function(value, key) {
                 comparatorObservers.push(key);
