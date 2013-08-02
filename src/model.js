@@ -435,6 +435,19 @@ BD.Model.reopenClass({
     },
 
     registerSortMacro: function(name, dependencies, comparator) {
-        BD.store.registerSortMacro(this, name, dependencies, comparator);
+        if (!this.sortMacros) {
+            this.sortMacros = {};
+        }
+        this.sortMacros[name] = {
+            dependencies: dependencies,
+            comparator: comparator
+        };
+    },
+
+    getSortMacro: function(name) {
+        if (!this.sortMacros) {
+            return null;
+        }
+        return this.sortMacros[name];
     }
 });

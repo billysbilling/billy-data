@@ -145,7 +145,7 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
             sortDirection = 'ASC';
         }
         if (!comparator && sortProperty) {
-            var sortMacro = BD.store.getSortMacro(type, sortProperty);
+            var sortMacro = type.getSortMacro(sortProperty);
             if (sortMacro) {
                 comparator = function(a, b) {
                     return (sortDirection === 'DESC' ? -1 : 1) * sortMacro.comparator(a, b);

@@ -113,7 +113,7 @@ BD.FixtureAdapter = Em.Object.extend({
             }
         });
         if (sortProperty) {
-            var sortMacro = BD.store.getSortMacro(type, sortProperty);
+            var sortMacro = type.getSortMacro(sortProperty);
             if (sortMacro) {
                 records.sort(function(a, b) {
                     return sortFactor * sortMacro.comparator(Ember.Object.create(a), Ember.Object.create(b));
