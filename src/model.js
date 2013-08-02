@@ -279,9 +279,10 @@ BD.Model = Em.Object.extend(Em.Evented, {
                 if (id && typeof id === 'object') {
                     id = BD.store.findByClientId(id.clientId).get(meta.idProperty);
                 }
-                if (typeof id !== 'undefined') {
-                    meta.serialize(serialized, key, id);
+                if (typeof id === 'undefined') {
+                    id = null;
                 }
+                meta.serialize(serialized, key, id);
             }
         }, this);
         if (options.embed) {

@@ -185,6 +185,20 @@ asyncTest('Calling `save` on a record with embedded records should persist them 
         });
 });
 
+asyncTest('Creating a record with a null belongsTo should set the fixture property to null too', function() {
+    adapter.setFixtures(App.Post, []);
+    var post = App.Post.createRecord({
+        category: null
+    });
+    post.save()
+        .success(function() {
+            var fixtures = adapter.fixturesForType(App.Post);
+            equal(fixtures.length, 1, 'Post was persisted');
+            strictEqual(fixtures[0].categoryId, null);
+            start();
+        });
+});
+
 asyncTest('`findByQuery` calls success with a filtered payload and ignores pageSize and offset', function() {
     var success = function(payload) {
         equal(payload.categories.length, 1);
