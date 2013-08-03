@@ -111,17 +111,20 @@ asyncTest('`findOne` should call error if the model is not found in fixtures', f
 });
 
 asyncTest('`saveRecord` adds one item when fixtures are empty', function() {
-    expect(3);
     adapter.setFixtures(App.Category, []);
     var success = function(payload) {
         var fixtures = adapter.fixturesForType(App.Category);
         equal(fixtures.length, 1);
         equal(fixtures[0].id, 'category1');
         equal(fixtures[0].name, 'Adam');
+        equal(fixtures[0].isPublic, true);
         start();
     };
     var error = function() {};
-    var record = App.Category.createRecord({ name: 'Adam' });
+    var record = App.Category.createRecord({
+        name: 'Adam',
+        isPublic: true
+    });
     var data = {};
     data[BD.store._rootForType(record.constructor)] = record.serialize();
     adapter.saveRecord(BD.store, record, data, {}, success, error);

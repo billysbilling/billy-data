@@ -138,7 +138,8 @@ BD.FixtureAdapter = Em.Object.extend({
         var self = this,
             type = r.constructor,
             root = BD.store._rootForType(type),
-            data,
+            fixtureSerializeOptions = $.extend(options, {includeReadonly: true}),
+            data = r.serialize(fixtureSerializeOptions),
             childType,
             childRootPlural,
             hasManyRelationship,
@@ -152,7 +153,6 @@ BD.FixtureAdapter = Em.Object.extend({
                 }
             };
             //Persist root record in fixtures and add its id to the response (id will be set by self._persist)
-            data = payload[root];
             self._persist(type, data);
             response[BD.pluralize(root)] = data;
             //Check for embedded records
