@@ -177,9 +177,11 @@ BD.Store = Em.Object.extend({
         //Don't save if the record is clean
         if (!r.get('isDirty') && !options.properties) {
             setTimeout(function() {
-                promise.trigger('complete');
-                promise.trigger('success');
-            }, 1);
+                Em.run(function() {
+                    promise.trigger('complete');
+                    promise.trigger('success');
+                });
+            }, 0);
             return promise;
         }
 
@@ -223,8 +225,10 @@ BD.Store = Em.Object.extend({
         //If there are no records in the transaction we just stop here
         if (transaction.get('length') == 0) {
             setTimeout(function() {
-                transaction.trigger('complete');
-                transaction.trigger('success', null);
+                Em.run(function() {
+                    transaction.trigger('complete');
+                    transaction.trigger('success', null);
+                });
             }, 0);
             return;
         }
@@ -252,8 +256,10 @@ BD.Store = Em.Object.extend({
         //If there were no dirty records we just stop here
         if (serializedItems.length == 0) {
             setTimeout(function() {
-                transaction.trigger('complete');
-                transaction.trigger('success', null);
+                Em.run(function() {
+                    transaction.trigger('complete');
+                    transaction.trigger('success', null);
+                });
             }, 0);
             return;
         }

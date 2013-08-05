@@ -20,9 +20,11 @@ BD.FixtureRequest = Ember.Object.extend({
         var self = this;
         this.triggerAjaxStart();
         this.timeoutId = this.setTimeout(function() {
-            cb();
-            self.timeoutId = null;
-            self.triggerAjaxStop();
+            Em.run(function() {
+                cb();
+                self.timeoutId = null;
+                self.triggerAjaxStop();
+            });
         }, this.DELAY);
     },
 
