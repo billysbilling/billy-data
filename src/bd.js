@@ -71,6 +71,30 @@ var BD = Ember.Namespace.create({
         if (hash.data && !(typeof hash.data === 'string') && hash.type !== 'GET') {
             hash.data = JSON.stringify(hash.data);
         }
+        var complete = hash.complete;
+        hash.complete = function(xhr) {
+            Em.run(function() {
+                if (complete) {
+                    complete(xhr);
+                }
+            });
+        };
+        var success = hash.success;
+        hash.success = function(payload) {
+            Em.run(function() {
+                if (success) {
+                    success(payload);
+                }
+            });
+        };
+        var error = hash.error;
+        hash.error = function(xhr) {
+            Em.run(function() {
+                if (error) {
+                    error(xhr);
+                }
+            });
+        };
         return $.ajax(hash);
     },
 
