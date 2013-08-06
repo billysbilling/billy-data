@@ -26,3 +26,14 @@ test('find() should request all records', function() {
     };
     App.Post.find();
 });
+
+asyncTest('should support being destroyed before finishing loading', function() {
+    expect(0);
+    var req = fakeAjax(200);
+    var posts = App.Post.find();
+    posts.destroy();
+    Em.run.next(function() {
+        req.respond();
+        start();
+    }, 0);
+});

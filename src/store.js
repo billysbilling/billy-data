@@ -125,7 +125,9 @@ BD.Store = Em.Object.extend({
         });
 
         var complete = function() {
-            recordArray.set('ajaxRequest', null);
+            if (!recordArray.get('isDestroyed')) {
+                recordArray.set('ajaxRequest', null);
+            }
         };
 
         var success = function(payload) {
