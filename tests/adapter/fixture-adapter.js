@@ -93,26 +93,41 @@ asyncTest('`record.deleteRecord` deletes the record', function() {
         });
 });
 
-asyncTest('when parent record is saved, embedded records should be unloaded', function() {
-    var post = App.Post.createRecord();
-    var comment = App.Comment.createRecord({
-        post: post
+asyncTest('when parent record is saved, deleted embedded records should be unloaded', function() {
+    var post = App.Post.load({
+        id: 'postx1'
     });
-    post.save({
-        embed: ['comments']
-    })
+    var comment = App.Comment.load({
+        id: 'commentx1',
+        postId: 'postx1'
+    });
+    comment.deleteRecord()
         .success(function() {
-            comment.deleteRecord()
+            equal(adapter.fixturesForType(App.Comment).length, 1, 'comment should not have been deleted yet');
+            post.save({
+                embed: ['comments']
+            })
                 .success(function() {
-                    equal(adapter.fixturesForType(App.Comment).length, 1, 'comment should not have been deleted yet');
-                    post.save({
-                        embed: ['comments']
-                    })
-                        .success(function() {
-                            equal(adapter.fixturesForType(App.Comment).length, 0, 'comment should be deleted now');
-                            start();
-                        });
+                    equal(adapter.fixturesForType(App.Comment).length, 0, 'comment should be deleted now');
+                    start();
                 });
+        });
+});
+
+asyncTest('when parent record is deleted, embedded records should be unloaded', function() {
+    var post = App.Post.load({
+        id: 'postx1'
+    });
+    var comment = App.Comment.load({
+        id: 'commentx1',
+        postId: 'postx1'
+    });
+    post.get('comments'); //Trigger load of hasMany relationship
+    post.deleteRecord()
+        .success(function() {
+            equal(adapter.fixturesForType(App.Post).length, 0, 'comment should be deleted now');
+            equal(adapter.fixturesForType(App.Comment).length, 0, 'comment should be deleted now');
+            start();
         });
 });
 

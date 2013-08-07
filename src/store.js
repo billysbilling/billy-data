@@ -345,7 +345,7 @@ BD.Store = Em.Object.extend({
         this._prepareRecordForDeletion(r);
         //If the record hasn't been created yet, there is no need to contact the server
         if (r.get('isNew')) {
-            r.unload();
+            r.didDelete();
             Em.run.next(function() {
                 promise.trigger('complete');
                 promise.trigger('success', null);
@@ -362,7 +362,7 @@ BD.Store = Em.Object.extend({
         }
 
         var success = function(payload) {
-            r.unload();
+            r.didDelete();
             self._unloadServerDeletedRecords(payload);
             promise.trigger('complete');
             promise.trigger('success', payload);
@@ -394,7 +394,7 @@ BD.Store = Em.Object.extend({
             this._prepareRecordForDeletion(r);
             //If the record hasn't been created yet, there is no need to contact the server
             if (r.get('isNew')) {
-                r.unload();
+                r.didDelete();
                 return;
             }
             //If the record is embedded, then don't send DELETE request
@@ -412,7 +412,7 @@ BD.Store = Em.Object.extend({
 
         var success = function(payload) {
             recordsToDelete.forEach(function(r) {
-                r.unload();
+                r.didDelete();
             });
             self._unloadServerDeletedRecords(payload);
             promise.trigger('complete');
@@ -451,7 +451,7 @@ BD.Store = Em.Object.extend({
                     ids.forEach(function(id) {
                         var deletedRecord = this.recordForTypeAndId(type, id);
                         if (deletedRecord) {
-                            deletedRecord.unload();
+                            deletedRecord.didDelete();
                         }
                     }, this);
                 }, this);

@@ -247,6 +247,14 @@ BD.Model = Em.Object.extend(Em.Evented, {
         }
     },
     
+    didDelete: function() {
+        this.eachEmbeddedRecord(function(child) {
+            console.log(child);
+            child.didDelete();
+        });
+        this.unload();
+    },
+    
     save: function(options) {
         return BD.store.saveRecord(this, options);
     },
