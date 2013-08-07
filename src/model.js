@@ -205,6 +205,9 @@ BD.Model = Em.Object.extend(Em.Evented, {
                 });
             }
         }, this);
+        this._deletedEmbeddedRecords.forEach(function(r) {
+            r.unload();
+        });
         this.becameClean();
     },
     rollback: function() {

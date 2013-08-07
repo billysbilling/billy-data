@@ -24,10 +24,14 @@ BD.FixtureAdapter = Em.Object.extend({
         this._fixtures[Ember.guidFor(type)] = fixtures;
     },
 
-    loadRecord: function(store, record) {
+    loadRecord: function(record) {
         this._persist(record.constructor, record.serialize({
             includeReadonly: true
         }));
+    },
+
+    unloadRecord: function(record) {
+        this._remove(record.constructor, record.get('id'));
     },
 
     deleteRecords: function(store, type, records, success, error) {

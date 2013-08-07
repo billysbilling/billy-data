@@ -19,7 +19,12 @@ module('BD.FixtureAdapter', {
         });
         App.Post = BD.Model.extend({
             category: BD.belongsTo('App.Category'),
-            title: BD.attr('string')
+            title: BD.attr('string'),
+            comments: BD.hasMany('App.Comment', 'post', {isEmbedded: true})
+        });
+        App.Comment = BD.Model.extend({
+            post: BD.belongsTo('App.Post', {isParent: true}),
+            message: BD.attr('string')
         });
         adapter.setFixtures(App.Category, [
             {
@@ -85,6 +90,29 @@ asyncTest('`record.deleteRecord` deletes the record', function() {
             equal(fixtures.length, 1);
             equal(fixtures[0].id, 2);
             start();
+        });
+});
+
+asyncTest('lalalal', function() {
+    var post = App.Post.createRecord();
+    var comment = App.Comment.createRecord({
+        post: post
+    });
+    post.save({
+        embed: ['comments']
+    })
+        .success(function() {
+            comment.deleteRecord()
+                .success(function() {
+                    equal(adapter.fixturesForType(App.Comment).length, 1, 'comment should not have been deleted yet');
+                    post.save({
+                        embed: ['comments']
+                    })
+                        .success(function() {
+                            equal(adapter.fixturesForType(App.Comment).length, 0, 'comment should be deleted now');
+                            start();
+                        });
+                });
         });
 });
 

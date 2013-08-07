@@ -346,15 +346,19 @@ BD.Store = Em.Object.extend({
         //If the record hasn't been created yet, there is no need to contact the server
         if (r.get('isNew')) {
             r.unload();
-            promise.trigger('complete');
-            promise.trigger('success', null);
-            return;
+            Em.run.next(function() {
+                promise.trigger('complete');
+                promise.trigger('success', null);
+            });
+            return promise;
         }
         //If the record is embedded, then don't send DELETE request
         if (isEmbedded) {
-            promise.trigger('complete');
-            promise.trigger('success', null);
-            return;
+            Em.run.next(function() {
+                promise.trigger('complete');
+                promise.trigger('success', null);
+            });
+            return promise;
         }
 
         var success = function(payload) {
@@ -459,6 +463,7 @@ BD.Store = Em.Object.extend({
             id = r.get('id');
         delete this._cidToRecord[cid];
         delete this._typeMapFor(r.constructor).idToRecord[id];
+        this.adapter.unloadRecord(r);
     },
 
     _rootForType: function(type) {
@@ -557,7 +562,7 @@ BD.Store = Em.Object.extend({
         var adapter = this.get('adapter');
         this._unmaterializedRecords.forEach(function(r) {
             r.materializeData();
-            adapter.loadRecord(this, r);
+            adapter.loadRecord(r);
         });
         this._unmaterializedRecords.forEach(function(r) {
             if (!r.get('isLoaded')) {
