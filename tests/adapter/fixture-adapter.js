@@ -93,7 +93,7 @@ asyncTest('`record.deleteRecord` deletes the record', function() {
         });
 });
 
-asyncTest('lalalal', function() {
+asyncTest('when parent record is saved, embedded records should be unloaded', function() {
     var post = App.Post.createRecord();
     var comment = App.Comment.createRecord({
         post: post

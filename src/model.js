@@ -208,6 +208,7 @@ BD.Model = Em.Object.extend(Em.Evented, {
         this._deletedEmbeddedRecords.forEach(function(r) {
             r.unload();
         });
+        this._deletedEmbeddedRecords = [];
         this.becameClean();
     },
     rollback: function() {
