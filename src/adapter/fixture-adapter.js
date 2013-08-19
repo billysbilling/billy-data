@@ -149,6 +149,7 @@ BD.FixtureAdapter = Em.Object.extend({
             hasManyRelationship,
             response;
         return this._simulateRemoteCall(function() {
+            var pluralizedRoot = BD.pluralize(root);
             //Setup response
             response = {
                 meta: {
@@ -158,7 +159,8 @@ BD.FixtureAdapter = Em.Object.extend({
             };
             //Persist root record in fixtures and add its id to the response (id will be set by self._persist)
             self._persist(type, data);
-            response[BD.pluralize(root)] = data;
+            response[pluralizedRoot] = response[pluralizedRoot] || [];
+            response[pluralizedRoot].push(data);
             //Check for embedded records
             if (options.embed) {
                 options.embed.forEach(function(name) {
