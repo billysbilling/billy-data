@@ -34,7 +34,7 @@ test('Sends correct AJAX options', function() {
     });
     BD.ajax = function(hash) {
         equal(hash.type, 'POST');
-        equal(hash.url, '/stories/milk');
+        equal(hash.url, '/stories');
         deepEqual(hash.data, {
             record: {
                 name: 'Arnold',
@@ -42,7 +42,27 @@ test('Sends correct AJAX options', function() {
             }
         });
     };
-    var ret = r.save('/stories/milk');
+    var ret = r.save('/stories');
+    ok(ret instanceof BD.ModelOperationPromise);
+});
+
+test('Can specify root key', function() {
+    expect(4);
+    var r = BD.AnonymousRecord.createRecord({
+        name: 'Arnold',
+        isBig: true
+    });
+    BD.ajax = function(hash) {
+        equal(hash.type, 'POST');
+        equal(hash.url, '/stories');
+        deepEqual(hash.data, {
+            story: {
+                name: 'Arnold',
+                isBig: true
+            }
+        });
+    };
+    var ret = r.save('/stories', {root: 'story'});
     ok(ret instanceof BD.ModelOperationPromise);
 });
 

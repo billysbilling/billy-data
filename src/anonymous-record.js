@@ -10,6 +10,7 @@ BD.AnonymousRecord = Em.ObjectProxy.extend({
         options = options || {};
         var self = this,
             promise = BD.ModelOperationPromise.create(),
+            data = {},
             serialized = {};
         //Payload
         _.each(this.get('content'), function(value, key) {
@@ -24,13 +25,12 @@ BD.AnonymousRecord = Em.ObjectProxy.extend({
             }
             serialized[key] = value;
         });
+        data[options.root || 'record'] = serialized;
         //Make PUT/POST request
         BD.ajax({
             type: 'POST',
             url: url,
-            data: {
-                record: serialized
-            },
+            data: data,
             success: function(payload) {
                 BD.store.sideload(payload);
                 promise.trigger('complete');
