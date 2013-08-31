@@ -127,15 +127,36 @@ test('`_handleValidationErrors` serializes the models errors', function() {
                 validationErrors: {
                     record: {
                         attributes: {
-                            postId: 'Thisfieldmustnotbeblank.',
-                            unitPrice: 'Thisfieldmustnotbeblank.'
+                            postId: 'This field must not be blank.',
+                            unitPrice: 'This field must not be blank.'
                         }
                     }
                 }
             })
         });
-        equal(record.get('errors.post'), 'Thisfieldmustnotbeblank.');
-        equal(record.get('errors.unitPrice'), 'Thisfieldmustnotbeblank.');
+        equal(record.get('errors.post'), 'This field must not be blank.');
+        equal(record.get('errors.unitPrice'), 'This field must not be blank.');
     };
     record.save('/stories/milk', { models: ['post'] });
+});
+
+test('`_handleValidationErrors` serializes the models errors with specified root', function() {
+    expect(1);
+    var record = BD.AnonymousRecord.createRecord();
+    BD.ajax = function(opts) {
+        opts.error({
+            status: 422,
+            responseText: JSON.stringify({
+                validationErrors: {
+                    john: {
+                        attributes: {
+                            name: 'This field must not be blank.'
+                        }
+                    }
+                }
+            })
+        });
+        equal(record.get('errors.name'), 'This field must not be blank.');
+    };
+    record.save('/stories/milk', {root: 'john'});
 });

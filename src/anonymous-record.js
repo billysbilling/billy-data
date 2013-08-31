@@ -12,6 +12,7 @@ BD.AnonymousRecord = Em.ObjectProxy.extend({
             promise = BD.ModelOperationPromise.create(),
             data = {},
             serialized = {};
+        options.root = options.root || 'record';
         //Payload
         _.each(this.get('content'), function(value, key) {
             if (options.models && options.models.contains(key)) {
@@ -25,7 +26,7 @@ BD.AnonymousRecord = Em.ObjectProxy.extend({
             }
             serialized[key] = value;
         });
-        data[options.root || 'record'] = serialized;
+        data[options.root] = serialized;
         //Make PUT/POST request
         BD.ajax({
             type: 'POST',
@@ -66,7 +67,7 @@ BD.AnonymousRecord = Em.ObjectProxy.extend({
         if (!payload || !payload.validationErrors) {
             return;
         }
-        rawErrors = payload.validationErrors.record;
+        rawErrors = payload.validationErrors[options.root];
         if (!rawErrors) {
             return;
         }
