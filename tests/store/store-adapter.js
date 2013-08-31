@@ -1,4 +1,4 @@
-module('BD.Store');
+module('BD.Store adapter features');
 
 test('should have default adapter of BD.RestAdapter', function() {
     ok(BD.store.get('adapter').toString().match(/BD.RestAdapter/));

@@ -692,6 +692,17 @@ BD.Store = Em.Object.extend({
             id: s[1]
         };
     },
+
+    unloadAllByType: function(type) {
+        var typeMap = this._typeMapFor(type),
+            idToRecord = typeMap.idToRecord,
+            id;
+        typeMap.allIsLoaded = false;
+        for (id in idToRecord) {
+            if (!idToRecord.hasOwnProperty(id)) continue;
+            idToRecord[id].unload();
+        }
+    },
     
     reset: function() {
         this.set('isResetting', true);
