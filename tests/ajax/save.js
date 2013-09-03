@@ -199,3 +199,47 @@ test('Test error validation', function() {
     equal(post.get('error'), 'All of it is wrong.');
     equal(post.get('errors.title'), 'This is wrong.');
 });
+
+test('Loading data into the store after a save should not update client changed values', function() {
+    var post = App.Post.load({
+        id: 1,
+        title: 'none'
+    });
+    
+    post.set('title', 'first');
+    var req1 = fakeAjax(200, {
+        posts: [
+            {
+                _clientId: post.get('clientId'),
+                id: 1,
+                title: 'first',
+                createdTime: '2013-09-02'
+            }
+        ]
+    });
+    post.save();
+    
+    post.set('title', 'second');
+    var req2 = fakeAjax(200, {
+        posts: [
+            {
+                _clientId: post.get('clientId'),
+                id: 1,
+                title: 'second',
+                createdTime: '2013-09-02'
+            }
+        ]
+    });
+    post.save();
+    
+    equal(post.get('createdTime'), null, 'Date should not be set yet');
+    
+    req1.respond();
+    
+    equal(post.get('createdTime').format('YYYY-MM-DD'), '2013-09-02', 'Date should have been loaded');
+    equal(post.get('title'), 'second', 'Second value should be preserved after first have been saved');
+    
+    req2.respond();
+    
+    equal(post.get('title'), 'second', 'Second value should still be there');
+});

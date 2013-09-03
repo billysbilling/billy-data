@@ -120,13 +120,28 @@ BD.Model = Em.Object.extend(Em.Evented, {
         BD.store.suspendRecordAttributeDidChange();
         //Attributes
         this.eachAttribute(function(key, meta) {
-            data.attributes[key] = BD.transforms[meta.type].deserialize(serialized[key]);
+            var serverValue = BD.transforms[meta.type].deserialize(serialized[key]);
+            if (this.get('selfIsDirty')) {
+                var cleanValue = this.clean.data.attributes[key],
+                    clientValue = data.attributes[key];
+                if (cleanValue !== clientValue) {
+                    return;
+                }
+            }
+            data.attributes[key] = serverValue;
             BD.store.recordAttributeDidChange(this, key);
         }, this);
         //BelongsTo
         this.eachBelongsTo(function(key, meta) {
-            var newValue = meta.extractValue(serialized, key);
-            data.belongsTo[key] = newValue;
+            var serverValue = meta.extractValue(serialized, key);
+            if (this.get('selfIsDirty')) {
+                var cleanValue = this.clean.data.belongsTo[key],
+                    clientValue = data.belongsTo[key];
+                if (cleanValue !== clientValue) {
+                    return;
+                }
+            }
+            data.belongsTo[key] = serverValue;
             BD.store.recordAttributeDidChange(this, key);
         }, this);
         //HasMany

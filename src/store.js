@@ -202,8 +202,8 @@ BD.Store = Em.Object.extend({
         }
 
         var success = function(payload) {
-            r.didCommit(options);
             self.sideload(payload);
+            r.didCommit(options);
             promise.trigger('complete');
             promise.trigger('success', payload);
             r.decrementProperty('_saveCount');
