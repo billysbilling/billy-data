@@ -51,6 +51,25 @@ module('Ajax save', {
     }
 });
 
+test('Do not a allow a record to be created twice', function() {
+    var post = App.Post.createRecord({
+        title: 'a'
+    });
+    fakeAjax(200, {
+        posts: [
+            {
+                _clientId: post.get('clientId'),
+                id: 1,
+                title: 'a'
+            }
+        ]
+    });
+    post.save();
+    throws(function() {
+        post.save();
+    }, /You can't save a new record that's already being saved. That would create two different records on the server./);
+});
+
 test('Test PUT ajax request options', function() {
     expect(3);
     var post = App.Post.find(101);

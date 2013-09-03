@@ -186,6 +186,11 @@ BD.Store = Em.Object.extend({
             }, 0);
             return promise;
         }
+        
+        if (r.get('isNew') && r.get('_saveCount') > 0) {
+            throw new Error('You can\'t save a new record that\'s already being saved. That would create two different records on the server.');
+        }
+        r.incrementProperty('_saveCount');
 
         //Payload
         var data = {};
@@ -201,6 +206,7 @@ BD.Store = Em.Object.extend({
             self.sideload(payload);
             promise.trigger('complete');
             promise.trigger('success', payload);
+            r.decrementProperty('_saveCount');
         };
 
         var error = function(payload, status) {
@@ -214,6 +220,7 @@ BD.Store = Em.Object.extend({
             }
             promise.trigger('complete');
             promise.trigger('error', errorMessage, payload);
+            r.decrementProperty('_saveCount');
         };
 
         //Make PUT/POST request
