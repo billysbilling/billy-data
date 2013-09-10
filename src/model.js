@@ -448,8 +448,8 @@ BD.Model.reopenClass({
     allLocal: function() {
         return BD.store.allLocal(this);
     },
-    filter: function(filter, comparator) {
-        return BD.store.filter(this, filter, comparator);
+    filter: function(options) {
+        return BD.store.filter(this, options);
     },
     loadAll: function(dataItems) {
         return BD.store.loadAll(this, dataItems);
