@@ -192,16 +192,16 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
                 r.promise.then(function() {
                     pending--;
                     if (pending == 0) {
-                        self.trigger('didLoad');
+                        self._triggerDidLoadAsync();
                     }
                 }, function(err) {
-                    self.trigger('didError', err);
+                    self._triggerDidLoadAsync(err);
                 });
             }
             self._pushObjectSorted(r);
         }, this);
         if (pending == 0) {
-            self.trigger('didLoad');
+            self._triggerDidLoadAsync();
         }
     },
 
@@ -220,7 +220,21 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
         length = records.length;
         this.set('length', length);
         self._replace(0, records);
-        self.trigger('didLoad');
+        self._triggerDidLoadAsync();
+    },
+
+    _triggerDidLoadAsync: function() {
+        var self = this;
+        Em.run.next(function() {
+            self.trigger('didLoad');
+        });
+    },
+
+    _triggerDidErrorAsync: function(err) {
+        var self = this;
+        Em.run.next(function() {
+            self.trigger('didError', err);
+        });
     },
 
     objectAt: function(index) {

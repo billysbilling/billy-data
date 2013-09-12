@@ -472,7 +472,14 @@ test('Test #bigdata sorting', function() {
     equal(all.indexOf(category), 11, 'Z goes last');
 });
 
-
+asyncTest('Local filter should fire didLoad event async', function() {
+    expect(1);
+    App.Post.loadAll([]);
+    App.Post.filter().one('didLoad', function() {
+        ok(true, 'didLoad was triggered');
+        start();
+    });
+});
 
 asyncTest('Local filter should fire promise.then async', function() {
     expect(1);
