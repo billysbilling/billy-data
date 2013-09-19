@@ -21,13 +21,3 @@ test('BD.allLoaded should be reset with BD.store.reset()', function() {
     BD.store.reset();
     ok(!BD.get('loadedAll.posts'));
 });
-
-test('loadAll() should throw error with blank payload', function() {
-    throws(
-        function() {
-            App.Post.loadAll();
-        },
-        /You must pass an array when using loadAll\./,
-        "throws with just a message, no expected"
-    );
-});

@@ -34,6 +34,9 @@ MockAjaxRequest.prototype = {
     isAborted: false,
     
     respond: function() {
+        if (!this.hash) {
+            throw new Error('This request has never been fired.');
+        }
         var xhr = {
             status: this.statusCode,
             responseText: JSON.stringify(this.payload)

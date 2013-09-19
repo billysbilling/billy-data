@@ -51,6 +51,7 @@ test('All attributes, belongsTo and hasMany should be setup before firing belong
             equal(comment.get('text'), 'I agree!', 'Text should match');
         }.observes('post.comments.@each')
     }).create({post: post});
+    post.get('comments');
     req.respond();
     o.destroy();
 });
