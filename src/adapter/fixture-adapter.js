@@ -230,13 +230,20 @@ BD.FixtureAdapter = Em.Object.extend({
     },
 
     _incrementIdInFixtures: function(type) {
-        var fixtures = this.fixturesForType(type);
-        if (fixtures.idCounter) {
-            fixtures.idCounter++;
-        } else {
-            fixtures.idCounter = 1;
+        var fixtures = this.fixturesForType(type),
+            id;
+        while (true) {
+            if (fixtures.idCounter) {
+                fixtures.idCounter++;
+            } else {
+                fixtures.idCounter = 1;
+            }
+            id = BD.store._rootForType(type)+fixtures.idCounter;
+            if (!fixtures.findBy('id', id)) {
+                break;
+            }
         }
-        return BD.store._rootForType(type)+fixtures.idCounter;
+        return id;
 
     },
 

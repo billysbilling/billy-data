@@ -153,14 +153,25 @@ asyncTest('`findOne` should call error if the model is not found in fixtures', f
     adapter.findOne(BD.store, App.Category, category, 999, {}, success, error);
 });
 
-asyncTest('`saveRecord` adds one item when fixtures are empty', function() {
-    adapter.setFixtures(App.Category, []);
+asyncTest('`saveRecord` adds one item when fixtures are empty and finds first available id', function() {
+    adapter.setFixtures(App.Category, [
+        {
+            id: 'category1',
+            name: 'Billy',
+            luckyNumber: 77
+        },
+        {
+            id: 'category2',
+            name: 'Noah',
+            luckyNumber: 2
+        }
+    ]);
     var success = function(payload) {
         var fixtures = adapter.fixturesForType(App.Category);
-        equal(fixtures.length, 1);
-        equal(fixtures[0].id, 'category1');
-        equal(fixtures[0].name, 'Adam');
-        equal(fixtures[0].isPublic, true);
+        equal(fixtures.length, 3);
+        equal(fixtures[2].id, 'category3');
+        equal(fixtures[2].name, 'Adam');
+        equal(fixtures[2].isPublic, true);
         start();
     };
     var error = function() {};
