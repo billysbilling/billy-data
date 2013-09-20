@@ -202,6 +202,9 @@ BD.Store = Em.Object.extend({
         }
 
         var success = function(payload) {
+            if (options.properties) {
+                r.setProperties(options.properties);
+            }
             self.sideload(payload);
             r.didCommit(options);
             promise.trigger('complete');

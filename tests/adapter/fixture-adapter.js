@@ -256,6 +256,24 @@ asyncTest('Creating a record with a null belongsTo should set the fixture proper
         });
 });
 
+asyncTest('Properties in save() options should be persisted in fixtures for new records', function() {
+    adapter.setFixtures(App.Category, []);
+    var post = App.Category.createRecord({
+        name: 'Arnold'
+    });
+    post.save({
+        properties: {
+            name: 'John'
+        }
+    })
+        .success(function() {
+            var fixtures = adapter.fixturesForType(App.Category);
+            strictEqual(fixtures[0].name, 'John');
+            strictEqual(post.get('name'), 'John');
+            start();
+        });
+});
+
 asyncTest('`findByQuery` calls success with a filtered payload and ignores pageSize and offset', function() {
     var success = function(payload) {
         equal(payload.categories.length, 1);
