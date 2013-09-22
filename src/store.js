@@ -465,6 +465,14 @@ BD.Store = Em.Object.extend({
                         }
                     }, this);
                 }, this);
+                if (deletedRecords._clientIds) {
+                    deletedRecords._clientIds.forEach(function(clientId) {
+                        var deletedRecord = this._cidToRecord[clientId];
+                        if (deletedRecord) {
+                            deletedRecord.didDelete();
+                        }
+                    }, this);
+                }
             }
         }
     },

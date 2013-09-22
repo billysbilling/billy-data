@@ -63,3 +63,24 @@ test('Other records that were also deleted by the API should be removed from the
     equal(BD.store.recordForTypeAndId(App.Comment, 201), null, 'Comment should have been deleted');
     equal(BD.store.recordForTypeAndId(App.Comment, 202), null, 'Comment should have been deleted');
 });
+
+test('Records that were deleted by the API referred to by client ids should be removed from the store', function() {
+    var post = App.Post.find(101);
+    var req = fakeAjax(200, {
+        meta: {
+            success: true,
+            statusCode: 200,
+            deletedRecords: {
+                _clientIds: [
+                    App.Comment.find(201).get('clientId'),
+                    App.Comment.find(202).get('clientId')
+                ]
+            }
+        }
+    });
+    post.deleteRecord();
+    req.respond();
+    equal(BD.store.recordForTypeAndId(App.Post, 101), null, 'Post should have been deleted');
+    equal(BD.store.recordForTypeAndId(App.Comment, 201), null, 'Comment should have been deleted');
+    equal(BD.store.recordForTypeAndId(App.Comment, 202), null, 'Comment should have been deleted');
+});
