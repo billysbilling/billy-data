@@ -205,6 +205,7 @@ BD.Store = Em.Object.extend({
             if (options.properties) {
                 r.setProperties(options.properties);
             }
+            self._unloadServerDeletedRecords(payload);
             self.sideload(payload);
             r.didCommit(options);
             promise.trigger('complete');
@@ -279,6 +280,7 @@ BD.Store = Em.Object.extend({
         data[rootPlural] = serializedItems;
 
         var success = function(payload) {
+            self._unloadServerDeletedRecords(payload);
             transaction.get('records').forEach(function(r, options) {
                 r.didCommit(options);
             }, self);
