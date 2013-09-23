@@ -200,6 +200,26 @@ test('Test error validation', function() {
     equal(post.get('errors.title'), 'This is wrong.');
 });
 
+test('Event is triggered when record is validated', function() {
+    expect(1);
+    var post = App.Post.find(101);
+    post.one('didValidate', function() {
+        ok(true);
+    });
+    var expectedValidationErrors = {};
+    expectedValidationErrors[post.clientId] = {
+        attributes: {
+            title: 'This is wrong.'
+        }
+    };
+    var req = fakeAjax(422, {
+        validationErrors: expectedValidationErrors
+    });
+    post.set('title', 'This is a good day to die'); //Set something so .save() actually commits the record
+    post.save();
+    req.respond();
+});
+
 test('Loading data into the store after a save should not update client changed values', function() {
     var post = App.Post.load({
         id: 1,

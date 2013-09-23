@@ -331,6 +331,7 @@ BD.Store = Em.Object.extend({
             }
             r.set('error', rawErrors.message);
             r.set('errors', attributeErrors);
+            r.trigger('didValidate');
         }, this);
     },
 
