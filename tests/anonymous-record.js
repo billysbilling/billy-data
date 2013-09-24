@@ -183,3 +183,9 @@ test('`_handleValidationErrors` serializes the models errors with specified root
     };
     record.save('/stories/milk', {root: 'john'});
 });
+
+test('Should always have `errors`', function() {
+    var record = BD.AnonymousRecord.createRecord();
+    record.set('errors.title', 'This is wrong.');
+    equal(record.get('errors.title'), 'This is wrong.');
+});

@@ -20,3 +20,11 @@ asyncTest('Promise of loaded record should be resolved', function() {
         start();
     })
 });
+
+test('Should always have `errors`', function() {
+    var post = App.Post.load({
+        id: 1
+    });
+    post.set('errors.title', 'This is wrong.');
+    equal(post.get('errors.title'), 'This is wrong.');
+});

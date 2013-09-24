@@ -24,6 +24,7 @@ BD.Model = Em.Object.extend(Em.Evented, {
             belongsTo: {},
             hasMany: {}
         });
+        this.set('errors', {});
         this.promise = new Em.RSVP.Promise(function(resolve, reject) {
             if (self.get('isLoaded')) {
                 resolve(self);

@@ -2,9 +2,12 @@ BD.AnonymousRecord = Em.ObjectProxy.extend(Em.Evented, {
 
     error: null,
     
-    errors: function() {
-        return {};
-    }.property(),
+    errors: null,
+
+    init: function() {
+        this._super();
+        this.set('errors', {});
+    },
     
     save: function(url, options) {
         options = options || {};
