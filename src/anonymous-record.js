@@ -1,4 +1,4 @@
-BD.AnonymousRecord = Em.ObjectProxy.extend({
+BD.AnonymousRecord = Em.ObjectProxy.extend(Em.Evented, {
 
     error: null,
     
@@ -80,10 +80,11 @@ BD.AnonymousRecord = Em.ObjectProxy.extend({
                     delete rawErrors.attributes[model + 'Id'];
                 }
             }
-        };
+        }
 
         this.set('error', rawErrors.message);
         this.set('errors', rawErrors.attributes);
+        this.trigger('didValidate');
     }
 
 });

@@ -140,6 +140,29 @@ test('`_handleValidationErrors` serializes the models errors', function() {
     record.save('/stories/milk', { models: ['post'] });
 });
 
+test('`_handleValidationErrors` triggers `didValidate` event', function() {
+    expect(1);
+    var record = BD.AnonymousRecord.createRecord({ name: null });
+    record.on('didValidate', function() {
+        ok(true);
+    });
+    BD.ajax = function(opts) {
+        opts.error({
+            status: 422,
+            responseText: JSON.stringify({
+                validationErrors: {
+                    record: {
+                        attributes: {
+                            name: 'This field must not be blank.'
+                        }
+                    }
+                }
+            })
+        });
+    };
+    record.save('/stories/milk');
+});
+
 test('`_handleValidationErrors` serializes the models errors with specified root', function() {
     expect(1);
     var record = BD.AnonymousRecord.createRecord();
