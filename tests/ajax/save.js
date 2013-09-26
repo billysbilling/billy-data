@@ -225,7 +225,7 @@ test('Loading data into the store after a save should not update client changed 
         id: 1,
         title: 'none'
     });
-    
+
     post.set('title', 'first');
     var req1 = fakeAjax(200, {
         posts: [
@@ -238,7 +238,7 @@ test('Loading data into the store after a save should not update client changed 
         ]
     });
     post.save();
-    
+
     post.set('title', 'second');
     var req2 = fakeAjax(200, {
         posts: [
@@ -251,15 +251,34 @@ test('Loading data into the store after a save should not update client changed 
         ]
     });
     post.save();
-    
+
     equal(post.get('createdTime'), null, 'Date should not be set yet');
-    
+
     req1.respond();
-    
+
     equal(post.get('createdTime').format('YYYY-MM-DD'), '2013-09-02', 'Date should have been loaded');
     equal(post.get('title'), 'second', 'Second value should be preserved after first have been saved');
-    
+
     req2.respond();
-    
+
     equal(post.get('title'), 'second', 'Second value should still be there');
+});
+
+test('Default attribute value should be saved', function() {
+    App.Tree = BD.Model.extend({
+        trunkColor: BD.attr('string', {defaultValue: 'brown'}),
+        leafColor: BD.attr('string', {defaultValue: 'green'})
+    });
+    var tree = App.Tree.createRecord({
+        leafColor: 'red'
+    });
+    BD.ajax = function(hash) {
+        strictEqual(hash.data.tree.trunkColor, 'brown');
+        strictEqual(hash.data.tree.leafColor, 'red');
+    };
+    tree.save({
+        properties: {
+            category: null
+        }
+    });
 });

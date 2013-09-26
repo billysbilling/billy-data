@@ -10,9 +10,6 @@ BD.attr = function(type, options) {
         var data = this.get('_data'),
             oldValue;
         oldValue = data.attributes[key];
-        if (oldValue === undefined) {
-            oldValue = options.defaultValue;
-        }
         if (arguments.length >= 2) {
             if (value !== oldValue) {
                 this.becomeDirty();

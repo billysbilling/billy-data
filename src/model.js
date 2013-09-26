@@ -379,6 +379,12 @@ BD.Model.reopenClass({
         //Mark the record as dirty and update properties
         r.becomeDirty();
         BD.store.suspendRecordAttributeDidChange();
+        r.eachAttribute(function(key, meta) {
+            var defaultValue = meta.options.defaultValue;
+            if (typeof defaultValue !== 'undefined' && typeof properties[key] === 'undefined') {
+                properties[key] = defaultValue;
+            }
+        });
         r.setProperties(properties);
         BD.store.resumeRecordAttributeDidChange();
         return r;
