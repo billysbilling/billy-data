@@ -227,6 +227,15 @@ BD.Model = Em.Object.extend(Em.Evented, {
         this._deletedEmbeddedRecords = [];
         this.becameClean();
     },
+    resetClean: function() {
+        if (!this.get('isNew')) {
+            throw new Error('Existing records can not be reset to clean');
+        }
+        this.eachEmbeddedRecord(function(r) {
+            r.resetClean();
+        }, this);
+        this.becameClean();
+    },
     rollback: function() {
         //Setup data variables
         var selfIsDirty = this.get('selfIsDirty');
