@@ -1,4 +1,4 @@
-module('Ajax delete', {
+QUnit.module('Ajax delete', {
     setup: function() {
         App.Post = BD.Model.extend({
             title: BD.attr('string'),

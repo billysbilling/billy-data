@@ -1,6 +1,6 @@
 var originalAjax = BD.ajax;
 
-module('Ajax save', {
+QUnit.module('Ajax save', {
     setup: function() {
         App.Category = BD.Model.extend({
             name: BD.attr('string')

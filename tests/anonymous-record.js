@@ -1,4 +1,4 @@
-module('BD.AnonymousRecord', {
+QUnit.module('BD.AnonymousRecord', {
     setup: function() {
         App.Post = BD.Model.extend({
             title: BD.attr('string')

@@ -1,4 +1,4 @@
-module('findByQuery()', {
+QUnit.module('findByQuery()', {
     setup: function() {
         App.Post = BD.Model.extend({
             title: BD.attr('string')

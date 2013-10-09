@@ -1,3 +1,5 @@
+var _ = require('lodash');
+
 BD.Store = Em.Object.extend({
 
     init: function() {
@@ -727,9 +729,12 @@ BD.Store = Em.Object.extend({
     
     reset: function() {
         this.set('isResetting', true);
-        _.each(this._cidToRecord, function(r) {
-            r.unload();
-        });
+        Object.keys(this._cidToRecord).forEach(function(clientId) {
+            var r = this._cidToRecord[clientId];
+            if (r) {
+                r.unload();
+            }
+        }, this);
         _.each(this._recordArrays, function(recordArray) {
             recordArray.destroy();
         });

@@ -52,7 +52,7 @@ MockAjaxRequest.prototype = {
     }
 }
 
-function fakeAjax(statusCode, payload) {
+window.fakeAjax = function(statusCode, payload) {
     payload = payload || {};
     payload.meta = payload.meta || {
         success: statusCode >= 200 && statusCode < 300,
@@ -74,7 +74,7 @@ function fakeAjax(statusCode, payload) {
     return req;
 }
 
-function resetAjax() {
+window.resetAjax = function() {
     BD.ajax = function(hash) {
         console.log('BD.ajax hash and for debugging:');
         console.log(hash);

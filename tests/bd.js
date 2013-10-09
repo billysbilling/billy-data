@@ -1,4 +1,4 @@
-module('BD');
+QUnit.module('BD');
 
 test('Pluralizer', function() {
     equal(BD.pluralize('invoice'), 'invoices');

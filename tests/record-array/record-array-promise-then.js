@@ -1,4 +1,4 @@
-module('RecordArray', {
+QUnit.module('RecordArray', {
     setup: function() {
         App.Post = BD.Model.extend({
             title: BD.attr('string')

@@ -1,4 +1,4 @@
-module('Filtered queries with q', {
+QUnit.module('Filtered queries with q', {
     setup: function() {
         App.Post = BD.Model.extend({
             title: BD.attr('string'),

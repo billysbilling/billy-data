@@ -1,4 +1,4 @@
-module('allLocal()', {
+QUnit.module('allLocal()', {
     setup: function() {
         App.Post = BD.Model.extend({
             title: BD.attr('string')

@@ -1,3 +1,6 @@
+var _ = require('lodash'),
+    moment = require('momentjs');
+
 BD.AnonymousRecord = Em.ObjectProxy.extend(Em.Evented, {
 
     error: null,

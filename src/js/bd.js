@@ -1,4 +1,4 @@
-var BD = Ember.Namespace.create({
+window.BD = Ember.Namespace.create({
 
     typeNamespaces: [],
     registerTypeNamespace: function(namespace) {

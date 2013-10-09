@@ -1,4 +1,4 @@
-module('BD.Model - dirty', {
+QUnit.module('BD.Model - dirty', {
     setup: function() {
         App.Post = BD.Model.extend({
             title: BD.attr('string'),

@@ -1,1 +1,5 @@
-script: "phantomjs test-runner.js"
+before_script:
+  - npm install
+  - bower install
+
+script: NODE_ENV=production grunt test

@@ -1,4 +1,4 @@
-module('Filtered record array', {
+QUnit.module('Filtered record array', {
     setup: function() {
         App.Post = BD.Model.extend({
             title: BD.attr('string')

@@ -1,6 +1,6 @@
 var User, adapter, oldAdapter;
 
-module('BD.FixtureAdapter', {
+QUnit.module('BD.FixtureAdapter', {
 
     setup: function() {
         BD.FixtureRequest.reopen({ DELAY: 0 });

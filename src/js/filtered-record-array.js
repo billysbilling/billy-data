@@ -1,3 +1,5 @@
+var _ = require('lodash');
+
 BD.SPARSE_PLACEHOLDER = Ember.Object.create({
     isLoaded: false
 });

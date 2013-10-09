@@ -1,4 +1,4 @@
-module('Sparse record array', {
+QUnit.module('Sparse record array', {
     setup: function() {
         App.Post = BD.Model.extend({
             title: BD.attr('string')

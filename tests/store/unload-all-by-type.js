@@ -1,4 +1,4 @@
-module('BD.store.unloadAllByType', {
+QUnit.module('BD.store.unloadAllByType', {
     setup: function() {
         App.Person = BD.Model.extend({
             name: BD.attr('string')

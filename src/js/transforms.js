@@ -1,3 +1,5 @@
+var moment = require('momentjs');
+
 BD.transforms = {
 
     string: {

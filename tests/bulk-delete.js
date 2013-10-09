@@ -1,4 +1,4 @@
-module('Bulk delete', {
+QUnit.module('Bulk delete', {
     setup: function() {
         App.Post = BD.Model.extend({
             title: BD.attr('string'),

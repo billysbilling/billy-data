@@ -1,4 +1,4 @@
-module('Many-to-many relationships', {
+QUnit.module('Many-to-many relationships', {
     setup: function() {
         App.InvoicePaymentAssociation = BD.Model.extend({
             invoice: BD.belongsTo('App.Invoice'),

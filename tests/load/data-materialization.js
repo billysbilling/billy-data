@@ -1,4 +1,4 @@
-module('Data materialization', {
+QUnit.module('Data materialization', {
     setup: function() {
         App.Post = BD.Model.extend({
             title: BD.attr('string'),

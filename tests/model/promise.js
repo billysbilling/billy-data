@@ -1,4 +1,4 @@
-module('BD.Model', {
+QUnit.module('BD.Model', {
     setup: function() {
         App.Post = BD.Model.extend({
             title: BD.attr('string'),

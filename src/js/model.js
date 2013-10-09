@@ -1,3 +1,5 @@
+var _ = require('lodash');
+
 BD.Model = Em.Object.extend(Em.Evented, {
     
     isLoaded: false,

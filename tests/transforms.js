@@ -1,4 +1,4 @@
-module('Transforms');
+QUnit.module('Transforms');
 
 test('String deserialization', function() {
     equal(BD.transforms.string.deserialize(null), null);

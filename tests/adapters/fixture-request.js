@@ -1,6 +1,6 @@
 var ajax;
 
-module('BD.FixtureRequest', {
+QUnit.module('BD.FixtureRequest', {
     setup: function() {
         BD.FixtureRequest.reopen({ DELAY: 0 });
     }

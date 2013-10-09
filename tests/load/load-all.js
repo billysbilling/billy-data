@@ -1,4 +1,4 @@
-module('loadAll()', {
+QUnit.module('loadAll()', {
     setup: function() {
         App.Post = BD.Model.extend({
             title: BD.attr('string')
