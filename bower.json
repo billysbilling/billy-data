@@ -14,7 +14,9 @@
   ],
   "description": "A data persistence framework for Ember.js used by Billy's Billing.",
   "main": "src/js/index.js",
-  "billyBuilderInclude": "src/js",
+  "billyBuilder": {
+      "include": "src/js"
+  },
   "license": "MIT",
   "ignore": [
     "**/.*",
