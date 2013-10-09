@@ -33,34 +33,9 @@ Here are a few of the issues we've had with Ember Data, which Billy Data solves 
 The API of Billy Data and some of the implementation has been greatly inspired by Ember Data. So big thanks and props
 for that to the Ember.js guys.
 
-## Building
+## Building and testing
 
-Install [grunt-cli](https://github.com/gruntjs/grunt-cli).
-
-Go to Terminal and `cd` into the billy-data folder and run:
-
-```
-npm install
-grunt
-```
-
-The built source code can then be found at `dist/billy-data.js` and `dist/billy-data.min.js`.
-
-## Running tests
-
-### In a browser
-
-Just open the `tests.html` file in your browser. The test suite uses QUnit.
-
-### From command line
-
-Install [PhantomJS](http://phantomjs.org/).
-
-From within your billy-data folder run:
-
-```
-phantomjs test-runner.js
-```
+See [billy-builder](https://github.com/billysbilling/billy-builder).
 
 ## Contributing
 
