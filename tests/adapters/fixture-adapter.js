@@ -291,6 +291,24 @@ asyncTest('`findByQuery` calls success with a filtered payload and ignores pageS
     adapter.findByQuery(BD.store, App.Category, query, success, $.noop, $.noop);
 });
 
+asyncTest('`findByQuery` works with arrays as query params', function() {
+    App.Category.load({
+        id: 888,
+        name: 'John',
+        luckyNumber: 3
+    });
+    var success = function(payload) {
+        equal(payload.categories.length, 2);
+        equal(payload.categories[0].name, 'Noah');
+        equal(payload.categories[1].name, 'John');
+        start();
+    };
+    var query = {
+        luckyNumber: [2, 3]
+    };
+    adapter.findByQuery(BD.store, App.Category, query, success, $.noop, $.noop);
+});
+
 asyncTest('`findByQuery` respects sortProperty', function() {
     var success = function(payload) {
         equal(payload.categories.length, 2);

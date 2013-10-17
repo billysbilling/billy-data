@@ -106,9 +106,18 @@ BD.FixtureAdapter = Em.Object.extend({
             if (query) {
                 for (name in query) {
                     if (!query.hasOwnProperty(name) || name === 'pageSize' || name === 'offset' || name === 'include' || name === 'sortProperty' || name === 'sortDirection') continue;
-                    if (data[name] !== query[name]) {
-                        match = false;
-                        break;
+                    var value = data[name],
+                        queryValue = query[name];
+                    if (Ember.typeOf(queryValue) === 'array') {
+                        if (!queryValue.contains(value)) {
+                            match = false;
+                            break;
+                        }
+                    } else {
+                        if (value !== queryValue) {
+                            match = false;
+                            break;
+                        }
                     }
                 }
             }
