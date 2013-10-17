@@ -1,3 +1,5 @@
+var originalAjax = BD.ajax;
+
 QUnit.module('BD.Model - dirty', {
     setup: function() {
         App.Post = BD.Model.extend({
@@ -7,6 +9,7 @@ QUnit.module('BD.Model - dirty', {
     },
     teardown: function() {
         BD.store.reset();
+        BD.ajax = originalAjax;
     }
 });
 
@@ -29,4 +32,16 @@ test('Existing record can not be set as clean', function() {
     throws(function() {
         post.resetClean();
     }, /Existing records can not be reset to clean/);
+});
+
+test('Record that was called resetClean() on still saves itself', function() {
+    expect(1);
+    var post = App.Post.createRecord({
+        title: 'Hey hey'
+    });
+    post.resetClean();
+    BD.ajax = function() {
+        ok(1);
+    };
+    post.save();
 });

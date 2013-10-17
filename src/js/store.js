@@ -178,8 +178,8 @@ BD.Store = Em.Object.extend({
         options = this._normalizeSaveOptions(options);
         var self = this;
         var promise = BD.ModelOperationPromise.create();
-        //Don't save if the record is clean
-        if (!r.get('isDirty') && !options.properties) {
+        //Don't save if the record is clean, not new and override properties have not been set
+        if (!r.get('isDirty') && !r.get('isNew') && !options.properties) {
             setTimeout(function() {
                 Em.run(function() {
                     promise.trigger('complete');
