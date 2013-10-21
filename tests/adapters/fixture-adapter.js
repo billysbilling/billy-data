@@ -274,7 +274,7 @@ asyncTest('Properties in save() options should be persisted in fixtures for new 
         });
 });
 
-asyncTest('`findByQuery` calls success with a filtered payload and ignores pageSize and offset', function() {
+asyncTest('`findByQuery` calls success with a filtered payload and ignores pageSize, offset and other random query params', function() {
     var success = function(payload) {
         equal(payload.categories.length, 1);
         notStrictEqual(payload.categories[0], adapter.fixturesForType(App.Category)[1], 'data should be a copy');
@@ -286,7 +286,8 @@ asyncTest('`findByQuery` calls success with a filtered payload and ignores pageS
         name: 'Noah',
         pageSize: 100,
         offset: 100,
-        include: 'category.thing'
+        include: 'category.thing',
+        bingo: 'The Tuxedo Cat'
     };
     adapter.findByQuery(BD.store, App.Category, query, success, $.noop, $.noop);
 });
