@@ -290,7 +290,6 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
         var r = this._content[from];
         if (r) {
             delete this._content[from];
-            delete this._indexForRecord[r.clientId];
             this._content[to] = r;
             this._indexForRecord[r.clientId] = to;
         }
