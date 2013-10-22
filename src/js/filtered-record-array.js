@@ -375,7 +375,7 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
         var content = this._content,
             index;
         for (index in content) {
-            if (!content.hasOwnProperty(index)) return;
+            if (!content.hasOwnProperty(index)) continue;
             callback.call(context, content[index], index);
         }
     },
