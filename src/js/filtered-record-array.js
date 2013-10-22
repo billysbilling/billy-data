@@ -295,7 +295,13 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
         }
     },
     pushObject: function(r) {
-        this.insertAt(this.get('length'), r);
+        var insertIndex = this.get('length');
+        //Length might be greater than the actual last element (if the array is sparse)
+        //So we need to decrement insertIndex until right before we hit another element
+        while (insertIndex > 0 && !this._content[insertIndex-1]) {
+            insertIndex--;
+        }
+        this.insertAt(insertIndex, r);
     },
     insertAt: function(index, r) {
         this._requestOffsetIsSuspended = true;
@@ -306,7 +312,9 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
         }
         this._content[index] = r;
         this._indexForRecord[r.clientId] = index;
-        this.incrementProperty('length');
+        if (!this._isReplacing) {
+            this.incrementProperty('length');
+        }
         this.arrayContentDidChange(index, 0, 1);
         this._requestOffsetIsSuspended = false;
     },
@@ -323,11 +331,13 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
         }
         if (hasRecords) {
             //If the record array already contains records at the given indexes, then we need to push the new records sorted
+            this._isReplacing = true;
             records.forEach(function(r) {
                 if (Em.isEmpty(this._indexForRecord[r.clientId])) {
                     this._pushObjectSorted(r);
                 }
             }, this);
+            this._isReplacing = false;
         } else {
             //Otherwise we can just add all the records
             this.arrayContentWillChange(index, 0, length);

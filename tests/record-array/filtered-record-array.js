@@ -66,3 +66,25 @@ test('Array observers when matching records are loaded before filtered record ar
     //Clean up
     posts.removeArrayObserver(observer);
 });
+
+test('When a record is added while a remote filter request is underway, the length should be correct', function() {
+    var req = fakeAjax(200, {
+        posts: [
+            {
+                id: 1,
+                title: 'Hi'
+            },
+            {
+                id: 2,
+                title: 'Bye'
+            }
+        ]
+    });
+    var posts = App.Post.all();
+    App.Post.load({
+        id: 1,
+        title: 'Hi'
+    });
+    req.respond();
+    equal(posts.get('length'), 2, 'There should be two posts');
+});
