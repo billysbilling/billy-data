@@ -252,6 +252,10 @@ BD.Model = Em.Object.extend(Em.Evented, {
         this.checkEmbeddedChildrenDirty();
         //Don't continue if this record itself is not dirty
         if (!selfIsDirty) {
+            //If the record is new, then we delete it
+            if (this.get('isNew')) {
+                this.deleteRecord();
+            }
             return;
         }
         //Store dirty parent (before we might clean it and set it back the original parent)

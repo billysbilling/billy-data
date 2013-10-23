@@ -45,3 +45,13 @@ test('Record that was called resetClean() on still saves itself', function() {
     };
     post.save();
 });
+
+test('Record that was called resetClean() on still deletes itself on rollback', function() {
+    var post = App.Post.createRecord({
+        title: 'Hey hey'
+    });
+    post.resetClean();
+    post.rollback();
+    ok(post.get('isDeleted'), 'record should be deleted');
+    ok(post.get('isDestroying'), 'record should be scheduled for destroy');
+});
