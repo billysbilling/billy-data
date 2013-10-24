@@ -10,7 +10,7 @@ test('Pluralizer', function() {
     equal(BD.pluralize('bankLineMatch'), 'bankLineMatches');
 });
 
-test('Singulizer', function() {
+test('Singularizer', function() {
     equal(BD.singularize('invoices'), 'invoice');
     equal(BD.singularize('invoiceLines'), 'invoiceLine');
     equal(BD.singularize('countries'), 'country');

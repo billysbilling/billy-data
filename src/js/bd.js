@@ -75,7 +75,7 @@ window.BD = Ember.Namespace.create({
         hash.complete = function(xhr) {
             Em.run(function() {
                 if (complete) {
-                    complete(xhr);
+                    complete.call(hash.context, xhr);
                 }
             });
         };
@@ -83,7 +83,7 @@ window.BD = Ember.Namespace.create({
         hash.success = function(payload) {
             Em.run(function() {
                 if (success) {
-                    success(payload);
+                    success.call(hash.context, payload);
                 }
             });
         };
@@ -91,7 +91,7 @@ window.BD = Ember.Namespace.create({
         hash.error = function(xhr) {
             Em.run(function() {
                 if (error) {
-                    error(xhr);
+                    error.call(hash.context, xhr);
                 }
             });
         };
