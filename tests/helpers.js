@@ -45,9 +45,13 @@ MockAjaxRequest.prototype = {
             this.hash.complete.call(this.hash.context, this.xhr);
         }
         if (this.statusCode >= 200 && this.statusCode < 300) {
-            this.hash.success.call(this.hash.context, this.payload);
+            if (this.hash.success) {
+                this.hash.success.call(this.hash.context, this.payload);
+            }
         } else {
-            this.hash.error.call(this.hash.context, xhr);
+            if (this.hash.error) {
+                this.hash.error.call(this.hash.context, xhr);
+            }
         }
     }
 }
