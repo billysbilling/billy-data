@@ -6,7 +6,7 @@
     "lodash": "~2.2.1",
     "ember": "billysbilling/bower-ember#~1.2.0"
   },
-  "version": "0.1.0",
+  "version": "0.9.0",
   "homepage": "https://github.com/billysbilling/billy-data",
   "authors": [
     "Sebastian Seilund <sebastian@billysbilling.com>"
@@ -14,7 +14,7 @@
   "description": "A data persistence framework for Ember.js used by Billy's Billing.",
   "main": "src/js/index.js",
   "billy-builder": {
-      "include": "src/js"
+    "include": "src/js"
   },
   "license": "MIT",
   "ignore": [
