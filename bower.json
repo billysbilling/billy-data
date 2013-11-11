@@ -1,11 +1,10 @@
 {
   "name": "billy-data",
   "dependencies": {
-    "jquery": "2.0.3",
-    "momentjs": "2.3.1",
-    "lodash": "2.2.1",
-    "handlebars": "billysbilling/bower-handlebars#master",
-    "ember": "billysbilling/bower-ember#master"
+    "jquery": "~2.0.3",
+    "momentjs": "~2.3.1",
+    "lodash": "~2.2.1",
+    "ember": "billysbilling/bower-ember#~1.2.0"
   },
   "version": "0.1.0",
   "homepage": "https://github.com/billysbilling/billy-data",
