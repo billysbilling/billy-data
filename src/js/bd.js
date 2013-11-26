@@ -1,3 +1,5 @@
+var inflectors = require('inflectors');
+
 window.BD = Ember.Namespace.create({
 
     typeNamespaces: [],
@@ -26,43 +28,11 @@ window.BD = Ember.Namespace.create({
         return type;
     },
 
-    plurals: {},
-    pluralize: function(name) {
-        if (this.plurals[name]) {
-            return this.plurals[name];
-        } else if (name.slice(-1) == 'y') {
-            return name.substring(0, name.length - 1)+'ies';
-        } else if (name.slice(-1) == 's') {
-            return name+'es';
-        } else if (name.slice(-3) == 'tch') {
-            return name+'es';
-        } else {
-            return name+'s';
-        }
-    },
-    singularize: function(name) {
-        if (!this.singulars) {
-            this.singulars = {};
-            for (var k in this.plurals) {
-                if (!this.plurals.hasOwnProperty(k)) continue;
-                this.singulars[this.plurals[k]] = k;
-            }
-        }
-        if (this.singulars[name]) {
-            return this.singulars[name];
-        } else if (name.slice(-3) == 'ies') {
-            return name.substring(0, name.length-3)+'y';
-        } else if (name.slice(-3) == 'ses') {
-            return name.substring(0, name.length-2);
-        } else if (name.slice(-5) == 'tches') {
-            return name.substring(0, name.length-2);
-        } else {
-            return name.substring(0, name.length-1);
-        }
-    },
-    classify: function(name) {
-        return name.substring(0, 1).toUpperCase()+name.substring(1);
-    },
+    addInflectorsRule: inflectors.addRule,
+    removeInflectorsRule: inflectors.removeRule,
+    pluralize: inflectors.pluralize,
+    singularize: inflectors.singularize,
+    classify: inflectors.classify,
 
     ajax: function(hash) {
         hash.url = BD.url(hash.url);
@@ -114,7 +84,7 @@ window.BD = Ember.Namespace.create({
         transaction.commit();
         return transaction;
     },
-    
+
     deleteRecords: function(records) {
         return BD.store.deleteRecords(records);
     },
@@ -122,7 +92,7 @@ window.BD = Ember.Namespace.create({
     printServerError: function(message) {
         console.error('Server error: ' + message);
     },
-    
+
     loadedAll: Em.Object.create()
 
 });
