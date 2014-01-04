@@ -142,7 +142,9 @@ BD.hasMany = function(type, belongsToKey, options) {
         query[belongsToKey] = this;
         filterOptions = {
             parent: this,
-            query: query
+            query: query,
+            sortProperty: options.sortProperty,
+            sortDirection: options.sortDirection
         };
         if (ids) {
             filterOptions.ids = ids;

@@ -1,4 +1,4 @@
-QUnit.module('One-to-many relationships', {
+QUnit.module('Embedded one-to-many relationships', {
     setup: function() {
         App.Category = BD.Model.extend({
             name: BD.attr('string'),
