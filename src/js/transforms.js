@@ -68,6 +68,15 @@ BD.transforms = {
             }
             return date.format('YYYY-MM-DDTHH:mm:ss');
         }
+    },
+    
+    object: {
+        deserialize: function(serialized) {
+            return serialized;
+        },
+        serialize: function(deserialized) {
+            return deserialized;
+        }
     }
     
 };
