@@ -494,7 +494,7 @@ BD.Store = Em.Object.extend({
     },
     
     sideload: function(payload, root, recordArray) {
-        var allRecords = [], rootRecords;
+        var rootRecords;
         for (var key in payload) {
             //Skip some properties
             if (!payload.hasOwnProperty(key)) continue;
@@ -507,7 +507,6 @@ BD.Store = Em.Object.extend({
             }
             //Load records of this type
             var records = this._loadMany(type, payload[key]);
-            allRecords.push(records);
             if (root == key) {
                 rootRecords = records;
             }
