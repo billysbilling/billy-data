@@ -93,6 +93,7 @@ BD.Store = Em.Object.extend({
                 msg = 'We\'re sorry, but the record could currently not be loaded. Please try again.';
             }
             BD.printServerError(msg);
+            r.trigger('didError', new Error(msg));
         };
 
         this.get('adapter').findOne(this, type, r, id, query, success, error);
