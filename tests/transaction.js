@@ -37,13 +37,11 @@ test('Check AJAX options for transaction for model that supports bulk updates', 
                 {
                     _clientId: post1.clientId,
                     id: 101,
-                    title: 'Dirty secrets',
                     state: 'public'
                 },
                 {
                     _clientId: post2.clientId,
                     id: 102,
-                    title: 'Testacular sounds like Testicular',
                     state: 'public'
                 }
             ]

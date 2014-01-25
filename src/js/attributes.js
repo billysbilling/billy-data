@@ -41,7 +41,7 @@ function belongsTo(meta, options) {
                     didChange = (!value || value.get('clientId') !== oldClientId);
                 }
             } else {
-                didChange = !!value;
+                didChange = id !== value;
                 oldClientId = null;
             }
             if (didChange) {

@@ -26,7 +26,7 @@ BD.FixtureAdapter = Em.Object.extend({
 
     loadRecord: function(record) {
         this._persist(record.constructor, record.serialize({
-            includeReadonly: true
+            includeAll: true
         }));
     },
 
@@ -156,7 +156,7 @@ BD.FixtureAdapter = Em.Object.extend({
         var self = this,
             type = r.constructor,
             root = BD.store._rootForType(type),
-            fixtureSerializeOptions = $.extend(options, {includeReadonly: true}),
+            fixtureSerializeOptions = $.extend(options, {includeAll: true}),
             data = r.serialize(fixtureSerializeOptions),
             childType,
             childRootPlural,
