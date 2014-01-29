@@ -3,6 +3,6 @@
   "version": "0.0.1",
   "devDependencies": {
     "grunt": "~0.4.1",
-    "billy-builder": "~1.0.0"
+    "billy-builder": "~2.1.0"
   }
 }
