@@ -28,8 +28,9 @@ BD.Store = Em.Object.extend({
             idToRecord = typeMap.idToRecord,
             id;
         for (id in idToRecord) {
-            if (!idToRecord.hasOwnProperty(id)) continue;
-            callback.call(context, idToRecord[id]);
+            if (idToRecord.hasOwnProperty(id)) {
+                callback.call(context, idToRecord[id]);
+            }
         }
     },
 
@@ -87,7 +88,7 @@ BD.Store = Em.Object.extend({
 
         var error = function(payload, status) {
             var msg;
-            if (status == 422 && payload) {
+            if (status === 422 && payload) {
                 msg = payload.errorMessage;
             } else {
                 msg = 'We\'re sorry, but the record could currently not be loaded. Please try again.';
@@ -218,7 +219,7 @@ BD.Store = Em.Object.extend({
 
         var error = function(payload, status) {
             var errorMessage;
-            if (status == 422 && payload) {
+            if (status === 422 && payload) {
                 errorMessage = payload.errorMessage;
                 self._handleValidationErrors(payload);
             } else {
@@ -239,7 +240,7 @@ BD.Store = Em.Object.extend({
         Ember.assert('This transaction has already been committed.', !transaction.get('hasCommitted'));
         transaction.set('hasCommitted', true);
         //If there are no records in the transaction we just stop here
-        if (transaction.get('length') == 0) {
+        if (transaction.get('length') === 0) {
             setTimeout(function() {
                 Em.run(function() {
                     transaction.trigger('complete');
@@ -270,7 +271,7 @@ BD.Store = Em.Object.extend({
             serializedItems.push(r.serialize(options));
         }, this);
         //If there were no dirty records we just stop here
-        if (serializedItems.length == 0) {
+        if (serializedItems.length === 0) {
             setTimeout(function() {
                 Em.run(function() {
                     transaction.trigger('complete');
@@ -294,7 +295,7 @@ BD.Store = Em.Object.extend({
 
         var error = function(payload, status) {
             var errorMessage;
-            if (status == 422 && payload) {
+            if (status === 422 && payload) {
                 errorMessage = payload.errorMessage;
                 self._handleValidationErrors(payload);
             } else {
@@ -405,7 +406,7 @@ BD.Store = Em.Object.extend({
             if (!type) {
                 type = r.constructor;
             } else {
-                Ember.assert('A bulk delete transaction can only contain records of the same type. This transaction already has '+type.toString()+' records, but you tried to add a '+r.constructor.toString()+' record.', r.constructor == type);
+                Ember.assert('A bulk delete transaction can only contain records of the same type. This transaction already has '+type.toString()+' records, but you tried to add a '+r.constructor.toString()+' record.', r.constructor === type);
             }
             this._prepareRecordForDeletion(r);
             //If the record hasn't been created yet, there is no need to contact the server
@@ -420,7 +421,7 @@ BD.Store = Em.Object.extend({
             recordsToDelete.push(r);
         }, this);
         //If there is nothing to delete
-        if (recordsToDelete.length == 0) {
+        if (recordsToDelete.length === 0) {
             promise.trigger('complete');
             promise.trigger('success', null);
             return;
@@ -445,7 +446,7 @@ BD.Store = Em.Object.extend({
     },
     _handleDeleteServerError: function(promise, payload, status) {
         var errorMessage;
-        if (status == 422 && payload) {
+        if (status === 422 && payload) {
             errorMessage = payload.errorMessage;
         } else {
             errorMessage = 'We\'re sorry, but the record could currently not be deleted. Please try again.';
@@ -497,19 +498,18 @@ BD.Store = Em.Object.extend({
     sideload: function(payload, root, recordArray) {
         var rootRecords;
         for (var key in payload) {
-            //Skip some properties
-            if (!payload.hasOwnProperty(key)) continue;
-            if (key === 'meta') continue;
-            //Find type
-            var type = BD.lookupTypeByName(key);
-            if (!type) {
-                Ember.warn('JSON payload had unknown key "'+key+'"');
-                continue;
-            }
-            //Load records of this type
-            var records = this._loadMany(type, payload[key]);
-            if (root == key) {
-                rootRecords = records;
+            if (payload.hasOwnProperty(key) && key !== 'meta') {
+                //Find type
+                var type = BD.lookupTypeByName(key);
+                if (!type) {
+                    Ember.warn('JSON payload had unknown key "'+key+'"');
+                    continue;
+                }
+                //Load records of this type
+                var records = this._loadMany(type, payload[key]);
+                if (root === key) {
+                    rootRecords = records;
+                }
             }
         }
         //Materialize records
@@ -520,7 +520,7 @@ BD.Store = Em.Object.extend({
         }
     },
     loadAll: function(type, dataItems) {
-        Ember.assert("You must pass an array when using loadAll.", Ember.typeOf(dataItems) == "array");
+        Ember.assert("You must pass an array when using loadAll.", Ember.typeOf(dataItems) === "array");
         var typeMap = this._typeMapFor(type);
         typeMap.allIsLoaded = true;
         BD.set('loadedAll.'+BD.pluralize(Em.get(type, 'root')), true);
@@ -698,8 +698,9 @@ BD.Store = Em.Object.extend({
             idToRecord = typeMap.idToRecord,
             id;
         for (id in idToRecord) {
-            if (!idToRecord.hasOwnProperty(id)) continue;
-            records.pushObject(idToRecord[id]);
+            if (idToRecord.hasOwnProperty(id)) {
+                records.pushObject(idToRecord[id]);
+            }
         }
         return records;
     },
@@ -722,8 +723,9 @@ BD.Store = Em.Object.extend({
             id;
         typeMap.allIsLoaded = false;
         for (id in idToRecord) {
-            if (!idToRecord.hasOwnProperty(id)) continue;
-            idToRecord[id].unload();
+            if (idToRecord.hasOwnProperty(id)) {
+                idToRecord[id].unload();
+            }
         }
     },
     

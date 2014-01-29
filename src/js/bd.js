@@ -38,7 +38,7 @@ window.BD = Ember.Namespace.create({
         hash.url = BD.url(hash.url);
         hash.dataType = 'json';
         hash.contentType = 'application/json; charset=utf-8';
-        if (hash.data && !(typeof hash.data === 'string') && hash.type !== 'GET') {
+        if (hash.data && typeof hash.data !== 'string' && hash.type !== 'GET') {
             hash.data = JSON.stringify(hash.data);
         }
         var complete = hash.complete;

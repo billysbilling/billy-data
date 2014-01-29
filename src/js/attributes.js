@@ -35,10 +35,10 @@ function belongsTo(meta, options) {
         if (arguments.length >= 2) {
             if (id) {
                 if (typeof id === 'object') { //then `id` is the record
-                    didChange = (!value || value != id);
+                    didChange = (!value || value !== id);
                 } else {
                     oldClientId = meta.clientIdForValue(id);
-                    didChange = (!value || value.get('clientId') != oldClientId);
+                    didChange = (!value || value.get('clientId') !== oldClientId);
                 }
             } else {
                 didChange = !!value;
@@ -131,7 +131,7 @@ BD.hasMany = function(type, belongsToKey, options) {
     };
     return function(key) {
         if (this._hasManyRecordArrays[key]) {
-            return this._hasManyRecordArrays[key]
+            return this._hasManyRecordArrays[key];
         }
         var data = this.get('_data'),
             resolvedType = BD.resolveType(type),

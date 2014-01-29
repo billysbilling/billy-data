@@ -66,7 +66,7 @@ BD.RestAdapter = Em.Object.extend({
     },
 
     findByQuery: function(store, type,  data, success, error, complete) {
-        var url  = '/' + BD.pluralize(store._rootForType(type))
+        var url  = '/' + BD.pluralize(store._rootForType(type));
         return this._ajax({
             type: 'GET',
             url: url,

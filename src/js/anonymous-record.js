@@ -50,7 +50,7 @@ BD.AnonymousRecord = Em.ObjectProxy.extend(Em.Evented, {
                     payload = JSON.parse(xhr.responseText);
                 } catch (e) {
                 }
-                if (xhr.status == 422 && payload) {
+                if (xhr.status === 422 && payload) {
                     errorMessage = payload.errorMessage;
                     self._handleValidationErrors(payload, options);
                 } else {

@@ -1,4 +1,4 @@
-var parent,
+var parentRecord,
     child1,
     child2;
 
@@ -10,16 +10,16 @@ QUnit.module('One-to-many relationships', {
             children: BD.hasMany('App.Person', 'parent', {sortProperty: 'age', sortDirection: 'DESC'})
         });
 
-        parent = App.Person.createRecord({
+        parentRecord = App.Person.createRecord({
         });
 
         child1 = App.Person.createRecord({
-            parent: parent,
+            parent: parentRecord,
             age: 12
         });
 
         child2 = App.Person.createRecord({
-            parent: parent,
+            parent: parentRecord,
             age: 17
         });
     },
@@ -29,7 +29,7 @@ QUnit.module('One-to-many relationships', {
 });
 
 test('Has-many sorting', function() {
-    var children = parent.get('children');
+    var children = parentRecord.get('children');
     
     strictEqual(children.objectAt(0), child2);
     strictEqual(children.objectAt(1), child1);

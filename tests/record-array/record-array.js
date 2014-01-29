@@ -28,7 +28,7 @@ test('When deleting a record, it should be removed from all record arrays contai
                 title: 'Hey'
             }
         ]
-    })
+    });
     var posts1 = App.Post.find({
         something: 1
     });
@@ -44,7 +44,7 @@ test('When deleting a record, it should be removed from all record arrays contai
                 title: 'Howdy'
             }
         ]
-    })
+    });
     var posts2 = App.Post.find({
         somethingElse: 1
     });
@@ -59,7 +59,7 @@ test('When deleting a record, it should be removed from all record arrays contai
     req3.respond();
     equal(posts1.get('length'), 1, 'After deleting, there should be one post in posts1');
     equal(posts1.get('firstObject'), post2, 'The only object in posts1 is post2');
-    equal(posts2.get('length'), 1), 'After deleting, there should be one post in posts2';
+    equal(posts2.get('length'), 1, 'After deleting, there should be one post in posts2');
     equal(posts2.get('firstObject'), post3, 'The only object in posts2 is post3');
 });
 

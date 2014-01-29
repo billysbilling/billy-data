@@ -1,7 +1,9 @@
 module.exports = function(grunt) {
     grunt.initConfig({
-        billy_builder: {
-            title: 'Billy Data'
+        'billy-builder': {
+            title: 'Billy Data',
+
+            jshint: true
         }
     });
 

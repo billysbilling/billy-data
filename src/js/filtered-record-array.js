@@ -133,7 +133,7 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
         //Normalize query properties to observe
         queryObservers = queryObservers || [];
         queryObservers.push('_all');
-        if (typeof query == 'object') {
+        if (typeof query === 'object') {
             _.each(query, function(value, key) {
                 queryObservers.push(key);
             });
@@ -160,11 +160,11 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
             this.set('comparator', comparator);
         }
         //Normalize comparator properties to observe
-        if (typeof comparator == 'object') {
+        if (typeof comparator === 'object') {
             _.each(comparator, function(value, key) {
                 comparatorObservers.push(key);
             });
-        } else if (typeof comparator == 'string') {
+        } else if (typeof comparator === 'string') {
             comparatorObservers.push(comparator);
         }
         this.set('comparatorObservers', comparatorObservers);
@@ -193,7 +193,7 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
                 pending++;
                 r.promise.then(function() {
                     pending--;
-                    if (pending == 0) {
+                    if (pending === 0) {
                         self._triggerDidLoadAsync();
                     }
                 }, function(err) {
@@ -202,7 +202,7 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
             }
             self._pushObjectSorted(r);
         }, this);
-        if (pending == 0) {
+        if (pending === 0) {
             self._triggerDidLoadAsync();
         }
     },
@@ -359,7 +359,7 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
             newIndex--;
         }
         //Only reinsert the object if it has been moved
-        if (oldIndex != newIndex) {
+        if (oldIndex !== newIndex) {
             this._requestOffsetIsSuspended = true;
             changeIndex = Math.min(newIndex, oldIndex);
             diff = Math.abs(newIndex - oldIndex) + 1;
@@ -385,8 +385,9 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
         var content = this._content,
             index;
         for (index in content) {
-            if (!content.hasOwnProperty(index)) continue;
-            callback.call(context, content[index], index);
+            if (content.hasOwnProperty(index)) {
+                callback.call(context, content[index], index);
+            }
         }
     },
 
@@ -438,11 +439,11 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
             pageSize = this.get('pageSize');
         _.each(query, function(value, key) {
             Ember.get(type, 'belongsToRelationships').forEach(function(belongsToKey, meta) {
-                if (belongsToKey == key) {
+                if (belongsToKey === key) {
                     delete query[key];
                     meta.addToQuery(query, key, value);
                 }
-            })
+            });
         });
         if (q) {
             query.q = q;
@@ -531,7 +532,7 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
                 if (direction === 'DESC') {
                     result *= -1;
                 }
-                if (result == 0) {
+                if (result === 0) {
                     //Take next sort parameter
                     return false;
                 }
@@ -626,7 +627,7 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
         //If no o was found, then its either because mid is the current record or we've hit a sparse index
         if (!o) {
             //If mid is max, then mid is the final result
-            if (mid == max) {
+            if (mid === max) {
                 return mid;
             }
             //Do a binary search to the right (in the interval from mid (excluding mid) to max). If the insertion point is after this, then just return it 
@@ -635,7 +636,7 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
                 return b;
             }
             //If mid is min, then mid is the final result
-            if (mid == min) {
+            if (mid === min) {
                 return mid;
             }
             //Otherwise do a binary search to the left (in the interval from min to mid (excluding mid)) and use this result no matter what
@@ -643,14 +644,14 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
             return b;
         }
         //Compare normally
-        s = this._compare(r, o)
+        s = this._compare(r, o);
         if (s < 0) {
-            if (mid == min) {
+            if (mid === min) {
                 return mid;
             }
             return this._binarySearch(r, min, mid-1);
         } else if (s > 0) {
-            if (mid == max) {
+            if (mid === max) {
                 return mid+1;
             }
             return this._binarySearch(r, mid+1, max);

@@ -6,7 +6,7 @@ QUnit.module('Transaction', {
         });
         App.Post.reopenClass({
             supportsBulkSave: true
-        })
+        });
         BD.store.loadMany(App.Post, [
             {
                 id: 101,

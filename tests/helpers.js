@@ -40,7 +40,7 @@ MockAjaxRequest.prototype = {
         var xhr = {
             status: this.statusCode,
             responseText: JSON.stringify(this.payload)
-        }
+        };
         if (this.hash.complete) {
             this.hash.complete.call(this.hash.context, this.xhr);
         }
@@ -54,7 +54,7 @@ MockAjaxRequest.prototype = {
             }
         }
     }
-}
+};
 
 window.fakeAjax = function(statusCode, payload) {
     payload = payload || {};
@@ -76,7 +76,7 @@ window.fakeAjax = function(statusCode, payload) {
         return request;
     };
     return req;
-}
+};
 
 window.resetAjax = function() {
     BD.ajax = function(hash) {
@@ -85,4 +85,4 @@ window.resetAjax = function() {
         console.trace();
         throw new Error('BD.ajax should not be called.');
     };
-}
+};

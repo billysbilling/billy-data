@@ -6,7 +6,7 @@ QUnit.module('Bulk delete', {
         });
         App.Post.reopenClass({
             supportsBulkDelete: true
-        })
+        });
         BD.store.loadMany(App.Post, [
             {
                 id: 101,

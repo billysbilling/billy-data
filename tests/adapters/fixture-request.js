@@ -47,7 +47,7 @@ asyncTest('`abort` triggers an ajax stop', function() {
 });
 
 asyncTest('`abort` removes the scheduled callback', function() {
-    expect(1)
+    expect(1);
     ajax = BD.FixtureRequest.create();
     ajax.clearTimeout = function() {
         ok(true);

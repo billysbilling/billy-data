@@ -69,7 +69,7 @@ BD.FixtureAdapter = Em.Object.extend({
             fixture,
             payload;
         fixture = fixtures.find(function(item) {
-            return item.id == id
+            return item.id === id;
         });
         if (fixture) {
             payload = { meta: { statusCode: 200, success: true } };
@@ -83,7 +83,7 @@ BD.FixtureAdapter = Em.Object.extend({
                 },
                 errorMessage: 'The record was not found.'
             };
-            error(payload, 404)
+            error(payload, 404);
         }
     },
 
@@ -97,31 +97,31 @@ BD.FixtureAdapter = Em.Object.extend({
         complete();
         var payload = {},
             records = [],
-            name,
             sortProperty = query.sortProperty,
             sortFactor = query.sortDirection === 'DESC' ? -1 : 1;
         payload.meta = { statusCode: 200, success: true };
         this.fixturesForType(type).forEach(function(data) {
             var match = true;
             if (query) {
-                for (name in query) {
-                    if (!query.hasOwnProperty(name)) continue;
-                    //Don't filter if the property is not an attribute name or a belongs-to-relationship
-                    if (!Em.get(type, 'attributes').get(name) && !Em.get(type, 'belongsToRelationships').get(name.replace(/Id$/, ''))) {
-                        continue;
-                    }
-                    //|| name === 'pageSize' || name === 'offset' || name === 'include' || name === 'sortProperty' || name === 'sortDirection'
-                    var value = data[name],
-                        queryValue = query[name];
-                    if (Ember.typeOf(queryValue) === 'array') {
-                        if (!queryValue.contains(value)) {
-                            match = false;
-                            break;
+                for (var name in query) {
+                    if (query.hasOwnProperty(name)) {
+                        //Don't filter if the property is not an attribute name or a belongs-to-relationship
+                        if (!Em.get(type, 'attributes').get(name) && !Em.get(type, 'belongsToRelationships').get(name.replace(/Id$/, ''))) {
+                            continue;
                         }
-                    } else {
-                        if (value !== queryValue) {
-                            match = false;
-                            break;
+                        //|| name === 'pageSize' || name === 'offset' || name === 'include' || name === 'sortProperty' || name === 'sortDirection'
+                        var value = data[name],
+                            queryValue = query[name];
+                        if (Ember.typeOf(queryValue) === 'array') {
+                            if (!queryValue.contains(value)) {
+                                match = false;
+                                break;
+                            }
+                        } else {
+                            if (value !== queryValue) {
+                                match = false;
+                                break;
+                            }
                         }
                     }
                 }
@@ -213,7 +213,7 @@ BD.FixtureAdapter = Em.Object.extend({
     _remove: function(type, id) {
         var fixtures = this.fixturesForType(type);
         fixtures.find(function(item, idx) {
-            if (item.id == id) {
+            if (item.id === id) {
                 fixtures.splice(idx, 1);
                 return true;
             }
@@ -225,7 +225,7 @@ BD.FixtureAdapter = Em.Object.extend({
 
         if (obj.id) {
             var fixture = fixtures.find(function(item, idx) {
-                if (item.id == obj.id) {
+                if (item.id === obj.id) {
                     fixtures[idx] = $.extend({}, item, obj);
                     return true;
                 }

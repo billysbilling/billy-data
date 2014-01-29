@@ -65,7 +65,7 @@ test('`load` persists the data in the fixtures', function() {
 asyncTest('`deleteRecords` deletes multiple records', function() {
     var records = [App.Category.find(1), App.Category.find(2)];
     var success = function(payload) {
-        equal(adapter.fixturesForType(App.Category).length, 0)
+        equal(adapter.fixturesForType(App.Category).length, 0);
         start();
     };
     adapter.deleteRecords(BD.store, App.Category, records, success, $.noop);
@@ -75,7 +75,7 @@ asyncTest('`adapter.deleteRecord` deletes the record', function() {
     var category = App.Category.find(1);
     var success = function(payload) {
         var fixtures = adapter.fixturesForType(App.Category);
-        equal(fixtures.length, 1)
+        equal(fixtures.length, 1);
         equal(fixtures[0].id, 2);
         start();
     };

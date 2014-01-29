@@ -11,7 +11,7 @@ QUnit.module('Filtered queries', {
         });
         App.Post.registerSortMacro('macroTest', ['author', 'title'], function(a, b) {
             //Sort by combined char length of author and title
-            return (a.get('author').length + a.get('title').length) - (b.get('author').length + b.get('title').length)
+            return (a.get('author').length + a.get('title').length) - (b.get('author').length + b.get('title').length);
         });
         BD.store.loadMany(App.Category, [
             {
@@ -249,7 +249,7 @@ test('Remote filtered record arrays should be filled', function() {
                 author: 'What am I doing here? Stupid server, but I should be added anyway'
             }
         ]
-    })
+    });
     var brucePosts = App.Post.filter({
         query: {
             author: 'Bruce Wayne'
@@ -292,7 +292,7 @@ test('Remote filtered record arrays should be filled by belongsTo', function() {
                 categoryId: 202
             }
         ]
-    })
+    });
     var techPosts = App.Post.filter({
         query: {
             category: App.Category.find(201)

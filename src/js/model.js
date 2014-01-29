@@ -82,9 +82,9 @@ BD.Model = Em.Object.extend(Em.Evented, {
     eachEmbeddedHasMany: function(callback, binding) {
         this.eachHasMany(function(key, meta) {
             if (meta.options.isEmbedded) {
-                callback.call(binding, key, meta)
+                callback.call(binding, key, meta);
             }
-        })
+        });
     },
     eachEmbeddedRecord: function(callback, binding) {
         this.eachEmbeddedHasMany(function(key, meta) {
@@ -96,7 +96,7 @@ BD.Model = Em.Object.extend(Em.Evented, {
             records.forEach(function(r) {
                 callback.call(binding, r, key, meta);
             });
-        }, this)
+        }, this);
     },
     hasManyIsLoaded: function(key) {
         return this._hasManyRecordArrays[key];
@@ -348,7 +348,7 @@ BD.Model = Em.Object.extend(Em.Evented, {
         delete this._inRecordArrays[Em.guidFor(recordArray)];
     },
     isInRecordArray: function(recordArray) {
-        return !!this._inRecordArrays[Em.guidFor(recordArray)]
+        return !!this._inRecordArrays[Em.guidFor(recordArray)];
     },
 
     unload: function() {

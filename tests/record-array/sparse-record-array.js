@@ -114,7 +114,7 @@ test('Requesting indexes should load from server', function() {
     });
     var records = App.Post.filter({
         pageSize: 3
-    })
+    });
     resetAjax();
     equal(records.objectAt(0), null); //These indexes should be null, since length is still 0
     equal(records.objectAt(1), null);
@@ -253,7 +253,7 @@ test('Loading a record that belongs in a sorted sparse array', function() {
     var records = App.Post.filter({
         pageSize: 3,
         sortProperty: 'title'
-    })
+    });
     req.respond();
     //Insert 4 after 2
     App.Post.load({
