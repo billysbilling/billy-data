@@ -297,42 +297,71 @@ BD.Model = Em.Object.extend(Em.Evented, {
         options = options || {};
         var serialized = {},
             optionProperties = options.properties || {},
-            data = this.get('_data');
+            data = this.get('_data'),
+            cleanData = this.clean ? this.clean.data : data,
+            isNew = this.get('isNew');
         serialized._clientId = this.get('clientId');
-        if (!this.get('isNew')) {
+        if (!isNew) {
             serialized.id = this.get('id');
         }
         this.eachAttribute(function(key, meta) {
-            if ((options.includeReadonly || !meta.options.readonly)) {
-                var value = optionProperties.hasOwnProperty(key) ? optionProperties[key] : data.attributes[key];
-                if (typeof value !== 'undefined') {
-                    serialized[key] = BD.transforms[meta.type].serialize(value);
+            var value = optionProperties.hasOwnProperty(key) ? optionProperties[key] : data.attributes[key],
+                serialize = BD.transforms[meta.type].serialize,
+                serializedValue = serialize(value);
+            if (!options.includeAll) {
+                if (meta.options.readonly) {
+                    return;
+                }
+                if (typeof value === 'undefined') {
+                    return;
+                }
+                if (!isNew && serializedValue === serialize(cleanData.attributes[key])) {
+                    return;
                 }
             }
+            if (typeof serializedValue === 'undefined') {
+                serializedValue = null;
+            }
+            serialized[key] = serializedValue;
         }, this);
         this.eachBelongsTo(function(key, meta) {
-            if ((options.includeReadonly || !meta.options.readonly) && (!options.isEmbedded || !meta.options.isParent)) {
-                var id;
-                if (optionProperties.hasOwnProperty(key)) {
-                    id = optionProperties[key] ? optionProperties[key].get('id') : null;
-                } else {
-                    id = data.belongsTo[key];
+            var id;
+            if (optionProperties.hasOwnProperty(key)) {
+                id = optionProperties[key] ? optionProperties[key].get('id') : null;
+            } else {
+                id = data.belongsTo[key];
+            }
+            if (id && typeof id === 'object') {
+                id = BD.store.findByClientId(id.clientId).get(meta.idProperty);
+            }
+            if (!options.includeAll) {
+                if (options.isEmbedded && meta.options.isParent) {
+                    return;
                 }
-                if (id && typeof id === 'object') {
-                    id = BD.store.findByClientId(id.clientId).get(meta.idProperty);
+                if (meta.options.readonly) {
+                    return;
                 }
                 if (typeof id === 'undefined') {
-                    id = null;
+                    return;
                 }
-                meta.serialize(serialized, key, id);
+                if (!isNew && id === cleanData.belongsTo[key]) {
+                    return;
+                }
             }
+            if (typeof id === 'undefined') {
+                id = null;
+            }
+            meta.serialize(serialized, key, id);
         }, this);
         if (options.embed) {
-            this.eachHasMany(function(key, meta) {
+            this.eachHasMany(function(key) {
                 if (options.embed.contains(key)) {
                     var embeddedRecords = [];
                     this.get(key).forEach(function(child) {
-                        embeddedRecords.push(child.serialize({isEmbedded: true}));
+                        embeddedRecords.push(child.serialize({
+                            isEmbedded: true,
+                            includeAll: options.includeAll
+                        }));
                     });
                     serialized[key] = embeddedRecords;
                 }

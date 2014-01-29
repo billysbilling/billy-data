@@ -242,6 +242,35 @@ asyncTest('Calling `save` on a record with embedded records should persist them 
         });
 });
 
+asyncTest('Calling `save` on a record with embedded records should persist unchanged properties too', function() {
+    adapter.setFixtures(App.Category, []);
+    var category = App.Category.createRecord({
+        name: 'Crazy'
+    });
+    var post1 = App.Post.createRecord({
+        category: category,
+        title: 'This is crazy'
+    });
+    category.save({
+        embed: ['posts']
+    })
+        .success(function() {
+            category.set('name', 'Crazier');
+            category.save({
+                embed: ['posts']
+            })
+                .success(function() {
+                    var postFixtures = adapter.fixturesForType(App.Post);
+                    equal(postFixtures.length, 1, 'Posts were persisted');
+                    equal(post1.get('category.id'), 'category1');
+                    equal(post1.get('title'), 'This is crazy');
+                    equal(postFixtures[0].categoryId, 'category1');
+                    equal(postFixtures[0].title, 'This is crazy');
+                    start();
+                });
+        });
+});
+
 asyncTest('Creating a record with a null belongsTo should set the fixture property to null too', function() {
     adapter.setFixtures(App.Post, []);
     var post = App.Post.createRecord({

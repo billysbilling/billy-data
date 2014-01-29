@@ -70,7 +70,27 @@ test('Do not a allow a record to be created twice', function() {
     }, /You can't save a new record that's already being saved. That would create two different records on the server./);
 });
 
-test('Test PUT ajax request options', function() {
+test('POST ajax request always contains all non-undefined properties', function() {
+    expect(3);
+    var post = App.Post.createRecord({
+        category: App.Category.find(301),
+        title: 'New post in town'
+    });
+    BD.ajax = function(hash) {
+        equal(hash.type, 'POST');
+        equal(hash.url, '/posts');
+        deepEqual(hash.data, {
+            post: {
+                _clientId: post.clientId,
+                categoryId: 301,
+                title: 'New post in town'
+            }
+        });
+    };
+    post.save();
+});
+
+test('Test PUT ajax request options when attribute has changed', function() {
     expect(3);
     var post = App.Post.find(101);
     BD.ajax = function(hash) {
@@ -80,12 +100,47 @@ test('Test PUT ajax request options', function() {
             post: {
                 _clientId: post.clientId,
                 id: 101,
-                categoryId: 301,
                 title: 'This is a good day to die'
             }
         });
     };
     post.set('title', 'This is a good day to die');
+    post.save();
+});
+
+test('Test PUT ajax request options when belongsTo has changed', function() {
+    expect(3);
+    var post = App.Post.find(101);
+    BD.ajax = function(hash) {
+        equal(hash.type, 'PUT');
+        equal(hash.url, '/posts/101');
+        deepEqual(hash.data, {
+            post: {
+                _clientId: post.clientId,
+                id: 101,
+                categoryId: 302
+            }
+        });
+    };
+    post.set('category', App.Category.find(302));
+    post.save();
+});
+
+test('Test PUT ajax request options when belongsTo has changed to null', function() {
+    expect(3);
+    var post = App.Post.find(101);
+    BD.ajax = function(hash) {
+        equal(hash.type, 'PUT');
+        equal(hash.url, '/posts/101');
+        deepEqual(hash.data, {
+            post: {
+                _clientId: post.clientId,
+                id: 101,
+                categoryId: null
+            }
+        });
+    };
+    post.set('category', null);
     post.save();
 });
 
