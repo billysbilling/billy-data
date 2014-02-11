@@ -118,8 +118,11 @@ test('calls `sideload` after a successful response', function() {
 });
 
 test('`_handleValidationErrors` serializes the models errors', function() {
-    expect(2);
-    var record = BD.AnonymousRecord.createRecord({ post: null });
+    expect(3);
+    var record = BD.AnonymousRecord.createRecord({
+        post: null,
+        author: null
+    });
     BD.ajax = function(opts) {
         opts.error({
             status: 422,
@@ -128,6 +131,7 @@ test('`_handleValidationErrors` serializes the models errors', function() {
                     record: {
                         attributes: {
                             postId: 'This field must not be blank.',
+                            authorId: 'This field must not be blank.',
                             unitPrice: 'This field must not be blank.'
                         }
                     }
@@ -135,9 +139,12 @@ test('`_handleValidationErrors` serializes the models errors', function() {
             })
         });
         equal(record.get('errors.post'), 'This field must not be blank.');
+        equal(record.get('errors.author'), 'This field must not be blank.');
         equal(record.get('errors.unitPrice'), 'This field must not be blank.');
     };
-    record.save('/stories/milk', { models: ['post'] });
+    record.save('/stories/milk', {
+        models: ['post', 'author']
+    });
 });
 
 test('`_handleValidationErrors` triggers `didValidate` event', function() {

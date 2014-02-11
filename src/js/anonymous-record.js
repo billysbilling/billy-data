@@ -80,7 +80,7 @@ BD.AnonymousRecord = Em.ObjectProxy.extend(Em.Evented, {
 
         if (models && rawErrors.attributes) {
             for (i = 0; i < models.length; i += 1) {
-                model = models[0];
+                model = models[i];
                 if (rawErrors.attributes.hasOwnProperty(model + 'Id')) {
                     rawErrors.attributes[model] = rawErrors.attributes[model + 'Id'];
                     delete rawErrors.attributes[model + 'Id'];
