@@ -8,7 +8,7 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
 
     /**
      The model class for records contained in this array.
-     @property {constructor} 
+     @property {constructor}
      */
     type: null,
 
@@ -38,11 +38,11 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
     /**
      String. Will be sent as its string value with all server requests. When matching local records `q` will be
      pattern matched on all property names defined in `type`'s `qProperties` property. Example:
-     
+
      ```javascript
      App.Post.reopenClass(qProperties: ['title', 'content']});
      ```
-     
+
      @property {String}
      */
     q: null,
@@ -50,7 +50,7 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
     /**
      String. The name of a property to sort records by. Will be sent with all server requests, and
      records will also be sorted local.
-     
+
      @property {String}
      */
     sortProperty: null,
@@ -65,12 +65,12 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
 
     /**
      A comparator that's used to sort locally only. Can be any of:
-     
+
      - String: The name of a property to sort by.
      - An object: Key value pairs of property names and directions to sort by. Example: `{name: 'ASC', birthdate: 'DESC'}
        will sort first by `name` ascending, then by `birthdate` descending.
      - A function that takes two records (`a` and `b`) and returns an integer. <0 means that `a` should be before `b`
-       >0, the opposite. 
+       >0, the opposite.
 
      @property {String|Object|Function}
      @default "ASC"
@@ -113,7 +113,7 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
         this._super();
         this._initData();
     },
-    
+
     _initData: function() {
         var type = this.get('type'),
             ids = this.get('ids'),
@@ -263,7 +263,7 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
         }
         return BD.SPARSE_PLACEHOLDER;
     },
-    
+
     indexOf: function(r) {
         return this._indexForRecord[r.clientId];
     },
@@ -429,7 +429,7 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
             self.trigger('didError');
         });
     },
-    
+
     _buildServerQuery: function() {
         var type = this.get('type'),
             query = _.extend({}, this.get('query'), this.get('remoteQuery')),
@@ -470,12 +470,30 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
         regex = new RegExp(q, 'i');
         qProperties = Em.get(type, 'qProperties');
         Em.assert("You need to set `qProperties` on the model class "+type.toString()+". As in `"+type.toString()+".reopenClass({qProperties: ['prop1', 'prop2']})`", Em.isArray(qProperties));
+        var hasManyRelationships = Em.get(type, 'hasManyRelationships');
         return function(r) {
             var match = false;
             qProperties.find(function(k) {
                 if (regex.test(r.get(k))) {
                     match = true;
                     return true;
+                } else {
+                    var p = k.split('.');
+                    //If first level has many relationship exists, search that
+                    if (p.length == 2 && hasManyRelationships.has(p[0])) {
+                        var subMatch = false;
+                        r.get(p[0]).find(function(s) {
+                            if (regex.test(s.get(p[1]))) {
+                                subMatch = true;
+                                return;
+                            }
+                            return false;
+                        });
+                        if (subMatch) {
+                            match = true;
+                            return true;
+                        }
+                    }
                 }
                 return false;
             });
@@ -630,7 +648,7 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
             if (mid === max) {
                 return mid;
             }
-            //Do a binary search to the right (in the interval from mid (excluding mid) to max). If the insertion point is after this, then just return it 
+            //Do a binary search to the right (in the interval from mid (excluding mid) to max). If the insertion point is after this, then just return it
             b = this._binarySearch(r, mid+1, max);
             if (b > mid+1) {
                 return b;
@@ -667,5 +685,5 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
         });
         this._super();
     }
-    
+
 });
