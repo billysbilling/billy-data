@@ -511,6 +511,23 @@ BD.Model.reopenClass({
     load: function(data) {
         return BD.store.load(this, data);
     },
+    
+    registerFilter: function(name, dependencies, callback) {
+        if (!this.filters) {
+            this.filters = {};
+        }
+        this.filters[name] = {
+            dependencies: dependencies,
+            callback: callback
+        };
+    },
+    
+    getFilter: function(name) {
+        if (!this.filters) {
+            return null;
+        }
+        return this.filters[name];
+    },
 
     registerSortMacro: function(name, dependencies, comparator) {
         if (!this.sortMacros) {

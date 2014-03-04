@@ -105,22 +105,30 @@ BD.FixtureAdapter = Em.Object.extend({
             if (query) {
                 for (var name in query) {
                     if (query.hasOwnProperty(name)) {
-                        //Don't filter if the property is not an attribute name or a belongs-to-relationship
-                        if (!Em.get(type, 'attributes').get(name) && !Em.get(type, 'belongsToRelationships').get(name.replace(/Id$/, ''))) {
-                            continue;
-                        }
-                        //|| name === 'pageSize' || name === 'offset' || name === 'include' || name === 'sortProperty' || name === 'sortDirection'
-                        var value = data[name],
-                            queryValue = query[name];
-                        if (Ember.typeOf(queryValue) === 'array') {
-                            if (!queryValue.contains(value)) {
+                        var queryValue = query[name],
+                            filter = type.getFilter(name);
+                        if (filter) {
+                            if (filter.callback(data, queryValue, query) === false) {
                                 match = false;
                                 break;
                             }
                         } else {
-                            if (value !== queryValue) {
-                                match = false;
-                                break;
+                            //Don't filter if the property is not an attribute name or a belongs-to-relationship
+                            if (!Em.get(type, 'attributes').get(name) && !Em.get(type, 'belongsToRelationships').get(name.replace(/Id$/, ''))) {
+                                continue;
+                            }
+                            //|| name === 'pageSize' || name === 'offset' || name === 'include' || name === 'sortProperty' || name === 'sortDirection'
+                            var value = data[name];
+                            if (Ember.typeOf(queryValue) === 'array') {
+                                if (!queryValue.contains(value)) {
+                                    match = false;
+                                    break;
+                                }
+                            } else {
+                                if (value !== queryValue) {
+                                    match = false;
+                                    break;
+                                }
                             }
                         }
                     }
