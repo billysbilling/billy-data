@@ -9,6 +9,10 @@ QUnit.module('Filtered queries', {
             title: BD.attr('string'),
             isPublic: BD.attr('boolean')
         });
+        App.Post.registerFilter('authorStartsWith', ['author'], function(data, authorStartsWith, query) {
+            equal(authorStartsWith, query.authorStartsWith);
+            return Em.get(data, 'author').substring(0, authorStartsWith.length) === authorStartsWith;
+        });
         App.Post.registerSortMacro('macroTest', ['author', 'title'], function(a, b) {
             //Sort by combined char length of author and title
             return (a.get('author').length + a.get('title').length) - (b.get('author').length + b.get('title').length);
@@ -409,6 +413,25 @@ test('Test macro sorting DESC', function() {
     deepEqual(posts.mapProperty('id'), [1, 2, 3], 'Order should be correct');
     sebastian.set('author', '1');
     deepEqual(posts.mapProperty('id'), [2, 3, 1], 'Order should be correct');
+});
+
+test('Test custom filter', function() {
+    App.Post.loadAll([]);
+    
+    var adam = App.Post.find(2);
+    
+    var posts = App.Post.filter({
+        query: {
+            authorStartsWith: 'Seb'
+        }
+    });
+    
+    deepEqual(posts.get('queryObservers'), ['_all', 'author']);
+    deepEqual(posts.mapProperty('id'), [1], 'Sebastian should be there');
+    
+    adam.set('author', 'Sebulba');
+    
+    deepEqual(posts.mapProperty('id'), [1, 2], 'Sebastian and Sebulba should be there');
 });
 
 test('Test #bigdata sorting', function() {

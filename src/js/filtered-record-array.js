@@ -135,7 +135,12 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
         queryObservers.push('_all');
         if (typeof query === 'object') {
             _.each(query, function(value, key) {
-                queryObservers.push(key);
+                var filter = type.getFilter(key);
+                if (filter) {
+                    queryObservers.pushObjects(filter.dependencies);
+                } else {
+                    queryObservers.push(key);
+                }
             });
         }
         if (!Em.isEmpty(q)) {
@@ -486,19 +491,28 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
     _matchesQuery: function(r) {
         var query = this.get('query'),
             qCallback = this.get('qCallback'),
+            type = r.constructor,
             match;
         if (typeof query === 'object') {
             match = true;
             _.find(query, function(v, k) {
-                if (Ember.isArray(v)) {
-                    if (!v.contains(r.get(k))) {
+                var filter = type.getFilter(k);
+                if (filter) {
+                    if (!filter.callback(r, v, query)) {
                         match = false;
                         return true;
                     }
                 } else {
-                    if (r.get(k) !== v) {
-                        match = false;
-                        return true;
+                    if (Ember.isArray(v)) {
+                        if (!v.contains(r.get(k))) {
+                            match = false;
+                            return true;
+                        }
+                    } else {
+                        if (r.get(k) !== v) {
+                            match = false;
+                            return true;
+                        }
                     }
                 }
                 return false;

@@ -13,7 +13,10 @@ QUnit.module('BD.FixtureAdapter', {
             posts: BD.hasMany('App.Post', 'category'),
             isPublic: BD.attr('boolean', {readonly: true})
         });
-        App.Category.registerSortMacro('macroTest', ['name'], function(a, b) {
+        App.Category.registerFilter('minLuckyNumber', ['luckyNumber'], function(data, minLuckyNumber, query) {
+            equal(minLuckyNumber, query.minLuckyNumber);
+            return Em.get(data, 'luckyNumber') >= minLuckyNumber;
+        });App.Category.registerSortMacro('macroTest', ['name'], function(a, b) {
             //Sort by char length of name
             return a.get('name').length - b.get('name').length;
         });
@@ -399,6 +402,34 @@ asyncTest('`findByQuery` sort using sort macro DESC', function() {
         equal(payload.categories[0].name, 'Billy');
         equal(payload.categories[1].name, 'Noah');
         start();
+    }, $.noop, $.noop);
+});
+
+asyncTest('`findByQuery` uses custom filters', function() {
+    var c = 3;
+    
+    adapter.findByQuery(BD.store, App.Category, {minLuckyNumber: 5}, function(payload) {
+        equal(payload.categories.length, 1);
+        equal(payload.categories[0].name, 'Billy');
+        if (--c === 0) {
+            start();
+        }
+    }, $.noop, $.noop);
+
+    adapter.findByQuery(BD.store, App.Category, {minLuckyNumber: 1}, function(payload) {
+        equal(payload.categories.length, 2);
+        equal(payload.categories[0].name, 'Billy');
+        equal(payload.categories[1].name, 'Noah');
+        if (--c === 0) {
+            start();
+        }
+    }, $.noop, $.noop);
+    
+    adapter.findByQuery(BD.store, App.Category, {minLuckyNumber: 78}, function(payload) {
+        equal(payload.categories.length, 0);
+        if (--c === 0) {
+            start();
+        }
     }, $.noop, $.noop);
 });
 
