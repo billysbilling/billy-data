@@ -6,7 +6,7 @@ BD.Store = Em.Object.extend({
         this._super();
         this._resetContainers();
     },
-    
+
     _typeMapFor: function(type) {
         type = BD.resolveType(type);
         var guidForType = Ember.guidFor(type);
@@ -154,7 +154,7 @@ BD.Store = Em.Object.extend({
             }
 
             BD.printServerError(msg);
-            
+
             recordArray.trigger('didError', msg);
         };
 
@@ -190,7 +190,7 @@ BD.Store = Em.Object.extend({
             }, 0);
             return promise;
         }
-        
+
         if (r.get('isNew') && r.get('_saveCount') > 0) {
             throw new Error('You can\'t save a new record that\'s already being saved. That would create two different records on the server.');
         }
@@ -386,7 +386,7 @@ BD.Store = Em.Object.extend({
         };
 
         var error = function(payload, status) {
-            self._handleDeleteServerError(promise, payload, status);
+            self._handleDeleteServerError(promise, payload, status, [r]);
         };
 
         //Make DELETE request
@@ -437,14 +437,17 @@ BD.Store = Em.Object.extend({
         };
 
         var error = function(payload, status) {
-            self._handleDeleteServerError(promise, payload, status);
+            self._handleDeleteServerError(promise, payload, status, recordsToDelete);
         };
 
         //Make DELETE request
         this.get('adapter').deleteRecords(this, type, recordsToDelete, success, error);
         return promise;
     },
-    _handleDeleteServerError: function(promise, payload, status) {
+    _handleDeleteServerError: function(promise, payload, status, records) {
+        records.forEach(function(record) {
+            record.rollback();
+        });
         var errorMessage;
         if (status === 422 && payload) {
             errorMessage = payload.errorMessage;
@@ -494,7 +497,7 @@ BD.Store = Em.Object.extend({
     _rootForType: function(type) {
         return Ember.get(type, 'root');
     },
-    
+
     sideload: function(payload, root, recordArray) {
         var rootRecords;
         for (var key in payload) {
@@ -528,7 +531,7 @@ BD.Store = Em.Object.extend({
     },
     allOfTypeIsLoaded: function(type) {
         var typeMap = this._typeMapFor(type);
-        return typeMap.allIsLoaded; 
+        return typeMap.allIsLoaded;
     },
     loadMany: function(type, dataItems) {
         var records = this._loadMany(type, dataItems);
@@ -691,7 +694,7 @@ BD.Store = Em.Object.extend({
             }
         });
     },
-    
+
     allLocal: function(type) {
         var records = Em.A(),
             typeMap = this._typeMapFor(type),
@@ -728,7 +731,7 @@ BD.Store = Em.Object.extend({
             }
         }
     },
-    
+
     reset: function() {
         this.set('isResetting', true);
         Object.keys(this._cidToRecord).forEach(function(clientId) {
@@ -753,7 +756,7 @@ BD.Store = Em.Object.extend({
         this._recordArrays = {};
         Em.set(BD, 'loadedAll', Em.Object.create());
     }
-    
+
 });
 
 BD.store = BD.Store.create({
