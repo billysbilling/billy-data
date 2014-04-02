@@ -32,7 +32,7 @@ test('Check AJAX options for transaction for model that supports bulk updates', 
     BD.ajax = function(hash) {
         equal(hash.type, 'PATCH');
         equal(hash.url, '/posts');
-        deepEqual(hash.data, {
+        deepEqual(JSON.parse(hash.data), {
             posts: [
                 {
                     _clientId: post1.clientId,

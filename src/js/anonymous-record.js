@@ -1,4 +1,5 @@
 var _ = require('lodash'),
+    ajaxRequest = require('./ajax-request'),
     moment = require('momentjs');
 
 BD.AnonymousRecord = Em.ObjectProxy.extend(Em.Evented, {
@@ -34,7 +35,7 @@ BD.AnonymousRecord = Em.ObjectProxy.extend(Em.Evented, {
         });
         data[options.root] = serialized;
         //Make PUT/POST request
-        BD.ajax({
+        ajaxRequest({
             type: 'POST',
             url: url,
             data: data,

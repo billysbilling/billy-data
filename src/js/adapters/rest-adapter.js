@@ -1,3 +1,5 @@
+var ajaxRequest = require('../ajax-request');
+
 BD.RestAdapter = Em.Object.extend({
 
     reset: function() {
@@ -5,7 +7,7 @@ BD.RestAdapter = Em.Object.extend({
     
     _ajax: function(hash) {
         hash.context = this;
-        return BD.ajax(hash);
+        return ajaxRequest(hash);
     },
 
     _parseResponseJson: function(responseText) {
