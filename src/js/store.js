@@ -178,7 +178,8 @@ BD.Store = Em.Object.extend({
     },
     saveRecord: function(r, options) {
         options = this._normalizeSaveOptions(options);
-        var self = this;
+        var self = this,
+            isNew = r.get('isNew');
         var promise = BD.ModelOperationPromise.create();
         //Don't save if the record is clean, not new and override properties have not been set
         if (!r.get('isDirty') && !r.get('isNew') && !options.properties) {
@@ -190,8 +191,8 @@ BD.Store = Em.Object.extend({
             }, 0);
             return promise;
         }
-
-        if (r.get('isNew') && r.get('_saveCount') > 0) {
+        
+        if (isNew && r.get('_saveCount') > 0) {
             throw new Error('You can\'t save a new record that\'s already being saved. That would create two different records on the server.');
         }
         r.incrementProperty('_saveCount');
@@ -210,11 +211,17 @@ BD.Store = Em.Object.extend({
                 r.setProperties(options.properties);
             }
             self._unloadServerDeletedRecords(payload);
-            self.sideload(payload);
+            var updatedRecords = self._sideload(payload);
             r.didCommit(options);
             promise.trigger('complete');
             promise.trigger('success', payload);
             r.decrementProperty('_saveCount');
+            self._triggerRecordChangeEvent(r, isNew ? 'created' : 'updated');
+            updatedRecords.forEach(function(updatedRecord) {
+                if (updatedRecord !== r) {
+                    self._triggerRecordChangeEvent(updatedRecord, 'updated');
+                }
+            });
         };
 
         var error = function(payload, status) {
@@ -261,7 +268,8 @@ BD.Store = Em.Object.extend({
             serializedItems = [],
             type = transaction.get('type'),
             rootPlural = BD.pluralize(this._rootForType(type)),
-            data  = {};
+            data  = {},
+            isNewMap = new Em.Map();
         //Serialize records
         transaction.get('records').forEach(function(r, options) {
             //Don't add if the record is clean
@@ -269,6 +277,7 @@ BD.Store = Em.Object.extend({
                 return;
             }
             serializedItems.push(r.serialize(options));
+            isNewMap.set(r, r.get('isNew'));
         }, this);
         //If there were no dirty records we just stop here
         if (serializedItems.length === 0) {
@@ -285,12 +294,23 @@ BD.Store = Em.Object.extend({
 
         var success = function(payload) {
             self._unloadServerDeletedRecords(payload);
+            
             transaction.get('records').forEach(function(r, options) {
                 r.didCommit(options);
             }, self);
-            self.sideload(payload);
+            
+            var updatedRecords = self._sideload(payload);
+            
             transaction.trigger('complete');
             transaction.trigger('success', payload);
+
+            transaction.get('records').forEach(function(r) {
+                self._triggerRecordChangeEvent(r, isNewMap.get(r) ? 'created' : 'updated');
+                updatedRecords.removeObject(r);
+            });
+            updatedRecords.forEach(function(updatedRecord) {
+                self._triggerRecordChangeEvent(updatedRecord, 'updated');
+            });
         };
 
         var error = function(payload, status) {
@@ -380,9 +400,10 @@ BD.Store = Em.Object.extend({
 
         var success = function(payload) {
             r.didDelete();
-            self._unloadServerDeletedRecords(payload);
+            self._unloadServerDeletedRecords(payload, [r]);
             promise.trigger('complete');
             promise.trigger('success', payload);
+            self._triggerRecordChangeEvent(r, 'deleted');
         };
 
         var error = function(payload, status) {
@@ -430,8 +451,9 @@ BD.Store = Em.Object.extend({
         var success = function(payload) {
             recordsToDelete.forEach(function(r) {
                 r.didDelete();
+                self._triggerRecordChangeEvent(r, 'deleted');
             });
-            self._unloadServerDeletedRecords(payload);
+            self._unloadServerDeletedRecords(payload, recordsToDelete);
             promise.trigger('complete');
             promise.trigger('success', payload);
         };
@@ -457,7 +479,7 @@ BD.Store = Em.Object.extend({
         promise.trigger('complete');
         promise.trigger('error', errorMessage, payload);
     },
-    _unloadServerDeletedRecords: function(payload) {
+    _unloadServerDeletedRecords: function(payload, alreadyDeleted) {
         var meta = payload.meta,
             deletedRecords;
         if (meta) {
@@ -472,6 +494,9 @@ BD.Store = Em.Object.extend({
                         var deletedRecord = this.recordForTypeAndId(type, id);
                         if (deletedRecord) {
                             deletedRecord.didDelete();
+                            if (!alreadyDeleted || !alreadyDeleted.contains(deletedRecord)) {
+                                this._triggerRecordChangeEvent(deletedRecord, 'deleted');
+                            }
                         }
                     }, this);
                 }, this);
@@ -480,6 +505,9 @@ BD.Store = Em.Object.extend({
                         var deletedRecord = this._cidToRecord[clientId];
                         if (deletedRecord) {
                             deletedRecord.didDelete();
+                            if (!alreadyDeleted || !alreadyDeleted.contains(deletedRecord)) {
+                                this._triggerRecordChangeEvent(deletedRecord, 'deleted');
+                            }
                         }
                     }, this);
                 }
@@ -497,8 +525,10 @@ BD.Store = Em.Object.extend({
     _rootForType: function(type) {
         return Ember.get(type, 'root');
     },
-
     sideload: function(payload, root, recordArray) {
+        this._sideload(payload, root, recordArray);
+    },
+    _sideload: function(payload, root, recordArray) {
         var rootRecords;
         for (var key in payload) {
             if (payload.hasOwnProperty(key) && key !== 'meta') {
@@ -516,11 +546,12 @@ BD.Store = Em.Object.extend({
             }
         }
         //Materialize records
-        this._materializeRecords();
+        var allRecords = this._materializeRecords();
         //Add root records, if any to the RecordArray
         if (rootRecords) {
             recordArray.set('content', rootRecords);
         }
+        return allRecords;
     },
     loadAll: function(type, dataItems) {
         Ember.assert("You must pass an array when using loadAll.", Ember.typeOf(dataItems) === "array");
@@ -595,7 +626,9 @@ BD.Store = Em.Object.extend({
                 r.trigger('didLoad');
             }
         });
+        var records = this._unmaterializedRecords;
         this._unmaterializedRecords = [];
+        return records;
     },
 
     didInstantiateRecord: function(r) {
@@ -732,6 +765,22 @@ BD.Store = Em.Object.extend({
         }
     },
 
+    _triggerRecordChangeEvent: function(r, action) {
+        this._events.trigger(Em.String.dasherize(this._rootForType(r.constructor))+'-'+action, r);
+    },
+
+    on: function(name, target, method) {
+        return this._events.on.apply(this._events, arguments);
+    },
+
+    one: function(name, target, method) {
+        return this._events.one.apply(this._events, arguments);
+    },
+
+    off: function(name, target, method) {
+        return this._events.off.apply(this._events, arguments);
+    },
+    
     reset: function() {
         this.set('isResetting', true);
         Object.keys(this._cidToRecord).forEach(function(clientId) {
@@ -755,6 +804,7 @@ BD.Store = Em.Object.extend({
         this._recordAttributeDidChangeQueue = [];
         this._recordArrays = {};
         Em.set(BD, 'loadedAll', Em.Object.create());
+        this._events = Em.Object.createWithMixins(Em.Evented);
     }
 
 });
