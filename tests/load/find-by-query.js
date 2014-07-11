@@ -18,6 +18,23 @@ test('findByQuery() should return a record array that has a `query` property.', 
     req.respond();
 });
 
+test('should get `paging` property from meta.', function() {
+    var req = fakeAjax(200, {
+        meta: {
+            paging: {
+                page: 1,
+                total: 167
+            }
+        }
+    });
+    var records = App.Post.findByQuery({
+        something: 123
+    });
+    req.respond();
+    equal(records.get('paging.page'), 1);
+    equal(records.get('paging.total'), 167);
+});
+
 test('find() should request all records', function() {
     expect(2);
     BD.ajax = function(hash) {

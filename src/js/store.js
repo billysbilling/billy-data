@@ -136,6 +136,7 @@ BD.Store = Em.Object.extend({
 
         var success = function(payload) {
             recordArray.trigger('willLoad', payload);
+            recordArray.set('paging', payload.meta && payload.meta.paging);
             self.sideload(payload,
                           BD.pluralize(self._rootForType(type)),
                           recordArray);
