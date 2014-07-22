@@ -154,5 +154,5 @@ BD.hasMany = function(type, belongsToKey, options) {
         recordArray = BD.store.filter(resolvedType, filterOptions);
         this._hasManyRecordArrays[key] = recordArray;
         return recordArray;
-    }.property('_data').meta(meta);
+    }.property().meta(meta);
 };
