@@ -1,7 +1,3 @@
-var parentRecord,
-    child1,
-    child2;
-
 QUnit.module('One-to-many relationships', {
     setup: function() {
         App.Person = BD.Model.extend({
@@ -9,19 +5,24 @@ QUnit.module('One-to-many relationships', {
             age: BD.attr('number'),
             children: BD.hasMany('App.Person', 'parent', {sortProperty: 'age', sortDirection: 'DESC'})
         });
-
-        parentRecord = App.Person.createRecord({
-        });
-
-        child1 = App.Person.createRecord({
-            parent: parentRecord,
-            age: 12
-        });
-
-        child2 = App.Person.createRecord({
-            parent: parentRecord,
-            age: 17
-        });
+        
+        App.Person.loadAll([
+            {
+                id: 1,
+                parentId: null,
+                age: 42
+            },
+            {
+                id: 2,
+                parentId: 1,
+                age: 12
+            },
+            {
+                id: 3,
+                parentId: 1,
+                age: 17
+            }
+        ]);
     },
     teardown: function() {
         BD.store.reset();
@@ -29,12 +30,28 @@ QUnit.module('One-to-many relationships', {
 });
 
 test('Has-many sorting', function() {
-    var children = parentRecord.get('children');
+    var children = App.Person.find(1).get('children');
+
+    deepEqual(children.mapBy('id'), [3, 2]);
+
+    App.Person.find(2).set('age', 108);
+    deepEqual(children.mapBy('id'), [2, 3]);
+});
+
+test('Has-many relationships not fire @each observers when loading the owner record', function() {
+    expect(0);
     
-    strictEqual(children.objectAt(0), child2);
-    strictEqual(children.objectAt(1), child1);
+    var r = App.Person.find(1);
+    r.get('children'); //init property
     
-    child1.set('age', 108);
-    strictEqual(children.objectAt(0), child1);
-    strictEqual(children.objectAt(1), child2);
+    Em.addObserver(r, 'children.@each', function() {
+        ok(false, 'Should not fire any observers when loaded');
+    });
+    
+    Em.run(function() {
+        App.Person.load({
+            id: 1,
+            age: 0
+        });
+    });
 });
