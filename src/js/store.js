@@ -694,6 +694,7 @@ BD.Store = Em.Object.extend({
             typeMap = this._typeMapFor(type),
             queryObservers = typeMap.recordArrayQueryObservers[key],
             comparatorObservers = typeMap.recordArrayComparatorObservers[key];
+
         if (queryObservers) {
             _.each(queryObservers, function(recordArray) {
                 recordArray.checkRecordAgainstQuery(r);

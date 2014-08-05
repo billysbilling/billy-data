@@ -1,15 +1,15 @@
 var _ = require('lodash');
 
 BD.Model = Em.Object.extend(Em.Evented, {
-    
+
     isLoaded: false,
     isNew: false,
     isDeleted: false,
     selfIsDirty: false,
     childIsDirty: false,
-    
+
     isNotLoaded: Em.computed.not('isLoaded'),
-    
+
     clientId: null,
     id: null,
     _data: null,
@@ -41,7 +41,7 @@ BD.Model = Em.Object.extend(Em.Evented, {
         BD.store.didInstantiateRecord(this);
         this._super();
     },
-    
+
     reference: function() {
         return Ember.get(this.constructor, 'root') + ':' + this.get('id');
     }.property('id'),
@@ -165,7 +165,7 @@ BD.Model = Em.Object.extend(Em.Evented, {
     include: function(include) {
         BD.store.findByIdInclude(this.constructor, this.get('id'), include);
     },
-    
+
     isDirty: function() {
         return (this.get('selfIsDirty') || this.get('childIsDirty'));
     }.property('selfIsDirty', 'childIsDirty'),
@@ -269,7 +269,7 @@ BD.Model = Em.Object.extend(Em.Evented, {
             }
             this.becameClean();
         } else {
-            //Handle case where record never was created. Then we just unload it 
+            //Handle case where record never was created. Then we just unload it
             this.unload();
         }
         //Let parent check child dirtiness
@@ -277,22 +277,22 @@ BD.Model = Em.Object.extend(Em.Evented, {
             dirtyParent.checkEmbeddedChildrenDirty();
         }
     },
-    
+
     didDelete: function() {
         this.eachEmbeddedRecord(function(child) {
             child.didDelete();
         });
         this.unload();
     },
-    
+
     save: function(options) {
         return BD.store.saveRecord(this, options);
     },
-    
+
     deleteRecord: function() {
         return BD.store.deleteRecord(this);
     },
-    
+
     serialize: function(options) {
         options = options || {};
         var serialized = {},
@@ -369,7 +369,7 @@ BD.Model = Em.Object.extend(Em.Evented, {
         }
         return serialized;
     },
-    
+
     didAddToRecordArray: function(recordArray) {
         this._inRecordArrays[Em.guidFor(recordArray)] = recordArray;
     },
@@ -382,23 +382,40 @@ BD.Model = Em.Object.extend(Em.Evented, {
 
     unload: function() {
         this.set('isUnloaded', true);
-        this.eachBelongsTo(function(name) {
-            this.set(name, null);
+
+        //Destroy all has-many record arrays owned by this record
+        this.eachHasMany(function(key) {
+            if (this.hasManyIsLoaded(key)) {
+                this.get(key).destroy();
+            }
         }, this);
+
+        //Unload all embeded children
         this.eachEmbeddedRecord(function(child) {
             child.unload();
         });
+
+        //Unset all belongs-to relationships
+        this.eachBelongsTo(function(name) {
+            this.set(name, null);
+        }, this);
+
+        //Remove this record from all record arrays
         _.each(this._inRecordArrays, function(recordArray) {
             recordArray.removeObject(this);
         }, this);
+
+        //Notify store of unload
         BD.store.didUnloadRecord(this);
+
+        //Destroy the object
         this.destroy();
     },
 
     toString: function toString() {
         return '<'+this.constructor.toString()+':'+this.get('id')+':'+this.get('clientId')+'>';
     }
-    
+
 });
 
 BD.Model.reopenClass({
@@ -433,7 +450,7 @@ BD.Model.reopenClass({
         BD.store.resumeRecordAttributeDidChange();
         return r;
     },
-    
+
     root: function() {
         var typeString = this.toString();
         var parts = typeString.split(".");
@@ -441,7 +458,7 @@ BD.Model.reopenClass({
         name = name.substring(0, 1).toLowerCase() + name.substring(1);
         return name;
     }.property(),
-    
+
     attributes: function() {
         var map = Ember.Map.create();
         this.eachComputedProperty(function(key, meta) {
@@ -452,7 +469,7 @@ BD.Model.reopenClass({
         });
         return map;
     }.property(),
-    
+
     belongsToRelationships: function() {
         var map = Ember.Map.create();
         this.eachComputedProperty(function(key, meta) {
@@ -463,7 +480,7 @@ BD.Model.reopenClass({
         });
         return map;
     }.property(),
-    
+
     hasManyRelationships: function() {
         var map = Ember.Map.create();
         this.eachComputedProperty(function(key, meta) {
@@ -511,7 +528,7 @@ BD.Model.reopenClass({
     load: function(data) {
         return BD.store.load(this, data);
     },
-    
+
     registerFilter: function(name, dependencies, callback) {
         if (!this.filters) {
             this.filters = {};
@@ -521,7 +538,7 @@ BD.Model.reopenClass({
             callback: callback
         };
     },
-    
+
     getFilter: function(name) {
         if (!this.filters) {
             return null;
