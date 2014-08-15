@@ -79,7 +79,7 @@ test('POST ajax request always contains all non-undefined properties', function(
     BD.ajax = function(hash) {
         equal(hash.type, 'POST');
         equal(hash.url, '/posts');
-        deepEqual(hash.data, {
+        deepEqual(JSON.parse(hash.data), {
             post: {
                 _clientId: post.clientId,
                 categoryId: 301,
@@ -96,7 +96,7 @@ test('Test PUT ajax request options when attribute has changed', function() {
     BD.ajax = function(hash) {
         equal(hash.type, 'PUT');
         equal(hash.url, '/posts/101');
-        deepEqual(hash.data, {
+        deepEqual(JSON.parse(hash.data), {
             post: {
                 _clientId: post.clientId,
                 id: 101,
@@ -114,7 +114,7 @@ test('Test PUT ajax request options when belongsTo has changed', function() {
     BD.ajax = function(hash) {
         equal(hash.type, 'PUT');
         equal(hash.url, '/posts/101');
-        deepEqual(hash.data, {
+        deepEqual(JSON.parse(hash.data), {
             post: {
                 _clientId: post.clientId,
                 id: 101,
@@ -132,7 +132,7 @@ test('Test PUT ajax request options when belongsTo has changed to null', functio
     BD.ajax = function(hash) {
         equal(hash.type, 'PUT');
         equal(hash.url, '/posts/101');
-        deepEqual(hash.data, {
+        deepEqual(JSON.parse(hash.data), {
             post: {
                 _clientId: post.clientId,
                 id: 101,
@@ -193,7 +193,7 @@ test('Test save() with properties, normal null attribute', function() {
     expect(1);
     var post = App.Post.find(101);
     BD.ajax = function(hash) {
-        strictEqual(hash.data.post.title, null);
+        strictEqual(JSON.parse(hash.data).post.title, null);
     };
     post.save({
         properties: {
@@ -206,9 +206,10 @@ test('Test save() with payloadData, simple property and object', function() {
     expect(3);
     var post = App.Post.find(101);
     BD.ajax = function(hash) {
-        strictEqual(hash.data.post.title, 'Post title');
-        strictEqual(hash.data.randomProperty, 'Weee!');
-        strictEqual(hash.data.randomObject.foo, 'bar');
+        var data = JSON.parse(hash.data);
+        strictEqual(data.post.title, 'Post title');
+        strictEqual(data.randomProperty, 'Weee!');
+        strictEqual(data.randomObject.foo, 'bar');
     };
     post.save({
         properties: {
@@ -227,7 +228,7 @@ test('Test save() with properties, null belongsTo', function() {
     expect(1);
     var post = App.Post.find(101);
     BD.ajax = function(hash) {
-        strictEqual(hash.data.post.categoryId, null);
+        strictEqual(JSON.parse(hash.data).post.categoryId, null);
     };
     post.save({
         properties: {
@@ -328,8 +329,9 @@ test('Default attribute value should be saved', function() {
         leafColor: 'red'
     });
     BD.ajax = function(hash) {
-        strictEqual(hash.data.tree.trunkColor, 'brown');
-        strictEqual(hash.data.tree.leafColor, 'red');
+        var data = JSON.parse(hash.data);
+        strictEqual(data.tree.trunkColor, 'brown');
+        strictEqual(data.tree.leafColor, 'red');
     };
     tree.save({
         properties: {

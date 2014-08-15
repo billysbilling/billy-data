@@ -21,7 +21,7 @@ test('returns a correct value for a Moment object', function() {
         date: moment(new Date('2000/01/01'))
     });
     BD.ajax = function(hash) {
-        equal(hash.data.record.date, '2000-01-01');
+        equal(JSON.parse(hash.data).record.date, '2000-01-01');
     };
     r.save('/stories/milk');
 });
@@ -35,7 +35,7 @@ test('Sends correct AJAX options', function() {
     BD.ajax = function(hash) {
         equal(hash.type, 'POST');
         equal(hash.url, '/stories');
-        deepEqual(hash.data, {
+        deepEqual(JSON.parse(hash.data), {
             record: {
                 name: 'Arnold',
                 isBig: true
@@ -55,7 +55,7 @@ test('Can specify root key', function() {
     BD.ajax = function(hash) {
         equal(hash.type, 'POST');
         equal(hash.url, '/stories');
-        deepEqual(hash.data, {
+        deepEqual(JSON.parse(hash.data), {
             story: {
                 name: 'Arnold',
                 isBig: true
@@ -74,7 +74,7 @@ test('Sends correct AJAX options with model', function() {
     BD.ajax = function(hash) {
         equal(hash.type, 'POST');
         equal(hash.url, '/stories/milk');
-        deepEqual(hash.data, {
+        deepEqual(JSON.parse(hash.data), {
             record: {
                 postId: 101
             }
@@ -93,7 +93,7 @@ test('Sends correct AJAX options with null model', function() {
     BD.ajax = function(hash) {
         equal(hash.type, 'POST');
         equal(hash.url, '/stories/milk');
-        deepEqual(hash.data, {
+        deepEqual(JSON.parse(hash.data), {
             record: {
                 postId: null
             }
