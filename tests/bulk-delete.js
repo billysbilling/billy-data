@@ -58,3 +58,13 @@ asyncTest('Bulk DELETE for model that supports bulk deletes', function() {
         start();
     }, 1);
 });
+
+asyncTest('Bulk delete with empty array returns event target', function() {
+    expect(1);
+    BD
+        .deleteRecords([])
+        .success(function() {
+            ok(true, 'Success should be fired once');
+            start();
+        });
+});

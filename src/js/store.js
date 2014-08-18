@@ -136,6 +136,7 @@ BD.Store = Em.Object.extend({
 
         var success = function(payload) {
             recordArray.trigger('willLoad', payload);
+            recordArray.set('paging', payload.meta && payload.meta.paging);
             self.sideload(payload,
                           BD.pluralize(self._rootForType(type)),
                           recordArray);
@@ -191,7 +192,7 @@ BD.Store = Em.Object.extend({
             }, 0);
             return promise;
         }
-        
+
         if (isNew && r.get('_saveCount') > 0) {
             throw new Error('You can\'t save a new record that\'s already being saved. That would create two different records on the server.');
         }
@@ -294,13 +295,13 @@ BD.Store = Em.Object.extend({
 
         var success = function(payload) {
             self._unloadServerDeletedRecords(payload);
-            
+
             transaction.get('records').forEach(function(r, options) {
                 r.didCommit(options);
             }, self);
-            
+
             var updatedRecords = self._sideload(payload);
-            
+
             transaction.trigger('complete');
             transaction.trigger('success', payload);
 
@@ -443,9 +444,11 @@ BD.Store = Em.Object.extend({
         }, this);
         //If there is nothing to delete
         if (recordsToDelete.length === 0) {
-            promise.trigger('complete');
-            promise.trigger('success', null);
-            return;
+            Em.run.next(function() {
+                promise.trigger('complete');
+                promise.trigger('success', null);
+            });
+            return promise;
         }
 
         var success = function(payload) {
@@ -691,6 +694,7 @@ BD.Store = Em.Object.extend({
             typeMap = this._typeMapFor(type),
             queryObservers = typeMap.recordArrayQueryObservers[key],
             comparatorObservers = typeMap.recordArrayComparatorObservers[key];
+
         if (queryObservers) {
             _.each(queryObservers, function(recordArray) {
                 recordArray.checkRecordAgainstQuery(r);
@@ -780,7 +784,7 @@ BD.Store = Em.Object.extend({
     off: function(name, target, method) {
         return this._events.off.apply(this._events, arguments);
     },
-    
+
     reset: function() {
         this.set('isResetting', true);
         Object.keys(this._cidToRecord).forEach(function(clientId) {

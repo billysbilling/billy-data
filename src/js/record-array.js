@@ -3,7 +3,7 @@ BD.RecordArray = Em.Mixin.create(Em.Evented, {
     isLoaded: false,
 
     isNotLoaded: Em.computed.not('isLoaded'),
-    
+
     init: function() {
         this._super();
         var self = this;
@@ -49,6 +49,7 @@ BD.RecordArray = Em.Mixin.create(Em.Evented, {
         this.forEach(function(r) {
             r.didRemoveFromRecordArray(this);
         }, this);
+            this._super();
     }
 
 });
