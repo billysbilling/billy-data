@@ -381,6 +381,11 @@ BD.Model = Em.Object.extend(Em.Evented, {
     },
 
     unload: function() {
+        //Stop if this record has already been unloaded
+        if (this.get('isDestroying')) {
+            return;
+        }
+
         this.set('isUnloaded', true);
 
         //Destroy all has-many record arrays owned by this record
