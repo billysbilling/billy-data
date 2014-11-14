@@ -1,18 +1,16 @@
-var _ = require('lodash'),
-    ajaxRequest = require('./ajax-request'),
-    moment = require('momentjs');
+var ajaxRequest = require('./ajax-request');
 
 BD.AnonymousRecord = Em.ObjectProxy.extend(Em.Evented, {
 
     error: null,
-    
+
     errors: null,
 
     init: function() {
         this._super();
         this.set('errors', {});
     },
-    
+
     save: function(url, options) {
         options = options || {};
         var self = this,

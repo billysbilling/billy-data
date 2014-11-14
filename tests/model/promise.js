@@ -27,11 +27,11 @@ asyncTest('Promise of not found record should be rejected', function() {
     expect(1);
     var req = fakeAjax(404);
     var post = App.Post.find(1);
-    req.respond();
     post.promise.then(function() {
         ok(false, 'Should not be resolved');
     }, function(e) {
         ok(e instanceof Error);
         start();
     });
+    req.respond();
 });

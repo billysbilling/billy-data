@@ -1,5 +1,3 @@
-var _ = require('lodash');
-
 BD.Store = Em.Object.extend({
 
     init: function() {
@@ -272,7 +270,7 @@ BD.Store = Em.Object.extend({
             data  = {},
             isNewMap = new Em.Map();
         //Serialize records
-        transaction.get('records').forEach(function(r, options) {
+        transaction.get('records').forEach(function(options, r) {
             //Don't add if the record is clean
             if (!r.get('isDirty') && !options.properties) {
                 return;
@@ -296,7 +294,7 @@ BD.Store = Em.Object.extend({
         var success = function(payload) {
             self._unloadServerDeletedRecords(payload);
 
-            transaction.get('records').forEach(function(r, options) {
+            transaction.get('records').forEach(function(options, r) {
                 r.didCommit(options);
             }, self);
 
@@ -305,7 +303,7 @@ BD.Store = Em.Object.extend({
             transaction.trigger('complete');
             transaction.trigger('success', payload);
 
-            transaction.get('records').forEach(function(r) {
+            transaction.get('records').forEach(function(options, r) {
                 self._triggerRecordChangeEvent(r, isNewMap.get(r) ? 'created' : 'updated');
                 updatedRecords.removeObject(r);
             });
@@ -321,7 +319,7 @@ BD.Store = Em.Object.extend({
                 self._handleValidationErrors(payload);
             } else {
                 errorMessage = 'We\'re sorry but we couldn\'t save your data. Please try again.';
-                transaction.get('records').forEach(function(r, options) {
+                transaction.get('records').forEach(function(options, r) {
                     r.set('error', errorMessage);
                 }, self);
             }

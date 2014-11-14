@@ -1,5 +1,3 @@
-var moment = require('momentjs');
-
 BD.transforms = {
 
     string: {
@@ -69,7 +67,7 @@ BD.transforms = {
             return date.format('YYYY-MM-DDTHH:mm:ss');
         }
     },
-    
+
     object: {
         deserialize: function(serialized) {
             return serialized;
@@ -78,5 +76,5 @@ BD.transforms = {
             return deserialized;
         }
     }
-    
+
 };

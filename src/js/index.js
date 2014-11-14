@@ -1,5 +1,3 @@
-require('ember');
-
 require('./bd');
 require('./adapters');
 require('./store');

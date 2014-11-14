@@ -1,0 +1,5 @@
+#!/bin/sh
+
+rm -rf dist
+node_modules/.bin/broccoli build dist
+node_modules/.bin/testem ci

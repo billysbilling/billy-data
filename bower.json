@@ -4,7 +4,7 @@
     "jquery": "~2.0.3",
     "momentjs": "~2.3.1",
     "lodash": ">=2.2.1 < 3.0",
-    "ember": "billysbilling/bower-ember#~1.3.0",
+    "ember": "1.9.0-beta.1",
     "inflectors": "~1.0.2"
   },
   "version": "0.14.2",
@@ -29,5 +29,8 @@
     "package.json",
     "README.md",
     "TODO.md"
-  ]
+  ],
+  "resolutions": {
+    "handlebars": ">= 2.0.0 < 3.0.0"
+  }
 }
