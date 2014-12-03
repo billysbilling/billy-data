@@ -1,9 +1,9 @@
 BD.Transaction = BD.ModelOperationPromise.extend({
-    
+
     records: null,
     type: null,
     hasCommitted: false,
-    
+
     init: function() {
         this._super();
         this.set('records', new Em.Map());
@@ -11,8 +11,8 @@ BD.Transaction = BD.ModelOperationPromise.extend({
 
     length: function() {
         return this.get('records.keys.list.length');
-    }.property().cacheable(false),
-    
+    }.property().volatile(),
+
     add: function(r, options) {
         Ember.assert('This transaction has already been committed.', !this.get('hasCommitted'));
         options = BD.store._normalizeSaveOptions(options);
@@ -26,9 +26,9 @@ BD.Transaction = BD.ModelOperationPromise.extend({
         records.set(r, options);
         return this;
     },
-    
+
     commit: function() {
         return BD.store.commitTransaction(this);
     }
-    
+
 });
