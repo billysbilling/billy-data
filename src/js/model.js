@@ -125,8 +125,8 @@ BD.Model = Em.Object.extend(Em.Evented, {
         this.eachAttribute(function(key, meta) {
             var serverValue = BD.transforms[meta.type].deserialize(serialized[key]);
             if (this.get('selfIsDirty')) {
-                var cleanValue = this.clean.data.attributes[key],
-                    clientValue = data.attributes[key];
+                var cleanValue = this.clean.data.attributes[key] || null,
+                    clientValue = data.attributes[key] || null;
                 if (cleanValue !== clientValue) {
                     return;
                 }
