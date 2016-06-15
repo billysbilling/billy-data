@@ -332,11 +332,12 @@ BD.Store = Em.Object.extend({
         this.get('adapter').commitTransactionBulk(this, type, rootPlural, data, success, error);
     },
     _handleValidationErrors: function(payload) {
+        var self = this
         if (!payload.validationErrors) {
             return;
         }
         _.each(payload.validationErrors, function(rawErrors, clientId) {
-            var r = this.findByClientId(clientId);
+            var r = self.findByClientId(clientId);
             if (!r) {
                 return;
             }
@@ -347,17 +348,17 @@ BD.Store = Em.Object.extend({
                     if (rawAttributeErrors[key]) {
                         attributeErrors.set(key, rawAttributeErrors[key]);
                     }
-                }, this);
+                }, self);
                 r.eachBelongsTo(function(key) {
                     if (rawAttributeErrors[key+'Id']) {
                         attributeErrors.set(key, rawAttributeErrors[key+'Id']);
                     }
-                }, this);
+                }, self);
             }
             r.set('error', rawErrors.message);
             r.set('errors', attributeErrors);
             r.trigger('didValidate');
-        }, this);
+        });
     },
 
     _prepareRecordForDeletion: function(r) {
@@ -483,8 +484,9 @@ BD.Store = Em.Object.extend({
         promise.trigger('error', errorMessage, payload);
     },
     _unloadServerDeletedRecords: function(payload, alreadyDeleted) {
-        var meta = payload.meta,
-            deletedRecords;
+        var self = this
+        var meta = payload.meta
+        var deletedRecords
         if (meta) {
             deletedRecords = meta.deletedRecords;
             if (deletedRecords) {
@@ -494,15 +496,15 @@ BD.Store = Em.Object.extend({
                         return;
                     }
                     ids.forEach(function(id) {
-                        var deletedRecord = this.recordForTypeAndId(type, id);
+                        var deletedRecord = self.recordForTypeAndId(type, id);
                         if (deletedRecord) {
                             deletedRecord.didDelete();
                             if (!alreadyDeleted || !alreadyDeleted.contains(deletedRecord)) {
-                                this._triggerRecordChangeEvent(deletedRecord, 'deleted');
+                                self._triggerRecordChangeEvent(deletedRecord, 'deleted');
                             }
                         }
-                    }, this);
-                }, this);
+                    }, self);
+                });
                 if (deletedRecords._clientIds) {
                     deletedRecords._clientIds.forEach(function(clientId) {
                         var deletedRecord = this._cidToRecord[clientId];

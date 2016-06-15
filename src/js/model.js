@@ -381,6 +381,7 @@ BD.Model = Em.Object.extend(Em.Evented, {
     },
 
     unload: function() {
+        var self = this
         //Stop if this record has already been unloaded
         if (this.get('isDestroying')) {
             return;
@@ -406,9 +407,9 @@ BD.Model = Em.Object.extend(Em.Evented, {
         }, this);
 
         //Remove this record from all record arrays
-        _.each(this._inRecordArrays, function(recordArray) {
-            recordArray.removeObject(this);
-        }, this);
+        _.each(self._inRecordArrays, function(recordArray) {
+            recordArray.removeObject(self);
+        });
 
         //Notify store of unload
         BD.store.didUnloadRecord(this);
