@@ -332,7 +332,7 @@ BD.Store = Em.Object.extend({
         this.get('adapter').commitTransactionBulk(this, type, rootPlural, data, success, error);
     },
     _handleValidationErrors: function(payload) {
-        var self = this
+        var self = this;
         if (!payload.validationErrors) {
             return;
         }
@@ -484,9 +484,9 @@ BD.Store = Em.Object.extend({
         promise.trigger('error', errorMessage, payload);
     },
     _unloadServerDeletedRecords: function(payload, alreadyDeleted) {
-        var self = this
-        var meta = payload.meta
-        var deletedRecords
+        var self = this;
+        var meta = payload.meta;
+        var deletedRecords;
         if (meta) {
             deletedRecords = meta.deletedRecords;
             if (deletedRecords) {

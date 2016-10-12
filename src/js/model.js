@@ -381,7 +381,7 @@ BD.Model = Em.Object.extend(Em.Evented, {
     },
 
     unload: function() {
-        var self = this
+        var self = this;
         //Stop if this record has already been unloaded
         if (this.get('isDestroying')) {
             return;
