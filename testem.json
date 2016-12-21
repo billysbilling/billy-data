@@ -1,0 +1,10 @@
+{
+  "framework": "qunit",
+  "launch_in_ci": ["PhantomJS"],
+  "launch_in_dev": ["PhantomJS"],
+  "src_files": [
+    "dist/billy-data.js",
+    "tests/bootstrap.js",
+    "tests/**/*.js"
+  ]
+}

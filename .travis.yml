@@ -1,7 +1,9 @@
-before_script:
-  - npm install
+language: node_js
+
+install:
   - npm install -g bower
-  - npm install -g grunt-cli
+  - npm install
   - bower install
 
-script: grunt test
+script:
+  - npm test

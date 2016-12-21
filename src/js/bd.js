@@ -1,5 +1,4 @@
-var $ = require('jquery'),
-    inflectors = require('inflectors');
+var inflectors = require('inflectors');
 
 window.BD = Ember.Namespace.create({
 
@@ -62,4 +61,3 @@ window.BD = Ember.Namespace.create({
     loadedAll: Em.Object.create()
 
 });
-

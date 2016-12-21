@@ -1,5 +1,3 @@
-var _ = require('lodash');
-
 BD.Model = Em.Object.extend(Em.Evented, {
 
     isLoaded: false,
@@ -47,13 +45,13 @@ BD.Model = Em.Object.extend(Em.Evented, {
     }.property('id'),
 
     eachAttribute: function(callback, binding) {
-        Em.get(this.constructor, 'attributes').forEach(function(key, meta) {
+        Em.get(this.constructor, 'attributes').forEach(function(meta, key) {
             callback.call(binding, key, meta);
         });
     },
 
     eachBelongsTo: function(callback, binding) {
-        Em.get(this.constructor, 'belongsToRelationships').forEach(function(key, meta) {
+        Em.get(this.constructor, 'belongsToRelationships').forEach(function(meta, key) {
             callback.call(binding, key, meta);
         });
     },
@@ -75,7 +73,7 @@ BD.Model = Em.Object.extend(Em.Evented, {
     },
 
     eachHasMany: function(callback, binding) {
-        Em.get(this.constructor, 'hasManyRelationships').forEach(function(key, meta) {
+        Em.get(this.constructor, 'hasManyRelationships').forEach(function(meta, key) {
             callback.call(binding, key, meta);
         });
     },

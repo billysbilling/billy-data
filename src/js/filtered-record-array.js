@@ -1,5 +1,3 @@
-var _ = require('lodash');
-
 BD.SPARSE_PLACEHOLDER = Ember.Object.create({
     isLoaded: false
 });
@@ -443,7 +441,7 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
             sortDirection = this.get('sortDirection'),
             pageSize = this.get('pageSize');
         _.each(query, function(value, key) {
-            Ember.get(type, 'belongsToRelationships').forEach(function(belongsToKey, meta) {
+            Ember.get(type, 'belongsToRelationships').forEach(function(meta, belongsToKey) {
                 if (belongsToKey === key) {
                     delete query[key];
                     meta.addToQuery(query, key, value);
