@@ -475,12 +475,30 @@ BD.FilteredRecordArray = Em.Object.extend(Em.Array, BD.RecordArray, {
         regex = new RegExp(q, 'i');
         qProperties = Em.get(type, 'qProperties');
         Em.assert("You need to set `qProperties` on the model class "+type.toString()+". As in `"+type.toString()+".reopenClass({qProperties: ['prop1', 'prop2']})`", Em.isArray(qProperties));
+        var hasManyRelationships = Em.get(type, 'hasManyRelationships');
         return function(r) {
             var match = false;
             qProperties.find(function(k) {
                 if (regex.test(r.get(k))) {
                     match = true;
                     return true;
+                } else {
+                    var p = k.split('.');
+                    //If first level has many relationship exists, search that
+                    if (p.length == 2 && hasManyRelationships.has(p[0])) {
+                        var subMatch = false;
+                        r.get(p[0]).find(function(s) {
+                            if (regex.test(s.get(p[1]))) {
+                                subMatch = true;
+                                return;
+                            }
+                            return false;
+                        });
+                        if (subMatch) {
+                            match = true;
+                            return true;
+                        }
+                    }
                 }
                 return false;
             });
